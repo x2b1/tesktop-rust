@@ -60,7 +60,7 @@ Implementation evidence checked September 13, 2026:
   checked September 20, 2026: challenge fields, the retry headers above, and friend
   requests listed as a challenged action. Also unofficial evidence.
 
-Windows and macOS embed verification; Linux opens a temporary GTK4/WebKit6 window. The owner reported a successful
+Windows and macOS embed verification; Linux opens a temporary GTK3/WebKit2GTK 4.1 window. The owner reported a successful
 manual live check on September 13, 2026; this is not an agent-observed interoperability
 test. macOS/Linux live verification remains unverified. Linux uses an ephemeral network
 session and a bounded main-frame query, with no cross-frame passcode IPC. Offline fixtures never

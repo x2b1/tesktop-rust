@@ -477,7 +477,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let saved = Arc::new(AtomicBool::new(false));
 	let completed = saved.clone();
 	eframe::run_native(
-		"Serein · offline profile preview",
+		"tesktop2 · offline profile preview",
 		eframe::NativeOptions {
 			viewport: egui::ViewportBuilder::default()
 				.with_inner_size([width, height])

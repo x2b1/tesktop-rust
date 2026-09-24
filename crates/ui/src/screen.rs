@@ -221,9 +221,9 @@ impl ScreenUi {
 				ui,
 				"Share system audio",
 				Some(if cfg!(target_os = "macos") {
-					"Send what your Mac plays along with the screen. Serein's own call audio is left out."
+					"Send what your Mac plays along with the screen. tesktop2's own call audio is left out."
 				} else {
-					"Share sound from other apps, even when sharing one window. Serein's own audio is left out."
+					"Share sound from other apps, even when sharing one window. tesktop2's own audio is left out."
 				}),
 				&mut self.audio,
 			);

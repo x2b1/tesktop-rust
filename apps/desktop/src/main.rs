@@ -299,9 +299,9 @@ fn main() -> eframe::Result {
 	let transparency_available =
 		transparency_available || demo && std::env::args().any(|arg| arg == "--demo-transparency");
 	#[cfg(target_os = "windows")]
-	let icon = include_bytes!("../../../packaging/windows/serein.png").as_slice();
+	let icon = include_bytes!("../../../assets/brand/tesktop2.png").as_slice();
 	#[cfg(target_os = "linux")]
-	let icon = include_bytes!("../../../packaging/linux/hicolor/256x256/apps/serein.png").as_slice();
+	let icon = include_bytes!("../../../assets/brand/tesktop2.png").as_slice();
 	let options = eframe::NativeOptions {
 		viewport: {
 			let builder = egui::ViewportBuilder::default()
@@ -309,7 +309,7 @@ fn main() -> eframe::Result {
 				.with_inner_size([1120.0, 760.0])
 				.with_min_inner_size([760.0, 520.0])
 				.with_active(!start_minimized)
-				.with_app_id("cz.viceverse.serein");
+				.with_app_id("org.testcord.tesktop2-native");
 			#[cfg(any(target_os = "windows", target_os = "linux"))]
 			let builder = builder
 				.with_icon(eframe::icon_data::from_png_bytes(icon).expect("bundled app icon"));
@@ -361,7 +361,7 @@ fn main() -> eframe::Result {
 		..Default::default()
 	};
 	eframe::run_native(
-		"Serein",
+		"tesktop2",
 		options,
 		Box::new(move |cc| {
 			let desktop = Desktop::new(cc, demo, frame_sample, transparency_available)?;
@@ -701,7 +701,7 @@ impl Drop for FrameMetrics {
 			let _ = writeln!(
 				std::io::stderr(),
 				// Preserve the legacy diagnostic label; elapsed callback time is wall time.
-				"[Serein frames] callbacks={} without_input={} cpu_us_buckets(1000,2000,4000,8000,16000,32000,64000,above)={:?} reflows(total,consecutive)={:?}",
+				"[tesktop2 frames] callbacks={} without_input={} cpu_us_buckets(1000,2000,4000,8000,16000,32000,64000,above)={:?} reflows(total,consecutive)={:?}",
 				self.frames,
 				self.inputless,
 				self.buckets,
@@ -3735,7 +3735,7 @@ impl Desktop {
 					})
 					.show(ui, |ui| {
 						ui.horizontal(|ui| {
-							ui.label(ui::design::semibold(ui, "Serein", 16.0).color(p.muted));
+							ui.label(ui::design::semibold(ui, "tesktop2", 16.0).color(p.muted));
 							ui.with_layout(
 								egui::Layout::right_to_left(egui::Align::Center),
 								|ui| {
@@ -3763,7 +3763,7 @@ impl Desktop {
 					ui.painter().rect_filled(mark, 14, p.accent);
 					ui::icons::paint(
 						ui.painter(),
-						ui::icons::Icon::Serein,
+						ui::icons::Icon::Tesktop,
 						mark.shrink(13.0),
 						p.accent_text,
 					);
@@ -3845,12 +3845,14 @@ impl Desktop {
 							ui.painter().rect_filled(mark, 6, p.accent);
 							ui::icons::paint(
 								ui.painter(),
-								ui::icons::Icon::Serein,
+								ui::icons::Icon::Tesktop,
 								mark.shrink(5.0),
 								p.accent_text,
 							);
 							ui.add_space(8.0);
-							ui.label(ui::design::semibold(ui, "Serein", 16.0).color(p.text_strong));
+							ui.label(
+								ui::design::semibold(ui, "tesktop2", 16.0).color(p.text_strong),
+							);
 							ui.add_space(8.0);
 							// Painted rather than framed: the pill must hug the text, not the row height.
 							let stage = ui.painter().layout_no_wrap(
@@ -4010,7 +4012,7 @@ impl Desktop {
 						if returning {
 							ui::design::secondary_icon_button(ui, ui::icons::Icon::Plus, label)
 						} else {
-							ui::design::primary_icon_button(ui, ui::icons::Icon::Serein, label)
+							ui::design::primary_icon_button(ui, ui::icons::Icon::Tesktop, label)
 						}
 					})
 					.inner;
@@ -4058,7 +4060,7 @@ impl Desktop {
 			ui.painter().rect_filled(mark, 13, p.accent);
 			ui::icons::paint(
 				ui.painter(),
-				ui::icons::Icon::Serein,
+				ui::icons::Icon::Tesktop,
 				mark.shrink(11.0),
 				p.accent_text,
 			);
@@ -4069,7 +4071,7 @@ impl Desktop {
 					if returning {
 						"Welcome back"
 					} else {
-						"Welcome to Serein"
+						"Welcome to tesktop2"
 					},
 					22.0,
 				)
@@ -4350,7 +4352,7 @@ impl Desktop {
 	/// Secondary panels: what this client is, and the owner's own session token.
 	fn sign_in_disclosures(&mut self, ui: &mut egui::Ui, ctx: &egui::Context) {
 		let p = ui::design::palette(ui);
-		if ui::design::disclosure(ui, "About Serein", self.about_open).clicked() {
+		if ui::design::disclosure(ui, "About tesktop2", self.about_open).clicked() {
 			self.about_open = !self.about_open;
 		}
 		if self.about_open {
@@ -4402,7 +4404,7 @@ impl Desktop {
 					ui.add(
 						egui::Label::new(
 							egui::RichText::new(
-								"For owners who already hold a valid Discord session token, for example from another signed-in Serein install. Passwords and 2FA are never used here; this bypasses Discord's hosted login page entirely.",
+								"For owners who already hold a valid Discord session token, for example from another signed-in tesktop2 install. Passwords and 2FA are never used here; this bypasses Discord's hosted login page entirely.",
 							)
 							.size(12.0)
 							.color(p.muted),
@@ -4555,7 +4557,7 @@ impl Desktop {
 						{
 							self.messaging.channel_preferences_reload = false;
 							self.messaging.channel_preferences_load_pending = false;
-							self.messaging.channel_preferences_status = "Local storage worker stopped; restart Serein to restore channel preferences.";
+							self.messaging.channel_preferences_status = "Local storage worker stopped; restart tesktop2 to restore channel preferences.";
 						}
 						presence_cache_stopped = self.presence_load_pending;
 						break;
@@ -4878,7 +4880,7 @@ impl Desktop {
 						// Nothing could have been saved without a credential store.
 						Err(platform::CredentialError::NoStore) => "",
 						Err(_) => {
-							"Could not remove saved login; remove cz.viceverse.serein / discord-session in your OS credential manager"
+							"Could not remove saved login; remove org.testcord.tesktop2-native / discord-session in your OS credential manager"
 						}
 					};
 				}
@@ -5156,7 +5158,7 @@ impl Desktop {
 					// One extra fixed-label terminal line per enabled scope; closed stderr is OK.
 					let _ = writeln!(
 						std::io::stderr(),
-						"[Serein {scope}] Session stopped: {}",
+						"[tesktop2 {scope}] Session stopped: {}",
 						failure.label()
 					);
 				}
@@ -5800,7 +5802,7 @@ impl eframe::App for Desktop {
 						ui.painter().rect_filled(rect, 8, p.accent);
 						ui::icons::paint(
 							ui.painter(),
-							ui::icons::Icon::Serein,
+							ui::icons::Icon::Tesktop,
 							rect.shrink(7.0),
 							p.accent_text,
 						);

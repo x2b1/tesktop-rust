@@ -54,7 +54,7 @@ trait Applications: Clone + Send + Sync + 'static {
 		&self,
 		id: Id,
 	) -> impl Future<Output = Result<Vec<discord_api::rpc::Asset>, &'static str>> + Send;
-	/// Ask Discord to proxy caller-supplied image URLs. Serein never fetches them itself.
+	/// Ask Discord to proxy caller-supplied image URLs. tesktop2 never fetches them itself.
 	fn external(
 		&self,
 		id: Id,
@@ -744,7 +744,7 @@ const LIST_TTL: Duration = Duration::from_secs(24 * 60 * 60);
 const MAX_CACHED_LIST: u64 = 8 * 1024 * 1024;
 
 fn list_path() -> Option<PathBuf> {
-	dirs::data_local_dir().map(|root| root.join("serein").join("detectable.json"))
+	dirs::data_local_dir().map(|root| root.join("tesktop2").join("detectable.json"))
 }
 
 async fn detectable<A: Applications>(service: &A) -> Option<Vec<Game>> {

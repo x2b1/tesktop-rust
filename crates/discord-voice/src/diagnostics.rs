@@ -418,7 +418,7 @@ impl Drop for Metrics {
 
 fn write_report(report: Report, bytes: &mut usize, writer: &mut impl Write) -> bool {
 	let mut line = format!(
-		"[Serein voice {:?}] debug={} at_ms={} window_ms={} wakes={} resets={} drops={} stalls={} noise_frames={} stages(calls,total_us,max_us): echo_render={:?} echo_capture={:?} noise={:?} encode={:?} mix={:?} receive={:?}",
+		"[tesktop2 voice {:?}] debug={} at_ms={} window_ms={} wakes={} resets={} drops={} stalls={} noise_frames={} stages(calls,total_us,max_us): echo_render={:?} echo_capture={:?} noise={:?} encode={:?} mix={:?} receive={:?}",
 		report.scope,
 		cfg!(debug_assertions),
 		report.at_ms,

@@ -193,8 +193,10 @@ impl Worker {
 				// Name the cause once so a share that ends by itself is never a mystery.
 				if std::env::var_os("SEREIN_VOICE_DIAGNOSTICS").is_some_and(|value| value == "1") {
 					match &result {
-						Ok(()) => eprintln!("[Serein voice Screen] capture_stopped=ok"),
-						Err(reason) => eprintln!("[Serein voice Screen] capture_stopped={reason}"),
+						Ok(()) => eprintln!("[tesktop2 voice Screen] capture_stopped=ok"),
+						Err(reason) => {
+							eprintln!("[tesktop2 voice Screen] capture_stopped={reason}")
+						}
 					}
 				}
 				let _ = complete.try_send(result);

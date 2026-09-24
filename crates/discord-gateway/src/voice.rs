@@ -865,7 +865,7 @@ fn deletion_reason(raw: Option<&str>) -> Option<&'static str> {
 		return Some("Discord ended the stream");
 	}
 	if std::env::var_os("SEREIN_VOICE_DIAGNOSTICS").is_some_and(|v| v == "1") {
-		eprintln!("[Serein voice Stream] discord_delete_reason={raw}");
+		eprintln!("[tesktop2 voice Stream] discord_delete_reason={raw}");
 	}
 	Some(match raw {
 		"user_requested" => return None,

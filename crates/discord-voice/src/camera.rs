@@ -361,7 +361,7 @@ mod macos {
 		time::{Duration, Instant},
 	};
 
-	const DENIED: &str = "Camera access denied. Allow Serein (or your terminal) in System Settings > Privacy & Security > Camera, then try again.";
+	const DENIED: &str = "Camera access denied. Allow tesktop2 (or your terminal) in System Settings > Privacy & Security > Camera, then try again.";
 
 	pub(super) fn devices() -> Result<DeviceList, &'static str> {
 		// SAFETY: Framework-owned device types and discovery only; no stream or permission request.
@@ -407,10 +407,10 @@ mod macos {
 		// exact AVFoundation delegate signature. AVFoundation uses a serial queue.
 		#[unsafe(super = NSObject)]
 		#[ivars = DelegateState]
-		struct SereinCameraDelegate;
+		struct TesktopCameraDelegate;
 
-		unsafe impl NSObjectProtocol for SereinCameraDelegate {}
-		unsafe impl AVCaptureVideoDataOutputSampleBufferDelegate for SereinCameraDelegate {
+		unsafe impl NSObjectProtocol for TesktopCameraDelegate {}
+		unsafe impl AVCaptureVideoDataOutputSampleBufferDelegate for TesktopCameraDelegate {
 			#[unsafe(method(captureOutput:didOutputSampleBuffer:fromConnection:))]
 			fn capture(
 				&self,
@@ -508,7 +508,7 @@ mod macos {
 	struct CaptureSession {
 		session: Retained<AVCaptureSession>,
 		output: Retained<AVCaptureVideoDataOutput>,
-		_delegate: Retained<SereinCameraDelegate>,
+		_delegate: Retained<TesktopCameraDelegate>,
 		queue: DispatchRetained<DispatchQueue>,
 	}
 	impl Drop for CaptureSession {
@@ -574,12 +574,12 @@ mod macos {
 			);
 			output.setVideoSettings(Some(&settings));
 			output.setAlwaysDiscardsLateVideoFrames(true);
-			let allocated = SereinCameraDelegate::alloc().set_ivars(DelegateState {
+			let allocated = TesktopCameraDelegate::alloc().set_ivars(DelegateState {
 				send,
 				shared: shared.clone(),
 				last: Mutex::new(Instant::now() - FRAME_INTERVAL),
 			});
-			let delegate: Retained<SereinCameraDelegate> = msg_send![super(allocated), init];
+			let delegate: Retained<TesktopCameraDelegate> = msg_send![super(allocated), init];
 			output.setSampleBufferDelegate_queue(
 				Some(ProtocolObject::from_ref(&*delegate)),
 				Some(&queue),

@@ -4,6 +4,10 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 
+[[bin]]
+name = "tesktop2-native"
+path = "src/main.rs"
+
 [features]
 default = []
 # No-op: token sign-in used to require this flag; it is now always built in.

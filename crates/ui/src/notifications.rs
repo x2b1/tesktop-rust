@@ -218,7 +218,7 @@ impl MessagingUi {
 				ui.painter().rect_filled(rect, 13, fill);
 				crate::icons::paint(
 					ui.painter(),
-					crate::icons::Icon::Serein,
+					crate::icons::Icon::Tesktop,
 					rect.shrink(10.5),
 					if home || hovered {
 						colors.accent_text

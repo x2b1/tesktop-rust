@@ -1,4 +1,4 @@
-// GTK4/WebKit6 login only. Tokens stay in this main-frame closure until a bounded
+// GTK3/WebKit2GTK 4.1 login only. Tokens stay in this main-frame closure until a bounded
 // native main-frame evaluation drains them; cross-frame IPC carries only a wake bit.
 (() => {
   if (window !== window.top || location.origin !== "https://discord.com") return;

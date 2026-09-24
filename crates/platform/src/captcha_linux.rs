@@ -1,12 +1,18 @@
-//! A temporary ephemeral GTK4/WebKit6 window for human-operated verification.
+//! A temporary ephemeral GTK3/WebKit2GTK 4.1 window for human-operated verification.
 use super::{Challenge, Solution, page, parse_result};
+use gtk4::{glib, prelude::*};
+use javascriptcore::ValueExt;
 use std::{
 	cell::{Cell, RefCell},
 	rc::Rc,
 	sync::Arc,
 	time::{Duration, Instant},
 };
-use webkit6::{gio, glib, prelude::*};
+use webkit6::{
+	AuthenticationRequestExt, DownloadExt, FileChooserRequestExt, NavigationPolicyDecisionExt,
+	PermissionRequestExt, PolicyDecisionExt, ResponsePolicyDecisionExt, SettingsExt, URIRequestExt,
+	UserContentManagerExt, WebContextExt, WebViewExt, WebsiteDataManagerExt, gio,
+};
 
 const LIFETIME: Duration = Duration::from_secs(300);
 const QUERY_INTERVAL: Duration = Duration::from_millis(100);
@@ -46,6 +52,7 @@ impl Handoff {
 }
 
 pub struct CaptchaView {
+	_context: webkit6::WebContext,
 	view: webkit6::WebView,
 	window: gtk4::Window,
 	manager: webkit6::UserContentManager,
@@ -55,6 +62,7 @@ pub struct CaptchaView {
 	wake: Arc<dyn Fn() + Send + Sync>,
 }
 
+#[allow(deprecated)]
 impl CaptchaView {
 	pub fn open(
 		parent: Arc<winit::window::Window>,
@@ -85,10 +93,12 @@ impl CaptchaView {
 		});
 		let wake: Arc<dyn Fn() + Send + Sync> = Arc::new(wake);
 		let cancel = gio::Cancellable::new();
-		let session = webkit6::NetworkSession::new_ephemeral();
-		session.set_persistent_credential_storage_enabled(false);
-		session.set_tls_errors_policy(webkit6::TLSErrorsPolicy::Fail);
-		session.connect_download_started(|_, download| download.cancel());
+		let context = webkit6::WebContext::new_ephemeral();
+		context.set_tls_errors_policy(webkit6::TLSErrorsPolicy::Fail);
+		if let Some(data) = context.website_data_manager() {
+			data.set_persistent_credential_storage_enabled(false);
+		}
+		context.connect_download_started(|_, download| download.cancel());
 		let settings = webkit6::Settings::new();
 		// Same identity as the REST client that submits the passcode; see client_core::fingerprint.
 		settings.set_user_agent(Some(&client_core::fingerprint::user_agent()));
@@ -115,7 +125,7 @@ impl CaptchaView {
 			&[],
 		));
 		let view = webkit6::WebView::builder()
-			.network_session(&session)
+			.web_context(&context)
 			.user_content_manager(&manager)
 			.settings(&settings)
 			.build();
@@ -126,17 +136,10 @@ impl CaptchaView {
 					.and_then(|decision| decision.navigation_action())
 					.and_then(|action| action.request())
 					.and_then(|request| request.uri())
-					.is_some_and(|uri| allowed_frame(&uri)),
+					.is_some_and(|uri| allowed_frame(uri.as_str())),
 				webkit6::PolicyDecisionType::Response => decision
 					.downcast_ref::<webkit6::ResponsePolicyDecision>()
-					.is_some_and(|response| {
-						response.is_mime_type_supported()
-							&& (!response.is_main_frame_main_resource()
-								|| response
-									.request()
-									.and_then(|request| request.uri())
-									.is_some_and(|uri| uri == PAGE))
-					}),
+					.is_some_and(|response| response.is_mime_type_supported()),
 				_ => false,
 			};
 			if allowed {
@@ -151,10 +154,6 @@ impl CaptchaView {
 			request.deny();
 			true
 		});
-		view.connect_query_permission_state(|_, query| {
-			query.finish(webkit6::PermissionState::Denied);
-			true
-		});
 		view.connect_run_file_chooser(|_, request| {
 			request.cancel();
 			true
@@ -163,12 +162,12 @@ impl CaptchaView {
 			request.cancel();
 			true
 		});
-		view.connect_context_menu(|_, _, _| true);
+		view.connect_context_menu(|_, _, _, _| true);
 		view.connect_enter_fullscreen(|_| true);
 		view.connect_print(|_, _| true);
 		view.connect_show_notification(|_, _| true);
 		let window = gtk4::Window::builder()
-			.title("Verification · Serein")
+			.title("Verification · tesktop2")
 			.default_width(500)
 			.default_height(560)
 			.child(&view)
@@ -183,7 +182,7 @@ impl CaptchaView {
 		let weak_view = view.downgrade();
 		let close_cancel = cancel.clone();
 		let notify = wake.clone();
-		window.connect_close_request(move |_| {
+		window.connect_delete_event(move |_, _| {
 			if let Some(state) = weak_state.upgrade() {
 				state.close();
 			}
@@ -193,7 +192,7 @@ impl CaptchaView {
 				view.terminate_web_process();
 			}
 			notify();
-			glib::Propagation::Proceed
+			gtk4::Inhibit(false)
 		});
 		let weak_state = Rc::downgrade(&state);
 		let notify = wake.clone();
@@ -208,6 +207,7 @@ impl CaptchaView {
 		view.load_html(&html, Some(PAGE));
 		window.present();
 		Ok(Self {
+			_context: context,
 			view,
 			window,
 			manager,
@@ -246,7 +246,7 @@ impl CaptchaView {
 			|| self.state.delivered.get()
 			|| self.state.querying.get()
 			|| self.state.last_query.get().elapsed() < QUERY_INTERVAL
-			|| !self.view.uri().is_some_and(|uri| uri == PAGE)
+			|| !self.view.uri().is_some_and(|uri| uri.as_str() == PAGE)
 		{
 			return;
 		}
@@ -255,12 +255,8 @@ impl CaptchaView {
 		let weak_state = Rc::downgrade(&self.state);
 		let weak_view = self.view.downgrade();
 		let notify = self.wake.clone();
-		self.view.evaluate_javascript(
-			&self.take_script,
-			None,
-			None,
-			Some(&self.cancel),
-			move |result| {
+		self.view
+			.run_javascript(&self.take_script, Some(&self.cancel), move |result| {
 				let (Some(state), Some(view)) = (weak_state.upgrade(), weak_view.upgrade()) else {
 					return;
 				};
@@ -268,19 +264,19 @@ impl CaptchaView {
 				if !state.active() {
 					return;
 				}
-				if let Ok(value) = result
+				if let Ok(result) = result
+					&& let Some(value) = result.js_value()
 					&& value.is_string()
 					&& let Some(uri) = view.uri()
-					&& uri == PAGE
+					&& uri.as_str() == PAGE
 				{
 					let body: zeroize::Zeroizing<String> =
 						zeroize::Zeroizing::new(value.to_str().into());
-					if state.accept(&uri, &body) {
+					if state.accept(uri.as_str(), &body) {
 						notify();
 					}
 				}
-			},
-		);
+			});
 	}
 }
 
@@ -292,7 +288,7 @@ impl Drop for CaptchaView {
 		self.view.stop_loading();
 		self.view.terminate_web_process();
 		self.window.set_child(None::<&gtk4::Widget>);
-		self.window.destroy();
+		self.window.close();
 	}
 }
 

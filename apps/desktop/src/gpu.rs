@@ -68,7 +68,7 @@ pub fn select(
 			format!("no GPU adapter can draw this window; found {available}")
 		});
 	};
-	eprintln!("[Serein] GPU adapter: {}", describe(&adapter.get_info()));
+	eprintln!("[tesktop2] GPU adapter: {}", describe(&adapter.get_info()));
 	Ok((*adapter).clone())
 }
 

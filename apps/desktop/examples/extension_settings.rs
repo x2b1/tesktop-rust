@@ -78,7 +78,7 @@ fn main() {
 		assert!(
 			!labels
 				.iter()
-				.any(|text| text.contains("Make Serein yours") || text.contains("A new look."))
+				.any(|text| text.contains("Make tesktop2 yours") || text.contains("A new look."))
 		);
 	}
 	messaging.preview_settings("extensions");

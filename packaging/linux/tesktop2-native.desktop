@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=tesktop2
+GenericName=Internet Messenger
+Comment=Tesktop2 native Rust Discord client with TestCord features
+Exec=tesktop2-native %U
+Icon=tesktop2
+StartupWMClass=org.testcord.tesktop2-native
+Terminal=false
+Categories=Network;InstantMessaging;Chat;
+Keywords=discord;testcord;chat;tesktop;tesktop2;
+MimeType=x-scheme-handler/discord;

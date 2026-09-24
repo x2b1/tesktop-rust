@@ -224,7 +224,7 @@ fn package_windows(root: &std::path::Path) -> Result<(), String> {
 		println!(
 			"Windows installer created: {}",
 			installer_dir
-				.join(format!("serein-{version}-setup.exe"))
+				.join(format!("tesktop2-native-{version}-setup.exe"))
 				.display()
 		);
 	} else {
@@ -263,12 +263,12 @@ fn package() -> Result<(), String> {
 	let root = PathBuf::from("dist");
 	std::fs::create_dir_all(&root).map_err(|e| e.to_string())?;
 	let exe = if cfg!(windows) {
-		"serein.exe"
+		"tesktop2-native.exe"
 	} else {
-		"serein"
+		"tesktop2-native"
 	};
 	let destination = if cfg!(target_os = "macos") {
-		let app = root.join("Serein.app/Contents");
+		let app = root.join("tesktop2.app/Contents");
 		std::fs::create_dir_all(app.join("MacOS")).map_err(|e| e.to_string())?;
 		std::fs::copy("packaging/macos/Info.plist", app.join("Info.plist"))
 			.map_err(|e| e.to_string())?;
@@ -310,7 +310,7 @@ fn package() -> Result<(), String> {
 		std::fs::copy(file, root.join(file)).map_err(|e| e.to_string())?;
 	}
 	let resources = if cfg!(target_os = "macos") {
-		root.join("Serein.app/Contents/Resources")
+		root.join("tesktop2.app/Contents/Resources")
 	} else {
 		root.clone()
 	};
@@ -397,7 +397,7 @@ fn package() -> Result<(), String> {
 	if cfg!(target_os = "macos") {
 		// Seal only after every bundle resource has been staged. Ad-hoc signing
 		// needs no identity and makes no Developer ID or notarization claim.
-		let bundle = root.join("Serein.app");
+		let bundle = root.join("tesktop2.app");
 		let bundle = bundle.to_str().ok_or("Invalid bundle path")?;
 		// An ad-hoc signature's identity is its own hash, so it changes with every build and
 		// macOS keychain grants ("Always Allow") never survive one. A locally configured

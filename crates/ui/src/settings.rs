@@ -108,9 +108,9 @@ impl Page {
 			Self::Notifications => "Choose which notifications you receive and how they appear.",
 			Self::Activity => "Show others what you are playing.",
 			Self::Voice => "Microphone, speakers, camera and voice processing.",
-			Self::Keybinds => "Keyboard shortcuts for Serein.",
-			Self::Storage => "What Serein keeps on this device.",
-			Self::Updates => "Keep Serein up to date on this device.",
+			Self::Keybinds => "Keyboard shortcuts for tesktop2.",
+			Self::Storage => "What tesktop2 keeps on this device.",
+			Self::Updates => "Keep tesktop2 up to date on this device.",
 			Self::Extensions => "Manage community plugins.",
 			Self::Themes => "Choose a community theme.",
 		}
@@ -528,7 +528,7 @@ impl MessagingUi {
 				self.settings_logout(ui, state.demo);
 				ui.add_space(12.0);
 				ui.label(
-					RichText::new(format!("Serein {}", self.build.version))
+					RichText::new(format!("tesktop2 {}", self.build.version))
 						.size(12.0)
 						.color(colors.muted),
 				);
@@ -740,8 +740,8 @@ impl MessagingUi {
 			ui.add_enabled_ui(self.startup_available && !self.startup_busy, |ui| {
 				design::switch(
 					ui,
-					"Open Serein when your computer starts",
-					Some("Serein signs in and connects in the background."),
+					"Open tesktop2 when your computer starts",
+					Some("tesktop2 signs in and connects in the background."),
 					&mut self.startup_enabled,
 				);
 				design::card_divider(ui);
@@ -765,7 +765,7 @@ impl MessagingUi {
 			{
 				design::switch(
 					ui,
-					"Hide Serein title bar",
+					"Hide tesktop2 title bar",
 					Some("Use the system title bar and window buttons instead."),
 					&mut self.hide_title_bar,
 				);
@@ -775,16 +775,16 @@ impl MessagingUi {
 				design::switch(
 					ui,
 					if cfg!(target_os = "macos") {
-						"Keep Serein in the menu bar"
+						"Keep tesktop2 in the menu bar"
 					} else {
-						"Keep Serein in the system tray"
+						"Keep tesktop2 in the system tray"
 					},
 					Some(if cfg!(target_os = "macos") {
-						"Closing the window keeps Serein in the menu bar. Quit from its menu to exit."
+						"Closing the window keeps tesktop2 in the menu bar. Quit from its menu to exit."
 					} else if cfg!(target_os = "linux") {
-						"Closing keeps Serein running. Use the tray to show, minimize or quit."
+						"Closing keeps tesktop2 running. Use the tray to show, minimize or quit."
 					} else {
-						"Closing the window keeps Serein in the notification area. Quit from its menu to exit."
+						"Closing the window keeps tesktop2 in the notification area. Quit from its menu to exit."
 					}),
 					&mut self.minimize_to_tray,
 				);
@@ -797,10 +797,10 @@ impl MessagingUi {
 		});
 		design::group(ui, "Graphics", |ui| {
 			let detail = if self.gpu_adapter.is_empty() {
-				"Takes effect the next time Serein starts.".to_owned()
+				"Takes effect the next time tesktop2 starts.".to_owned()
 			} else {
 				format!(
-					"Currently drawing with {}. Takes effect the next time Serein starts.",
+					"Currently drawing with {}. Takes effect the next time tesktop2 starts.",
 					self.gpu_adapter
 				)
 			};
@@ -895,7 +895,7 @@ impl MessagingUi {
 				ui,
 				"Transparency & blur",
 				Some(
-					"Restart Serein after changing this. Themes can customize effects while enabled.",
+					"Restart tesktop2 after changing this. Themes can customize effects while enabled.",
 				),
 				&mut self.transparency_blur,
 			);
@@ -1085,13 +1085,13 @@ impl MessagingUi {
 			design::card_divider(ui);
 			design::hint(
 				ui,
-				"Messages and drafts are cached on this device inside bounded, account-isolated files. Cache data is not encrypted by Serein; saved login tokens use the OS credential store.",
+				"Messages and drafts are cached on this device inside bounded, account-isolated files. Cache data is not encrypted by tesktop2; saved login tokens use the OS credential store.",
 			);
 		});
 		design::group(ui, "Your privacy", |ui| {
 			design::hint(
 				ui,
-				"Serein does not collect telemetry or upload diagnostics. Discord retains service-side data according to its own policies.",
+				"tesktop2 does not collect telemetry or upload diagnostics. Discord retains service-side data according to its own policies.",
 			);
 		});
 	}

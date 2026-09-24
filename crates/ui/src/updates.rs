@@ -43,7 +43,7 @@ impl Default for Updates {
 	}
 }
 impl MessagingUi {
-	/// Whether the account card grows an update row, which it does only while Serein's own
+	/// Whether the account card grows an update row, which it does only while tesktop2's own
 	/// title bar is hidden: the title-bar button is the only other place the prompt appears.
 	pub(super) fn shows_update_banner(&mut self) -> bool {
 		if self.shows_title_bar() {
@@ -178,7 +178,7 @@ impl MessagingUi {
 		};
 
 		format!(
-			"- **Serein Version:** {} ({channel})\n- **Operating System:** {os} ({arch}){session_type}{package_type}{graphics}\n- **Display Scale:** {scale:.2}\n- **Theme:** {theme_mode} ({theme_variant})\n- **Update Channel:** {update_channel}\n- **Auto Update:** {}",
+			"- **tesktop2 Version:** {} ({channel})\n- **Operating System:** {os} ({arch}){session_type}{package_type}{graphics}\n- **Display Scale:** {scale:.2}\n- **Theme:** {theme_mode} ({theme_variant})\n- **Update Channel:** {update_channel}\n- **Auto Update:** {}",
 			self.build.version,
 			if self.updates.auto_update {
 				"Enabled"
@@ -215,14 +215,14 @@ impl MessagingUi {
 					.rect_filled(badge, 12, colors.accent.gamma_multiply(0.16));
 				crate::icons::paint(
 					ui.painter(),
-					crate::icons::Icon::Serein,
+					crate::icons::Icon::Tesktop,
 					badge.shrink(10.0),
 					colors.accent,
 				);
 				ui.vertical(|ui| {
 					ui.spacing_mut().item_spacing.y = 2.0;
 					ui.label(
-						design::semibold(ui, format!("Serein {}", self.build.version), 17.0)
+						design::semibold(ui, format!("tesktop2 {}", self.build.version), 17.0)
 							.color(colors.text_strong),
 					);
 					ui.add(
@@ -294,7 +294,7 @@ impl MessagingUi {
 				design::switch(
 					ui,
 					"Auto update",
-					Some("Download updates in the background. Restart when you are ready. Serein still checks at startup and periodically when this is off."),
+					Some("Download updates in the background. Restart when you are ready. tesktop2 still checks at startup and periodically when this is off."),
 					&mut self.updates.auto_update,
 				);
 			});
@@ -339,7 +339,7 @@ impl MessagingUi {
 							ui,
 							"Package manager updates",
 							Some(
-								"Serein was installed via your distribution. Run this in a terminal to update.",
+								"tesktop2 was installed via your distribution. Run this in a terminal to update.",
 							),
 							|ui| {
 								if design::button(
@@ -467,7 +467,7 @@ mod tests {
 		let mut view = MessagingUi::default();
 		view.updates.available = true;
 		scan(&ctx, &mut view, &mut state);
-		// With Serein's own title bar the prompt stays up there, not in the sidebar.
+		// With tesktop2's own title bar the prompt stays up there, not in the sidebar.
 		#[cfg(not(target_os = "linux"))]
 		assert!(banner(&scan(&ctx, &mut view, &mut state).0).is_none());
 		view.hide_title_bar = true;

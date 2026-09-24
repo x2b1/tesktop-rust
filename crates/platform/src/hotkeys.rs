@@ -11,11 +11,11 @@ const READY: &str = "Global voice keybinds are enabled.";
 #[cfg(target_os = "linux")]
 const WAYLAND_PENDING: &str = "Approve the global voice keybinds in your desktop's dialog.";
 #[cfg(target_os = "linux")]
-const WAYLAND_UNAVAILABLE: &str = "Global voice keybinds were denied or the desktop GlobalShortcuts portal is unavailable; they still work while Serein is focused.";
+const WAYLAND_UNAVAILABLE: &str = "Global voice keybinds were denied or the desktop GlobalShortcuts portal is unavailable; they still work while tesktop2 is focused.";
 const UNAVAILABLE: &str =
-	"Global voice keybinds are unavailable on this system; they work while Serein is focused.";
-const INVALID: &str = "One or more voice bindings cannot be registered globally; they still work while Serein is focused.";
-const MODIFIER_REQUIRED: &str = "Add Ctrl, Alt, Shift, or Command to use a voice binding globally; it still works while Serein is focused.";
+	"Global voice keybinds are unavailable on this system; they work while tesktop2 is focused.";
+const INVALID: &str = "One or more voice bindings cannot be registered globally; they still work while tesktop2 is focused.";
+const MODIFIER_REQUIRED: &str = "Add Ctrl, Alt, Shift, or Command to use a voice binding globally; it still works while tesktop2 is focused.";
 
 const PUSH_TO_TALK: usize = 0;
 const TOGGLE_MUTE: usize = 1;
@@ -251,9 +251,9 @@ async fn portal(
 	use ashpd::desktop::global_shortcuts::{GlobalShortcuts, NewShortcut};
 	use futures_util::StreamExt;
 	let shortcuts: Vec<_> = [
-		("push-to-talk", "Serein push to talk"),
-		("mute", "Toggle Serein microphone mute"),
-		("deafen", "Toggle Serein deafen"),
+		("push-to-talk", "tesktop2 push to talk"),
+		("mute", "Toggle tesktop2 microphone mute"),
+		("deafen", "Toggle tesktop2 deafen"),
 	]
 	.into_iter()
 	.zip(bindings.iter())

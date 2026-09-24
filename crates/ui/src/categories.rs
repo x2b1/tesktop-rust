@@ -719,7 +719,7 @@ impl MessagingUi {
 								state.unread_count(channel.id)
 							};
 							let enabled = visible && (channel.supports_text() || forum);
-							// Kinds Serein cannot render keep Discord's own destination.
+							// Kinds tesktop2 cannot render keep Discord's own destination.
 							let external = (!channel.supports_text() && !forum)
 								.then(|| crate::markdown::discord_url(channel, None))
 								.flatten()

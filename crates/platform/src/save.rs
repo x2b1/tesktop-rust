@@ -7,8 +7,8 @@ pub fn extension_source(
 ) -> impl std::future::Future<Output = Option<PathBuf>> + Send + 'static {
 	let dialog = rfd::AsyncFileDialog::new()
 		.set_parent(parent.as_ref())
-		.set_title("Import Serein extension")
-		.add_filter("Serein extensions", &["serein-extension", "json"])
+		.set_title("Import tesktop2 extension")
+		.add_filter("tesktop2 extensions", &["serein-extension", "json"])
 		.pick_file();
 	async move {
 		let file = dialog.await?;
@@ -69,9 +69,9 @@ pub fn theme_destination(
 ) -> impl std::future::Future<Output = Option<PathBuf>> + Send + 'static {
 	let dialog = rfd::AsyncFileDialog::new()
 		.set_parent(parent.as_ref())
-		.set_title("Export Serein theme")
+		.set_title("Export tesktop2 theme")
 		.set_file_name(safe_filename(filename))
-		.add_filter("Serein theme", &["serein-extension"])
+		.add_filter("tesktop2 theme", &["serein-extension"])
 		.save_file();
 	async move {
 		let file = dialog.await?;

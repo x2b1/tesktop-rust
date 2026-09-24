@@ -1,7 +1,7 @@
-//! Serein theme tokens, presets and typography shared by every native view.
+//! tesktop2 theme tokens, presets and typography shared by every native view.
 //!
 //! The palette is resolved from egui's light/dark mode plus a process-wide [`Variant`]
-//! (the cool Serein neutrals, deep black, blue-grey, or a gradient recolour). Gradient
+//! (the cool tesktop2 neutrals, deep black, blue-grey, or a gradient recolour). Gradient
 //! variants paint a backdrop under translucent surfaces; see [`paint_backdrop`].
 use egui::{Color32, FontFamily, FontId, RichText, Stroke, epaint::FontColorTransferFunction};
 use std::sync::atomic::{AtomicU8, AtomicU32, Ordering};
@@ -103,7 +103,7 @@ impl Variant {
 	];
 	pub fn label(self) -> &'static str {
 		match self {
-			Variant::Standard => "Serein",
+			Variant::Standard => "tesktop2",
 			Variant::Eclipse => "Eclipse",
 			Variant::Slate => "Slate",
 			Variant::Nightfall => "Nightfall",
@@ -249,7 +249,7 @@ const fn rgba(value: u32, alpha: u8) -> Color32 {
 		alpha,
 	)
 }
-/// Serein azure: the house accent, packed for call sites that speak in integer colours.
+/// tesktop2 azure: the house accent, packed for call sites that speak in integer colours.
 pub const DEFAULT_PRIMARY_RGB: u32 = 0x1a72e8;
 pub const DEFAULT_PRIMARY_COLOR: [u8; 3] = [
 	(DEFAULT_PRIMARY_RGB >> 16) as u8,
@@ -1343,7 +1343,7 @@ fn wide_button(
 	}
 	response
 }
-/// Deterministic fallback avatar colours drawn from the Serein palette, keyed by the display name.
+/// Deterministic fallback avatar colours drawn from the tesktop2 palette, keyed by the display name.
 fn fallback_avatar_color(name: &str) -> Color32 {
 	const COLORS: [u32; 5] = [DEFAULT_PRIMARY_RGB, 0x6b7a94, 0x2fb87a, 0xe8a33d, 0xef5561];
 	let hash = name
@@ -3033,7 +3033,7 @@ mod sign_in_widget_tests {
 						ui.scope_builder(egui::UiBuilder::new().max_rect(area), |ui| {
 							ui.spacing_mut().item_spacing.y = 0.0;
 							clicks.0 = account_row(ui, "Riley Quinn", "@riley").clicked();
-							clicks.1 = disclosure(ui, "About Serein", false).clicked();
+							clicks.1 = disclosure(ui, "About tesktop2", false).clicked();
 						});
 					},
 				);
@@ -3056,7 +3056,7 @@ mod sign_in_widget_tests {
 				(text, clicks)
 			};
 			let (text, _) = run(vec![]);
-			for expected in ["Riley Quinn", "@riley", "About Serein", "RQ"] {
+			for expected in ["Riley Quinn", "@riley", "About tesktop2", "RQ"] {
 				assert!(text.iter().any(|value| value == expected), "{expected}");
 			}
 			// The row owns the full width; the expander sits directly beneath it.

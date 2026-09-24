@@ -9,7 +9,7 @@ failures still stop with a static explanation; neither an unlimited payload nor 
 interoperability is promised. See [storage policy](storage-policy.md#large-account-startup-september-14-2026)
 for component limits. The reported issue #154 build and live trigger are not yet verified.
 
-Linux uses GTK4/WebKit6 with a fresh ephemeral NetworkSession and persistent credential
+Linux uses an ephemeral GTK3/WebKit2GTK 4.1 context and disables persistent credential
 storage disabled. Normal TLS validation remains enabled. Scripts run at document start only
 in the top Discord frame. Navigation permits HTTPS hcaptcha.com and its subdomains on
 port 443 for embedded challenges, using the same origin validation as invite verification.
@@ -22,7 +22,7 @@ QR/CAPTCHA loop remain unverified. Popups, downloads, file choosers, other permi
 requests, HTTP-auth, notifications and printing are denied; embedded challenge
 availability remains unverified.
 
-WebKit6 script-message callbacks lack trusted sender-frame metadata. The callback accepts
+WebKit2GTK script-message callbacks lack trusted sender-frame metadata. The callback accepts
 only a boolean wake signal. A protected main-frame closure retains one ASCII candidate of at
 most 2113 bytes (65-byte capability plus 2048-byte token). A native main-frame query checks
 origin and result bounds before creating a Rust string; Rust checks URI, capability, lifetime

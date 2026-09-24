@@ -1,4 +1,4 @@
-//! Phosphor Icons (MIT), Simple Icons brand marks (CC0) and the Serein mark rasterized once
+//! Phosphor Icons (MIT), Simple Icons brand marks (CC0) and the tesktop2 brand mark
 //! into one bundled atlas and tinted at draw time.
 //!
 //! `assets/icons/atlas.png` holds white glyphs on transparency in fixed 64px cells;
@@ -9,10 +9,12 @@ use egui::{Color32, Rect, Response, Sense, TextureHandle, Vec2};
 use std::sync::OnceLock;
 
 const ATLAS: &[u8] = include_bytes!("../../../assets/icons/atlas.png");
+const BRAND: &[u8] = include_bytes!("../../../assets/brand/tesktop2.png");
 const INDEX: &str = include_str!("../../../assets/icons/index.tsv");
 const COLUMNS: usize = 8;
 const CELL: f32 = 64.0;
 const TEXTURE_KEY: &str = "phosphor-icons";
+const BRAND_TEXTURE_KEY: &str = "tesktop2-brand";
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Icon {
@@ -75,7 +77,7 @@ pub enum Icon {
 	Copy,
 	Verified,
 	Calendar,
-	Serein,
+	Tesktop,
 	File,
 	FileImage,
 	FilePdf,
@@ -187,7 +189,7 @@ impl Icon {
 		Icon::Copy,
 		Icon::Verified,
 		Icon::Calendar,
-		Icon::Serein,
+		Icon::Tesktop,
 		Icon::File,
 		Icon::FileImage,
 		Icon::FilePdf,
@@ -299,7 +301,7 @@ impl Icon {
 			Icon::Copy => "copy",
 			Icon::Verified => "seal-check",
 			Icon::Calendar => "calendar-blank",
-			Icon::Serein => "serein-mark",
+			Icon::Tesktop => "tesktop-mark",
 			Icon::File => "file",
 			Icon::FileImage => "file-image",
 			Icon::FilePdf => "file-pdf",
@@ -380,6 +382,7 @@ fn decoded() -> egui::ColorImage {
 /// Upload the atlas for `ctx` during application creation, outside the render callback.
 pub fn install(ctx: &egui::Context) {
 	let _ = texture(ctx);
+	let _ = brand_texture(ctx);
 }
 
 fn texture(ctx: &egui::Context) -> TextureHandle {
@@ -399,11 +402,36 @@ fn texture(ctx: &egui::Context) -> TextureHandle {
 	texture
 }
 
+fn brand_texture(ctx: &egui::Context) -> TextureHandle {
+	let id = egui::Id::unique(BRAND_TEXTURE_KEY);
+	if let Some(texture) = ctx.data(|data| data.get_temp::<TextureHandle>(id)) {
+		return texture;
+	}
+	let image = image::load_from_memory_with_format(BRAND, image::ImageFormat::Png)
+		.expect("bundled tesktop2 brand icon")
+		.into_rgba8();
+	let size = [image.width() as usize, image.height() as usize];
+	let image = egui::ColorImage::from_rgba_unmultiplied(size, &image);
+	let texture = ctx.load_texture("tesktop2 brand icon", image, egui::TextureOptions::LINEAR);
+	ctx.data_mut(|data| data.insert_temp(id, texture.clone()));
+	texture
+}
+
 /// Paint `icon` centred in `rect` with `color`.
 pub fn paint(painter: &egui::Painter, icon: Icon, rect: Rect, color: Color32) {
 	let size = rect.width().min(rect.height());
 	let rect = Rect::from_center_size(rect.center(), Vec2::splat(size))
 		.round_to_pixels(painter.pixels_per_point());
+	if icon == Icon::Tesktop {
+		let texture = brand_texture(painter.ctx());
+		painter.image(
+			texture.id(),
+			rect,
+			Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)),
+			Color32::WHITE,
+		);
+		return;
+	}
 	let texture = texture(painter.ctx());
 	let [width, height] = texture.size();
 	let cell = icon.cell();
@@ -529,8 +557,8 @@ mod tests {
 			}
 		});
 		assert!(
-			output.textures_delta.set.len() <= 2,
-			"fonts plus one atlas upload"
+			output.textures_delta.set.len() <= 3,
+			"fonts plus atlas and tesktop2 brand uploads"
 		);
 		for shape in &output.shapes {
 			let bounds = shape.shape.visual_bounding_rect();

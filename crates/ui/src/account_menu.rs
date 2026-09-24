@@ -800,7 +800,7 @@ impl MessagingUi {
 		// The deadline is local to this client, so name the moment rather than implying
 		// Discord will clear it for you.
 		if let Some(clears) = self.account_menu.clear_after.clears_at() {
-			dialog::hint(ui, &format!("Serein clears it {clears}."));
+			dialog::hint(ui, &format!("tesktop2 clears it {clears}."));
 		}
 		if !valid {
 			ui.add_space(8.0);

@@ -49,9 +49,7 @@ The folder and open-folder glyphs are unmodified Phosphor `folder-fill.svg` and
 The media-viewer caret and download glyphs are unmodified Phosphor `caret-left-bold.svg` and
 `download-simple-bold.svg`, fetched from the same pinned 2.1.1 package on September 11, 2026.
 
-The `serein-mark` cell is our own artwork, not an upstream icon: it is the solid silhouette of
-the Serein chat-wave from `assets/brand/serein-mark.svg`, trimmed to its bounding box so it
-matches Phosphor's glyph weight in the cell. It replaced the Discord brand mark that previously
-occupied cell 58; no third-party application logo is bundled any more. `tools/generate-icons.py`
-pins its SHA-256 like every upstream source and rasterizes it from the repository rather than a
-package mirror.
+The `tesktop-mark` name is retained in the shared atlas index for cell 58. The native tesktop2
+brand texture is bundled separately at `assets/brand/tesktop2.png` and is painted in full color
+by `Icon::Tesktop`; the old Serein artwork remains in the repository only for upstream attribution
+and is not used by the tesktop2 product.

@@ -235,7 +235,7 @@ fn demo_embeds(id: u64) -> Vec<Embed> {
         description: Some("**Native embed preview**\nFormatted descriptions, *useful details*, and a static image.\n[Markdown link](https://example.com/synthetic) · https://example.org".into()),
         url: Some("https://example.com/synthetic".into()),
         color: Some(0x68ada4),
-        author: Some(EmbedAuthor { name: "Serein · synthetic example".into(), ..Default::default() }),
+        author: Some(EmbedAuthor { name: "tesktop2 · synthetic example".into(), ..Default::default() }),
         fields: vec![EmbedField { name:"Interface".into(),value:"Rust + egui".into(),inline:true },EmbedField { name:"Preview".into(),value:"Offline only".into(),inline:true }],
         image: Some(EmbedMedia { url:Some("https://example.com/synthetic-image.png".into()),width:640,height:240,..Default::default() }),
         footer: Some(EmbedFooter { text:"Synthetic content · no service request".into(),..Default::default() }),
@@ -1451,7 +1451,7 @@ pub fn seed_stickers(state: &mut State) {
 	state.stickers.recent = vec![guild_stickers[0].clone()];
 	state.stickers.packs = vec![model::StickerPack {
 		id: Id(9200),
-		name: "Serein Friends (synthetic)".into(),
+		name: "tesktop2 Friends (synthetic)".into(),
 		stickers: vec![
 			sticker(9201, "Sleep", None, Some(Id(9200))),
 			sticker(9202, "Hello", None, Some(Id(9200))),

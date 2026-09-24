@@ -40,9 +40,9 @@ in this macOS fast local pass.
 |---|---|---|
 | macOS | Rust 1.98.1, Xcode command-line tools; Metal/wgpu, system WKWebView, Keychain | Local arm64 build and native synthetic window tested on macOS 27.0 beta, Apple M1 Pro / 16 GiB |
 | Windows | Rust MSVC toolchain, Visual Studio C++ build tools, system graphics drivers, WebView2 Runtime 101+ (current supported runtime recommended), Credential Manager | Local x64 checks and unsigned release packaging on Windows 11 build 26200; synthetic process/window startup passed. Visual interaction, InPrivate behavior, IME and accessibility unverified |
-| Linux | Rust, C compiler, pkg-config, GTK >=4.10, WebKitGTK 6.0, fontconfig, libxkbcommon, X11/Wayland development packages, Vulkan-compatible GPU/driver, Secret Service session bus/keyring | Ubuntu 26.04 x64 / WSL2 text and voice releases and Debian package smoke passed; X11/Wayland rendering and login window unverified |
+| Linux | Rust, C compiler, pkg-config, GTK 3, WebKit2GTK 4.1, fontconfig, libxkbcommon, X11/Wayland development packages, Vulkan-compatible GPU/driver, Secret Service session bus/keyring | Local tesktop2 compatibility build; upstream Serein Linux packaging may use GTK4/WebKitGTK 6.0 |
 
-Debian/Ubuntu development packages typically include `build-essential pkg-config libgtk-4-dev libwebkitgtk-6.0-dev libfontconfig1-dev libxkbcommon-dev libwayland-dev libx11-dev libxi-dev libxrandr-dev libxcursor-dev libvulkan-dev`. Package names vary by distribution. SQLite is bundled through rusqlite; it is an embedded client cache, with no database service.
+Debian/Ubuntu development packages typically include `build-essential pkg-config libgtk-3-dev libwebkit2gtk-4.1-dev libfontconfig1-dev libxkbcommon-dev libwayland-dev libx11-dev libxi-dev libxrandr-dev libxcursor-dev libvulkan-dev`. Package names vary by distribution. SQLite is bundled through rusqlite; it is an embedded client cache, with no database service.
 
 Linux packaging uses the target distribution's native tools: `dpkg-dev` for Debian,
 `rpm-build` for Fedora/openSUSE, or `makepkg` for Arch, plus Python 3 and
@@ -51,7 +51,7 @@ dependencies, installation commands and supported distribution versions.
 
 `cargo xtask package --format appimage` creates a Linux x86_64 Type 2 AppImage
 including voice. A separate Ubuntu 24.04 (glibc 2.39) release job publishes it
-alongside the native packages and release checksums. It uses host GTK4/WebKitGTK 6.0,
+alongside the native packages and release checksums. It uses host GTK3/WebKit2GTK 4.1,
 audio and graphics libraries, rather than bundling a separate browser runtime. See
 [AppImage setup and builds](../packaging/appimage/README.md) for installation
 requirements, pinned tooling and package inspection. Native AppImage startup and
@@ -118,7 +118,7 @@ physical capture or delivery to an official Discord client; these remain unverif
 ## Invite verification (September 13, 2026)
 
 Invite verification uses a temporary WebView2 child on Windows, WKWebView child on
-macOS, and a separate GTK4/WebKit6 window on Linux. It
+macOS, and a separate GTK3/WebKit2GTK 4.1 window on Linux. It
 loads a local verification page and hCaptcha's official widget after the user
 chooses Verify. The local custom-protocol origin is
 `https://serein-captcha.verification.invalid/` on Windows/Linux and
@@ -130,7 +130,7 @@ loading and synthetic checks do not establish live Discord challenge acceptance.
 
 ## Opt-out tray icon (September 13, 2026)
 
-Windows General settings offer Show Serein in System Tray, on by default; turning it off
+Windows General settings offer Show tesktop2 in System Tray, on by default; turning it off
 falls back to ordinary window minimize/close. Minimizing
 keeps the window in the taskbar, including taskbar clicks and automatic startup. The icon supports
 keyboard/mouse restore and a Show Serein / Quit menu. Quit uses the normal unsaved

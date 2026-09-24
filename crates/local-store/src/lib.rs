@@ -175,7 +175,7 @@ impl LocalStore {
 	pub fn open_default() -> Result<Self> {
 		let root = dirs::data_local_dir()
 			.ok_or(StoreError::Unavailable)?
-			.join("serein");
+			.join("tesktop2");
 		std::fs::create_dir_all(&root).map_err(|_| StoreError::Unavailable)?;
 		#[cfg(unix)]
 		{

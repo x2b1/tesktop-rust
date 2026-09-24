@@ -1,4 +1,9 @@
-# Serein
+# tesktop2
+
+> **tesktop2** is the Tesktop/TestCord distribution of the native Serein client. The native
+> Rust/egui/wgpu UI and networking runtime are based on Serein; Tesktop features are layered
+> on top without replacing that client. Serein remains the upstream project and is used under
+> its original MIT/Apache-2.0 terms.
 
 <p align="center">
   <a href="https://github.com/ViceVerse-cz/rustcord">
@@ -112,7 +117,7 @@ Download `serein-<version>-Linux-X64.AppImage` from [Releases](https://github.co
 chmod +x ./serein-*-Linux-X64.AppImage
 ./serein-*-Linux-X64.AppImage
 ```
-Keep the AppImage in a writable directory to receive in-app updates via **Settings → Updates**. Note that the AppImage uses host GTK4 and WebKitGTK 6.0 libraries; see [AppImage setup and runtime dependencies](packaging/appimage/README.md) for host requirements.
+Keep the AppImage in a writable directory to receive in-app updates via **Settings → Updates**. Note that the tesktop2 Linux build uses host GTK 3 and WebKit2GTK 4.1 libraries; see [AppImage setup and runtime dependencies](packaging/appimage/README.md) for host requirements.
 
 </details>
 
@@ -217,7 +222,7 @@ Download `serein-<version>-macOS-ARM64.zip` from [Releases](https://github.com/V
 ### Prerequisites
 Rust **1.98.1** is pinned. Ensure you have the standard C/C++ toolchain and CMake installed for your platform:
 - **macOS:** Xcode command-line tools (`xcode-select --install`)
-- **Linux:** GCC/Clang, ALSA development headers, `pkg-config`, GTK 4, WebKitGTK 6.0, fontconfig, and Vulkan drivers (see [Platform Support](docs/platform-support.md))
+- **Linux:** GCC/Clang, ALSA development headers, `pkg-config`, GTK 3, WebKit2GTK 4.1, fontconfig, and Vulkan drivers (see [Platform Support](docs/platform-support.md))
 - **Windows:** Visual Studio C++ build tools and WebView2 Runtime
 
 ### Running Locally

@@ -20,7 +20,7 @@ const SIGNAL_TIMEOUT: Duration = Duration::from_secs(30);
 /// that stops by itself otherwise leaves only the latest status, which the stop overwrites.
 fn note(event: &str, reason: &str) {
 	if std::env::var_os("SEREIN_VOICE_DIAGNOSTICS").is_some_and(|value| value == "1") {
-		eprintln!("[Serein voice Screen] {event}={reason}");
+		eprintln!("[tesktop2 voice Screen] {event}={reason}");
 	}
 }
 
