@@ -272,6 +272,162 @@ impl crate::Plugin for WordCount {
 	}
 }
 
+/// Words the Ingtoninator will not touch: a pronoun, or anything ending in a vowel or `y`,
+/// which reads badly once it carries the suffix.
+pub fn ington_legal(word: &str) -> bool {
+	if word.eq_ignore_ascii_case("i") {
+		return false;
+	}
+	!matches!(
+		word.chars()
+			.last()
+			.map(|character| character.to_ascii_lowercase()),
+		Some('a' | 'e' | 'i' | 'o' | 'u' | 'y')
+	)
+}
+
+/// The suffix that goes after a word, which shortens the endings it would otherwise double up.
+pub fn ington(word: &str) -> String {
+	let upper = word.to_ascii_uppercase();
+	for (tail, replacement) in [
+		("INGTON", ""),
+		("INGTO", "N"),
+		("INGT", "ON"),
+		("ING", "TON"),
+		("IN", "GTON"),
+		("I", "NGTON"),
+	] {
+		if upper.ends_with(tail) {
+			return replacement.to_string();
+		}
+	}
+	"INGTON".to_string()
+}
+
+/// The words of a body that the port may choose from: letters only, and never inside a link.
+pub fn ington_words(content: &str) -> Vec<(usize, String)> {
+	let mut links: Vec<(usize, usize)> = Vec::new();
+	let mut rest = content;
+	while let Some(start) = rest.find("http") {
+		let (before, tail) = rest.split_at(start);
+		let end = tail.find(char::is_whitespace).unwrap_or(tail.len());
+		links.push((start, start + end));
+		rest = &tail[end..];
+		let _ = before;
+	}
+	let mut words = Vec::new();
+	let mut index = 0;
+	let mut current = String::new();
+	let mut start = 0;
+	for character in content.chars() {
+		if character.is_alphabetic() {
+			if current.is_empty() {
+				start = index;
+			}
+			current.push(character);
+		} else if !current.is_empty() {
+			words.push((start, std::mem::take(&mut current)));
+		}
+		index += character.len_utf8();
+	}
+	if !current.is_empty() {
+		words.push((start, current));
+	}
+	words
+		.into_iter()
+		.filter(|(at, _)| !links.iter().any(|(from, to)| *at >= *from && *at < *to))
+		.collect()
+}
+
+const INGTON_SETTINGS: &[Setting] = &[Setting {
+	key: "isEnabled",
+	label: "Add the suffix",
+	kind: SettingKind::Toggle,
+	default: Fallback::Flag(true),
+}];
+
+/// Ingtoninator: one word in every message you send grows a suffix.
+pub struct Ingtoninator {
+	enabled: bool,
+}
+
+impl Default for Ingtoninator {
+	fn default() -> Self {
+		Self { enabled: true }
+	}
+}
+
+impl Ingtoninator {
+	/// Add the suffix after one word of the body, chosen by the body itself so the same text
+	/// always gets the same word and a message is never rewritten twice.
+	pub fn rewrite(&self, body: &str) -> String {
+		if !self.enabled {
+			return body.to_string();
+		}
+		let words: Vec<(usize, String)> = ington_words(body)
+			.into_iter()
+			.filter(|(_, word)| ington_legal(word))
+			.collect();
+		if words.is_empty() {
+			return body.to_string();
+		}
+		let pick = (fnv(body) as usize) % words.len();
+		let (at, word) = &words[pick];
+		let insertion = if word.chars().all(|character| !character.is_lowercase()) {
+			ington(word)
+		} else {
+			ington(word).to_lowercase()
+		};
+		let at = at + word.len();
+		format!("{}{insertion}{}", &body[..at], &body[at..])
+	}
+}
+
+fn fnv(text: &str) -> u64 {
+	let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
+	for byte in text.as_bytes() {
+		hash ^= u64::from(*byte);
+		hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+	}
+	hash
+}
+
+impl crate::Plugin for Ingtoninator {
+	fn meta(&self) -> Meta {
+		Meta {
+			id: "Ingtoninator",
+			name: "Ingtoninator",
+			description: "Adds the Ington suffix to one word of every message you send.",
+			authors: "Equicord",
+			tags: &["Chat", "Fun"],
+			aliases: &["ingtoninator"],
+			default_enabled: false,
+		}
+	}
+
+	fn settings(&self) -> &'static [Setting] {
+		INGTON_SETTINGS
+	}
+
+	fn configure(&mut self, values: &Values) {
+		self.enabled = flag_or(values, INGTON_SETTINGS, "isEnabled");
+	}
+
+	fn before_send(&mut self, outgoing: &mut Outgoing<'_>) -> Result<(), &'static str> {
+		let body = std::mem::take(outgoing.body);
+		*outgoing.body = self.rewrite(&body);
+		Ok(())
+	}
+
+	fn summary(&self) -> Option<String> {
+		Some(if self.enabled {
+			"Adding the suffix".to_string()
+		} else {
+			"Standing by".to_string()
+		})
+	}
+}
+
 #[cfg(test)]
 mod tests {
 	use super::*;
@@ -379,5 +535,61 @@ mod tests {
 			registry.summary("WordCount").as_deref(),
 			Some("Counted from 5 words")
 		);
+	}
+
+	#[test]
+	fn one_word_grows_the_suffix() {
+		let plugin = Ingtoninator::default();
+		// "hello" ends in a vowel and cannot take it; "world" can.
+		assert_eq!(plugin.rewrite("hello world"), "hello worldington");
+	}
+
+	#[test]
+	fn the_same_text_always_gets_the_same_word() {
+		let plugin = Ingtoninator::default();
+		assert_eq!(
+			plugin.rewrite("hello world friend"),
+			plugin.rewrite("hello world friend")
+		);
+	}
+
+	#[test]
+	fn a_word_that_cannot_take_it_is_skipped() {
+		let plugin = Ingtoninator::default();
+		assert_eq!(plugin.rewrite("a e o u y i"), "a e o u y i");
+	}
+
+	#[test]
+	fn a_link_is_never_touched() {
+		let plugin = Ingtoninator::default();
+		let body = "https://example.com/some/path";
+		assert_eq!(plugin.rewrite(body), body);
+	}
+
+	#[test]
+	fn an_all_caps_word_keeps_its_case() {
+		// The suffix goes after the whole word, and shortens the ending it would double up.
+		assert_eq!(format!("BRING{}", ington("BRING")), "BRINGTON");
+		assert_eq!(format!("BRINGTO{}", ington("BRINGTO")), "BRINGTON");
+		assert_eq!(format!("INGTON{}", ington("INGTON")), "INGTON");
+		assert_eq!(format!("THING{}", ington("THING")), "THINGTON");
+	}
+
+	#[test]
+	fn the_suffix_can_be_turned_off() {
+		let mut plugin = Ingtoninator::default();
+		plugin.configure(&Values(
+			[("isEnabled".to_string(), serde_json::json!(false))]
+				.into_iter()
+				.collect(),
+		));
+		assert_eq!(plugin.rewrite("hello there"), "hello there");
+	}
+
+	#[test]
+	fn words_are_counted_in_bytes_so_a_link_range_holds() {
+		let words = ington_words("héllo wörld");
+		assert_eq!(words.len(), 2);
+		assert_eq!(words[1].0, "héllo ".len());
 	}
 }

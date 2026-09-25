@@ -480,6 +480,7 @@ impl Registry {
 			Box::new(speech::SpaceOut::default()),
 			Box::new(speech::AntiNameChange::default()),
 			Box::new(speech::WordCount::default()),
+			Box::new(speech::Ingtoninator::default()),
 			Box::new(clean::ZeroWidthSanitizer::default()),
 			Box::new(clean::SafeNumbers),
 			Box::new(clean::TalkInReverse::default()),
