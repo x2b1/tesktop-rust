@@ -407,6 +407,11 @@ pub trait Plugin {
 	/// Rewrite the files about to be sent, by name. A port that cannot read a file's bytes
 	/// still gets here: renaming is the part the pipeline can honestly offer.
 	fn stage_files(&mut self, _files: &mut Vec<Staged>) {}
+	/// Text to put in the composer, handed over once. The composer owns the caret, so a
+	/// port says what it means rather than reaching into the field.
+	fn take_compose(&mut self) -> Option<String> {
+		None
+	}
 	/// A line to show in the window, handed over once. The host owns the toast area.
 	fn take_toast(&mut self) -> Option<String> {
 		None
@@ -524,6 +529,8 @@ impl Registry {
 			Box::new(files::FixFileExtensions::default()),
 			Box::new(files::DownloadAllAttachments::default()),
 			Box::new(marker::AntiRickroll::default()),
+			Box::new(files::QuickMention::default()),
+			Box::new(files::QuickReply::default()),
 			Box::new(blockkeywords::BlockKeywords::default()),
 			Box::new(silenceusers::SilenceUsers::default()),
 			Box::new(splitlarge::SplitLargeMessages::default()),
@@ -783,6 +790,19 @@ impl Registry {
 			}
 		}
 		false
+	}
+
+	/// Take the text the first active port is handing over for the composer, if any.
+	pub fn take_compose(&mut self) -> Option<String> {
+		if !self.any_enabled() {
+			return None;
+		}
+		for index in self.active() {
+			if let Some(text) = self.plugins[index].take_compose() {
+				return Some(text);
+			}
+		}
+		None
 	}
 
 	/// Take the line the first active port is handing over, if any.

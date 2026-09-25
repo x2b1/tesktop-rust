@@ -391,3 +391,192 @@ mod tests {
 		assert_eq!(unique_name(&mut used, "README"), "README_1");
 	}
 }
+
+/// QuickMention: a mention of the person whose message you are looking at, ready to send.
+#[derive(Default)]
+pub struct QuickMention {
+	/// The mention waiting to be written, handed to the composer once.
+	pending: std::cell::RefCell<Option<String>>,
+}
+
+impl crate::Plugin for QuickMention {
+	fn meta(&self) -> Meta {
+		Meta {
+			id: "QuickMention",
+			name: "QuickMention",
+			description: "Puts a mention of the author in the composer.",
+			authors: "Vencord",
+			tags: &["Shortcuts", "Utility"],
+			aliases: &["quickMention"],
+			default_enabled: false,
+		}
+	}
+
+	fn message_actions(&self) -> &'static [crate::MessageAction] {
+		&[crate::MessageAction {
+			id: "mention-author",
+			label: "Mention this person",
+		}]
+	}
+
+	fn run_action(&self, action: &str, message: &model::Message) -> Option<crate::ActionResult> {
+		if action != "mention-author" {
+			return None;
+		}
+		// A mention of yourself is a no-op, and the original leaves that one out too.
+		if message.author.id == model::Id(0) {
+			return None;
+		}
+		*self.pending.borrow_mut() = Some(format!("<@{}> ", message.author.id));
+		Some(crate::ActionResult::Notice(
+			"The mention is in the composer".to_string(),
+		))
+	}
+
+	fn take_compose(&mut self) -> Option<String> {
+		self.pending.borrow_mut().take()
+	}
+}
+
+const REPLY_SETTINGS: &[Setting] = &[Setting {
+	key: "preset",
+	label: "The reply to write",
+	kind: SettingKind::Text { multiline: true },
+	default: Fallback::Text("On my way"),
+}];
+
+/// QuickReply: a reply you keep to hand, written into the composer.
+#[derive(Default)]
+pub struct QuickReply {
+	preset: String,
+	pending: std::cell::RefCell<Option<String>>,
+}
+
+impl crate::Plugin for QuickReply {
+	fn meta(&self) -> Meta {
+		Meta {
+			id: "QuickReply",
+			name: "QuickReply",
+			description: "Keeps a reply to hand and writes it in the composer.",
+			authors: "Vencord",
+			tags: &["Shortcuts", "Utility"],
+			aliases: &["quickReply"],
+			default_enabled: false,
+		}
+	}
+
+	fn settings(&self) -> &'static [Setting] {
+		REPLY_SETTINGS
+	}
+
+	fn configure(&mut self, values: &Values) {
+		// A draft is bounded like any other, and a reply is a line rather than an essay.
+		self.preset = text_or(values, REPLY_SETTINGS, "preset")
+			.trim()
+			.chars()
+			.filter(|character| *character != '\0')
+			.take(512)
+			.collect();
+	}
+
+	fn message_actions(&self) -> &'static [crate::MessageAction] {
+		&[crate::MessageAction {
+			id: "quick-reply",
+			label: "Write my usual reply",
+		}]
+	}
+
+	fn run_action(&self, action: &str, _message: &model::Message) -> Option<crate::ActionResult> {
+		if action != "quick-reply" || self.preset.is_empty() {
+			return None;
+		}
+		*self.pending.borrow_mut() = Some(self.preset.clone());
+		Some(crate::ActionResult::Notice(
+			"Your reply is in the composer".to_string(),
+		))
+	}
+
+	fn take_compose(&mut self) -> Option<String> {
+		self.pending.borrow_mut().take()
+	}
+
+	fn summary(&self) -> Option<String> {
+		(!self.preset.is_empty()).then(|| format!("{:?}", self.preset))
+	}
+}
+
+#[cfg(test)]
+mod compose_tests {
+	use super::*;
+	use crate::{Plugin, Staged};
+
+	fn message(author: u64) -> model::Message {
+		let mut message = test_support::message(1, model::Id(7));
+		message.author.id = model::Id(author);
+		message
+	}
+
+	fn staged(name: &str) -> Vec<Staged> {
+		vec![Staged {
+			name: name.to_string(),
+			bytes: 1,
+		}]
+	}
+
+	#[test]
+	fn a_mention_is_handed_over_once() {
+		let mut plugin = QuickMention::default();
+		assert!(plugin.run_action("mention-author", &message(42)).is_some());
+		assert_eq!(plugin.take_compose().as_deref(), Some("<@42> "));
+		assert!(plugin.take_compose().is_none(), "it is written once");
+	}
+
+	#[test]
+	fn the_mention_is_about_the_author() {
+		let mut plugin = QuickMention::default();
+		plugin.run_action("mention-author", &message(99));
+		assert_eq!(plugin.take_compose(), Some("<@99> ".to_string()));
+	}
+
+	#[test]
+	fn the_keeps_its_reply_to_hand() {
+		let mut plugin = QuickReply::default();
+		plugin.configure(&Values(
+			[("preset".to_string(), serde_json::json!("On my way"))]
+				.into_iter()
+				.collect(),
+		));
+		plugin.run_action("quick-reply", &message(1));
+		assert_eq!(plugin.take_compose().as_deref(), Some("On my way"));
+		assert_eq!(plugin.summary().as_deref(), Some("\"On my way\""));
+	}
+
+	#[test]
+	fn an_empty_reply_writes_nothing() {
+		let mut plugin = QuickReply::default();
+		plugin.configure(&Values(
+			[("preset".to_string(), serde_json::json!("   "))]
+				.into_iter()
+				.collect(),
+		));
+		assert!(plugin.run_action("quick-reply", &message(1)).is_none());
+		assert!(plugin.take_compose().is_none());
+	}
+
+	#[test]
+	fn the_registry_hands_the_first_one_over() {
+		let mut registry = crate::Registry::new();
+		registry.set_enabled("QuickMention", true);
+		let message = message(7);
+		registry.run_action("QuickMention", "mention-author", &message);
+		assert_eq!(registry.take_compose().as_deref(), Some("<@7> "));
+	}
+
+	#[test]
+	fn nothing_is_handed_over_when_nothing_asked() {
+		let mut registry = crate::Registry::new();
+		registry.set_enabled("QuickMention", true);
+		assert!(registry.take_compose().is_none());
+		let _ = staged("a.txt");
+	}
+}

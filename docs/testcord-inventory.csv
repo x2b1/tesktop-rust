@@ -107,8 +107,8 @@ plugins,pinDms,PinDMs,Which order should pinned DMs be displayed in?,"Devs.Ven,D
 plugins,plainFolderIcon,PlainFolderIcon,Dont show the small guild icons in folders,Devs.botato,0,True,False,False,False,False,,rewrite,
 plugins,platformIndicators,PlatformIndicators,Show indicators in the member list,"Devs.kemo,Devs.TheSun,Devs.Nuckyz,Devs.V",6,True,False,False,False,True,,rewrite,
 plugins,previewMessage,PreviewMessage,Lets you preview your message before sending it.,Devs.Aria,2,False,False,False,True,False,,portable-hook,
-plugins,quickMention,QuickMention,Adds a quick mention button to the message actions bar,Devs.kemo,1,False,False,False,False,False,,portable-logic,
-plugins,quickReply,QuickReply,Ping reply by default,"Devs.fawn,Devs.Ven,Devs.pylix",3,False,False,False,True,False,,portable-hook,
+plugins,quickMention,QuickMention,Adds a quick mention button to the message actions bar,Devs.kemo,1,False,False,False,False,False,,portable-logic,files
+plugins,quickReply,QuickReply,Ping reply by default,"Devs.fawn,Devs.Ven,Devs.pylix",3,False,False,False,True,False,,portable-hook,files
 plugins,reactErrorDecoder,ReactErrorDecoder,,"Devs.Cyn,Devs.maisymoe",0,True,False,False,False,False,,rewrite,
 plugins,readAllNotificationsButton,ReadAllNotificationsButton,Read all server notifications with a single button click!,"Devs.kemo,EquicordDevs.KrystalSkull",0,False,False,False,False,False,,portable-ui,
 plugins,relationshipNotifier,RelationshipNotifier,"Notifies you when a friend, group chat, or server removes you.",Devs.nick,1,True,False,False,True,False,,rewrite,

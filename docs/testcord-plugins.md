@@ -93,6 +93,8 @@ MessageLogger record is session memory and is never written to disk; copy it out
 | SpaceOut | `/spaceout` separates every character, spaces included, so the gap between two words becomes three | Nothing; the port is complete |
 | AntiNameChange | A mention of someone you track keeps the alias you gave them, and an alias can never smuggle a mention of its own | Nothing; the port is complete |
 | WordCount | A count under every message of more than five words, counting characters as a reader sees them | Nothing; the port is complete |
+| QuickMention | A mention of the author is written in the composer from the message menu | Nothing; the port is complete |
+| QuickReply | Your own reply, kept to hand, written in the composer | The keybinds that pick which message you are replying to |
 | AntiRickroll | A line under a message whose link is one you would rather not follow: the original's 54 video ids and its two hosts, plus your own list, and a masked link is checked first because that is the one being hidden | Nothing; the port is complete |
 | FixFileExtensions | A file goes out under a name the service accepts, using the original's own mapping, with an exemption list; a name the upload path refuses is left as it was | Reading a file's bytes, so the plugins that compress or rewrite content still need an upload path |
 | DownloadAllAttachments | Every file on a message at once, with images optional, numbered when they share a name | Nothing; the app owns where the files land |
@@ -163,9 +165,6 @@ not faked until the app can honour it:
   what is about to be sent, which is what `FixFileExtensions` needs. `LongMsgTxt` and
   `AutoZipper` rewrite content, and the composer's upload path still carries names and sizes
   rather than files, so there is nothing honest to hand them yet.
-- **Text into the composer.** `QuickMention`, `QuickReply` and the canned-reply plugins all end
-  in a cursor insertion. The registry can hand the host a line today, but the host has no way to
-  put it where the caret is, and a port must not write into the field itself.
 - **An attachment and channel surface.** `DownloadAllAttachments`, `FastDeleteChannels` and
   `GuildPickerDumper` act on things other than a message body. The app owns the file picker and
   the confirmation dialogs, so a port should report intent the way `AskMeToMute` does.

@@ -3935,7 +3935,15 @@ impl Desktop {
 		self.tesktop_send_replies();
 		self.tesktop_run_action(ctx);
 		self.tesktop_toast();
+		self.tesktop_compose();
 		self.tesktop_open_url();
+	}
+
+	/// Text a port asked to put in the composer, which the composer inserts at the caret.
+	fn tesktop_compose(&mut self) {
+		if let Some(text) = self.tesktop.take_compose() {
+			self.messaging.compose_text(text);
+		}
 	}
 
 	/// A line a port asked to show, in the same toast area the rest of the app uses.
