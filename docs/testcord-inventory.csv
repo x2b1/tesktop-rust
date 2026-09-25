@@ -145,7 +145,7 @@ plugins,themeAttributes,ThemeAttributes,Adds data attributes to various elements
 plugins,translate,Translate,"Translate messages with Google Translate, DeepL or Kagi.","Devs.Ven,Devs.AshtonMemer,Devs.koish1",3,False,False,False,False,True,native.ts,native-feature,
 plugins,typingIndicator,TypingIndicator,Whether to show the typing indicator for the currently selected channel,"Devs.Nuckyz,Devs.fawn,Devs.Sqaaakoi",5,True,False,False,False,False,,rewrite,
 plugins,typingTweaks,TypingTweaks,Show avatars in the typing indicator,"Devs.zt,Devs.sadan,EquicordDevs.MrDiamon",4,True,False,False,False,False,,rewrite,
-plugins,unindent,Unindent,Trims leading indentation from codeblocks,Devs.Ven,0,True,False,False,False,False,,rewrite,
+plugins,unindent,Unindent,Trims leading indentation from codeblocks,Devs.Ven,0,True,False,False,False,False,,rewrite,body
 plugins,unlockedAvatarZoom,UnlockedAvatarZoom,Zoom multiplier,Devs.nakoyasha,1,True,False,False,False,False,,rewrite,
 plugins,unsuppressEmbeds,UnsuppressEmbeds,Allows you to unsuppress embeds in messages,"Devs.rad,Devs.HypedDomi",1,False,False,False,False,False,,portable-logic,
 plugins,userMessagesPronouns,UserMessagesPronouns,Adds pronouns to chat user messages,"Devs.Tyman,Devs.TheKodeToad,Devs.Ven,Dev",0,True,False,False,False,False,,rewrite,
@@ -297,7 +297,7 @@ equicordplugins,partyMode,PartyMode,Party intensity,Devs.UwUDev,1,False,False,Fa
 equicordplugins,pendingFriendRequest,CancelFriendRequest,Adds a way to cancel outgoing friend requests from profiles.,EquicordDevs.omaw,1,True,False,False,False,False,,rewrite,
 equicordplugins,pinIcon,PinIcon,Adds a pin icon to pinned messages,EquicordDevs.iamme,0,True,False,False,False,False,,rewrite,
 equicordplugins,pingNotifications,PingNotifications,Notify when friends send messages in servers,EquicordDevs.smuki,6,False,False,False,True,False,,portable-hook,
-equicordplugins,polishWording,PolishWording,Quick disable. Turns off message modifying without requiring a client reload.,"Devs.Samwich,EquicordDevs.WKoA",7,False,True,False,False,False,,portable-hook,
+equicordplugins,polishWording,PolishWording,Quick disable. Turns off message modifying without requiring a client reload.,"Devs.Samwich,EquicordDevs.WKoA",7,False,True,False,False,False,,portable-hook,sendtext
 equicordplugins,profileSets,ProfileSets,Avatar size in preset list.,"EquicordDevs.omaw,EquicordDevs.justjxke",2,False,False,False,False,False,,portable-logic,
 equicordplugins,questify,Questify,"Enhance specific Quest features, disable annoyances, or completely remove Quests.",EquicordDevs.Etorix,2,True,False,False,True,False,native.ts,native-feature,
 equicordplugins,quickThemeSwitcher.discordDesktop,QuickThemeSwitcher,Include local themes,Devs.prism,5,False,False,False,False,False,,portable-logic,
@@ -326,7 +326,7 @@ equicordplugins,showResourceChannels,ShowResourceChannels,shows the channels hid
 equicordplugins,showRolesInChat,ShowRolesInChat,Whether to show the highest role on bots.,EquicordDevs.lucabeyer,3,False,False,False,False,True,,portable-ui,
 equicordplugins,showSongName,ShowSongName,Shows song name instead of artist for Spotify activity,Devs.prism,0,True,False,False,False,False,,rewrite,
 equicordplugins,sidebarChat,SidebarChat,Open a channel or DM as a sidebar or a popout.,"Devs.Joona,EquicordDevs.justjxke",3,True,False,False,False,False,,rewrite,
-equicordplugins,signature,Signature,The signature that will be added to the end of your messages,"Devs.Ven,Devs.Rini,Devs.ImBanana,Equicor",2,False,False,False,False,False,,portable-ui,
+equicordplugins,signature,Signature,The signature that will be added to the end of your messages,"Devs.Ven,Devs.Rini,Devs.ImBanana,Equicor",2,False,False,False,False,False,,portable-ui,sendtext
 equicordplugins,silenceUsers,SilenceUsers,Comma-separated Discord user IDs to silence pings and server badges.,EquicordDevs.dka,1,False,False,False,False,False,,portable-logic,silenceusers
 equicordplugins,snowfall,Snowfall,Change the type of snow displayed (Affects performance).,"EquicordDevs.ZcraftElite,EquicordDevs.sq",4,False,False,False,False,False,,portable-logic,
 equicordplugins,songLink.desktop,SongLink,settings for services,"Devs.nin0dev,EquicordDevs.NassCT",5,False,False,False,False,True,native.ts,native-feature,
@@ -673,7 +673,7 @@ testcordplugins,idlePage,IdlePage,Hex code of the backgorund. needs #,TestcordDe
 testcordplugins,impersonate,Impersonate,Impersonate a user and have them send a message,TestcordDevs.x2b,0,False,False,False,False,False,,excluded,
 testcordplugins,importMultiTokens,ImportMultiTokens,Import tokens to Token Login Manager,TestcordDevs.x2b,1,False,False,False,False,False,,excluded,
 testcordplugins,inviteDefaults,InviteDefaults,Invite Duration,"{name:""Death"",id:1003477997728313405n}",3,True,False,False,False,False,,rewrite,
-testcordplugins,jstextreplace,JSTextReplace,"TextReplace, with JavaScript replacements",Devs.nin0dev,3,False,False,False,False,False,,portable-ui,
+testcordplugins,jstextreplace,JSTextReplace,"TextReplace, with JavaScript replacements",Devs.nin0dev,3,False,False,False,False,False,,portable-ui,sendtext
 testcordplugins,laisse,Leash,Enable Leash plugin,TestcordDevs.x2b,5,False,False,False,True,False,,portable-hook,
 testcordplugins,lastOnline,LastOnline,Also show the last online indicator in server member lists,TestcordDevs.x2b,2,False,False,False,True,False,,portable-hook,
 testcordplugins,lastfmRichPresence,Last.fm,Your Last.fm API key. Get one free at last.fm/api/account/create.,"{name:""Sharp"",id:0n}",8,False,False,False,False,False,,portable-logic,
@@ -748,7 +748,7 @@ testcordplugins,pluginManager,pluginManager,Manage custom plugins,TestcordDevs.d
 testcordplugins,pollMaker,PollMaker,/poll formats a quick poll. Use: question | option | option ...,"{name:""Dann"",id:0n}",0,False,False,False,False,False,,portable-ui,
 testcordplugins,profanityFilter,ProfanityFilter,Filter outgoing messages (Ctrl+Alt+P toggles this anywhere),"
 TestcordDevs.sirphantom89,
-{name:""Nepot",3,False,False,False,False,False,,portable-logic,
+{name:""Nepot",3,False,False,False,False,False,,portable-logic,sendtext
 testcordplugins,profileCommand,ProfileCommand,Adds a /profile command to open someone's profile,TestcordDevs.x2b,0,False,False,False,False,False,,portable-ui,
 testcordplugins,profileCopyButton,ProfileCopyButton,"Also copy the target user's profile game widgets (favourite game, currently playing, want to play, played, gam","TestcordDevs.x2b,TestcordDevs.nnenaza",2,True,False,False,False,False,,rewrite,
 testcordplugins,punishmentcommands,PunishmentCommands,"Allows you to send a command in chat to punish someone, right from the context menu",Devs.nin0dev,1,False,False,False,False,False,,portable-logic,

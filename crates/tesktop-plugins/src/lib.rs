@@ -16,6 +16,7 @@ pub mod copy;
 pub mod display;
 pub mod messagelogger;
 pub mod noreplymention;
+pub mod sendtext;
 pub mod silenceusers;
 pub mod splitlarge;
 pub mod store;
@@ -24,8 +25,9 @@ use model::{Id, Message};
 use serde_json::Value;
 use std::collections::BTreeMap;
 
-/// Bundled plugins are fixed at build time; a settings file cannot add entries.
-pub const MAX_PLUGINS: usize = 16;
+/// Bundled plugins are compiled in, so a settings file cannot add entries. The ceiling is
+/// generous because the port set keeps growing; the file size is the real limit.
+pub const MAX_PLUGINS: usize = 256;
 /// Setting keys kept per plugin.
 pub const MAX_PLUGIN_VALUES: usize = 48;
 /// Serialized setting bytes accepted per plugin.
@@ -364,6 +366,10 @@ impl Registry {
 			Box::new(display::CharacterCounter::default()),
 			Box::new(display::StopAutoUnread),
 			Box::new(body::Unindent),
+			Box::new(sendtext::PolishWording::default()),
+			Box::new(sendtext::ProfanityFilter::default()),
+			Box::new(sendtext::JsTextReplace::default()),
+			Box::new(sendtext::Signature::default()),
 			Box::new(blockkeywords::BlockKeywords::default()),
 			Box::new(silenceusers::SilenceUsers::default()),
 			Box::new(splitlarge::SplitLargeMessages::default()),
@@ -539,13 +545,11 @@ impl Registry {
 		if !self.any_enabled() {
 			return None;
 		}
-		self.active()
-			.into_iter()
-			.find_map(|index| {
-				self.plugins[index]
-					.body_transform()
-					.map(|transform| (self.plugins[index].meta().id, transform))
-			})
+		self.active().into_iter().find_map(|index| {
+			self.plugins[index]
+				.body_transform()
+				.map(|transform| (self.plugins[index].meta().id, transform))
+		})
 	}
 
 	/// Fold every active plugin's display wishes into one resolved view.

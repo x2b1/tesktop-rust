@@ -45,7 +45,7 @@ message path.
 
 | Bound | Value |
 |---|---|
-| Plugins | 16, fixed at build time |
+| Plugins | 256, compiled in at build time |
 | Settings per plugin | 48 keys, 16 KiB |
 | Settings file | 256 KiB |
 | Blocked keyword patterns | 256 patterns, 8 KiB total, 512 KiB regex size limit each |
@@ -76,6 +76,10 @@ MessageLogger record is session memory and is never written to disk; copy it out
 | CustomTimestamps | Message clocks follow a 12 or 24 hour choice with the owner's own offset | The composer timestamp picker and its modal |
 | DontRoundMyTimestamps | Relative phrases round down, so 7.6 years reads "7 years" | `moment`'s global rounding, which this client does not use |
 | NoEditedTimestamp | Hides the `(edited)` marker | Nothing; the port is complete |
+| PolishWording | Puts missing apostrophes back, expands contractions, capitalizes sentences and adds final periods, with a lowercase word list | The full rule set is TestCord's 43-entry contraction table, used as-is |
+| ProfanityFilter | Removes filtered whole words from what you send, tidies the spaces and punctuation it leaves, and either sends a duck or refuses the message | The keyboard shortcut that toggles it |
+| JsTextReplace | Applies your own find and replace rules, in order, each with an optional condition | The repeating rule editor widget: rules live in one multiline field, one per line, `find => replace` with an optional `\| if: text` |
+| Signature | Appends your signature under every message you send | The composer button and composer menu entry that toggle it |
 | CharacterCounter | A composer counter from the first character, coloured by percentage like TestCord | Nothing; the port is complete |
 | StopAutoUnread | Messages stay unread while you read them, until you mark them yourself | Nothing; the port is complete |
 | CopyUserURLs | Adds a Copy user link entry to a message's menu | The user context menu in the member list, which is a separate surface |

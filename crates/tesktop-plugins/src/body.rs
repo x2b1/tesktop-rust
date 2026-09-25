@@ -63,10 +63,7 @@ mod tests {
 	#[test]
 	fn the_shared_indent_goes_and_the_relative_one_stays() {
 		let body = "    fn main() {\n        println!(\"hi\");\n    }";
-		assert_eq!(
-			unindent(body),
-			"fn main() {\n    println!(\"hi\");\n}"
-		);
+		assert_eq!(unindent(body), "fn main() {\n    println!(\"hi\");\n}");
 	}
 
 	#[test]
@@ -94,7 +91,10 @@ mod tests {
 		let mut registry = crate::Registry::new();
 		assert!(registry.body_transform().is_none());
 		registry.set_enabled("Unindent", true);
-		assert_eq!(registry.body_transform().map(|(id, _)| id), Some("Unindent"));
+		assert_eq!(
+			registry.body_transform().map(|(id, _)| id),
+			Some("Unindent")
+		);
 		registry.set_enabled("Unindent", false);
 		assert!(registry.body_transform().is_none());
 	}

@@ -3785,9 +3785,10 @@ impl Desktop {
 	/// Keep the settings page, the import picker, the saved file and the send queue in step.
 	fn tesktop_tick(&mut self, ctx: &egui::Context) {
 		// A body rewrite belongs to one plugin, and the formatter caches by owner.
-		let (owner, transform) = self.tesktop.body_transform().map_or((None, None), |(id, transform)| {
-			(Some(id), Some(transform))
-		});
+		let (owner, transform) = self
+			.tesktop
+			.body_transform()
+			.map_or((None, None), |(id, transform)| (Some(id), Some(transform)));
 		self.messaging.tesktop_body = owner;
 		self.messaging.testcord_body = transform;
 		// Clocks and markers come straight from the registry, so the fold is the only cost.
