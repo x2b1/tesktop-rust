@@ -77,6 +77,10 @@ MessageLogger record is session memory and is never written to disk; copy it out
 | ClearURLs | Removes tracking parameters from links in outgoing bodies and edits | TestCord downloads the full rule database at startup; this port ships a bundled provider table for the widely used services, so uncommon providers are not covered |
 | BlockKeywords | Ignores messages matching your words, in the body and in embed titles and descriptions | The second mode, which shows a matched message greyed out instead of dropping it |
 | AutoReplyContent | Answers a trigger with one of your responses, with TestCord's channel, mention, cooldown and rate-limit rules | Responses are picked by a hash of the message id instead of `Math.random`, so a given message always gets the same answer |
+| GhostPingAlert | A message that pinged you and is then taken back is named, with the quote cut to the length you set, and a plain mention is a ping while @everyone is its own switch | Nothing; the port is complete |
+| DetectBlock | A direct message that will not go out is named once, and only for a refusal: a network failure or a rate limit says nothing about the other person and is not reported | Nothing; the port is complete |
+| QuickDelete | A button in the composer's row deletes your own last message here, and only your own | The keybind the original uses |
+| AutoChannelReact | The reactions a conversation always gets, from rules you write, capped so a busy channel cannot turn it into a flood, and never on your own message | The rules editor, which is yours |
 | MessageLogger | Records created, edited and deleted messages, and copies the record out | The searchable history window, edit diffs and the deleted-message styling |
 | SilenceUsers | Takes `@everyone`, role and user pings out of messages by the listed people | Dropping the desktop notification for those messages, which the state owner raises |
 | SplitLargeMessages | Splits an oversized body on newlines, spaces or an exact length and sends the parts in order with your delay | Reading the account's Nitro tier for the 4000-character limit, and slowmode awareness |
@@ -93,6 +97,10 @@ MessageLogger record is session memory and is never written to disk; copy it out
 | SpaceOut | `/spaceout` separates every character, spaces included, so the gap between two words becomes three | Nothing; the port is complete |
 | AntiNameChange | A mention of someone you track keeps the alias you gave them, and an alias can never smuggle a mention of its own | Nothing; the port is complete |
 | WordCount | A count under every message of more than five words, counting characters as a reader sees them | Nothing; the port is complete |
+| MessageLogger | The record is on the settings page, not only on the clipboard, and a send of your own is recorded even where the service does not echo it back | The history window and the inline diffs, which are the app's own message cache |
+| QuickMention | A mention of the author is written in the composer from the message menu | Nothing; the port is complete |
+| QuickReply | Your own reply, kept to hand, written in the composer | The keybinds that pick which message you are replying to |
+| AntiRickroll | A line under a message whose link is one you would rather not follow: the original's 54 video ids and its two hosts, plus your own list, and a masked link is checked first because that is the one being hidden | Nothing; the port is complete |
 | FixFileExtensions | A file goes out under a name the service accepts, using the original's own mapping, with an exemption list; a name the upload path refuses is left as it was | Reading a file's bytes, so the plugins that compress or rewrite content still need an upload path |
 | DownloadAllAttachments | Every file on a message at once, with images optional, numbered when they share a name | Nothing; the app owns where the files land |
 | GoodPerson | The blocked words arrive as another word, from the original's own five categories and both replacement tables, with a category each switchable, matching whole words and the obfuscated spellings a slur also arrives as | `Math.random`; the replacement is chosen from the word instead, so a message always reads the same way |
@@ -103,7 +111,13 @@ MessageLogger record is session memory and is never written to disk; copy it out
 | ZeroWidthSanitizer | Strips the invisible characters out of what you send and out of your edits, and says how many it removed | Nothing; the port is complete |
 | SafeNumbers | Digits become mathematical figures, while a mention still mentions and an address still opens | Nothing; the port is complete |
 | TalkInReverse | Your message arrives with its characters reversed, reversed by character so nothing comes out as mojibake | The composer button, which is yours |
-| SilentMessageToggle | The silent marker is added once, at the front or the back as you choose | The composer button, which is yours |
+## Ports that were removed
+
+`SilentMessageToggle` was ported and then taken back out. The service removed silent
+messages years ago, so prefixing a message with `@silent ` does not make it silent; it makes
+it a message about a word. A port that is faithful to a removed feature is not compatible,
+it is just wrong, so it is gone rather than off by default.
+
 | HopOn | A message matching your pattern opens an address you choose, once per run, and the host refuses anything but web links and the launcher schemes a game needs | Nothing; the port is complete |
 | IRememberYou | Who you have talked to, oldest first, bounded and evicting the oldest, with servers optionally left out | The account-list export screen, which is yours |
 | AskMeToMute | A reminder entry, explaining the app owns muting | Muting, which the app owns |
@@ -162,12 +176,6 @@ not faked until the app can honour it:
   what is about to be sent, which is what `FixFileExtensions` needs. `LongMsgTxt` and
   `AutoZipper` rewrite content, and the composer's upload path still carries names and sizes
   rather than files, so there is nothing honest to hand them yet.
-- **Text into the composer.** `QuickMention`, `QuickReply` and the canned-reply plugins all end
-  in a cursor insertion. The registry can hand the host a line today, but the host has no way to
-  put it where the caret is, and a port must not write into the field itself.
-- **A line under a message.** `AntiRickroll` and the other accessory plugins draw one warning
-  per message. The per-message count added for `WordCount` proves the position and the drawing;
-  what is missing is a per-message value rather than a flag on the whole timeline.
 - **An attachment and channel surface.** `DownloadAllAttachments`, `FastDeleteChannels` and
   `GuildPickerDumper` act on things other than a message body. The app owns the file picker and
   the confirmation dialogs, so a port should report intent the way `AskMeToMute` does.

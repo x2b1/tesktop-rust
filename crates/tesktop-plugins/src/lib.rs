@@ -8,6 +8,7 @@
 //!
 //! Every hook is bounded by items and bytes, so message traffic cannot grow memory without limit.
 
+pub mod aftermath;
 pub mod autoreply;
 pub mod blockkeywords;
 pub mod body;
@@ -249,6 +250,18 @@ pub struct Previous {
 	pub replying: bool,
 }
 
+/// A button in the composer's own row, which is what the original's chat bar buttons are.
+///
+/// A button is a toggle when `active` is set, and a plain button when it is not. The app
+/// draws it and the owner decides, so a port never gets a click of its own.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ComposerButton {
+	pub id: &'static str,
+	pub label: &'static str,
+	pub tooltip: &'static str,
+	pub active: Option<bool>,
+}
+
 /// A service action a port wants carried out, named rather than performed: the app owns the
 /// confirmation, the permissions, the request id and the retry, and a port that could do
 /// any of those itself would be acting outside the client. `emoji` is a `String`, so this
@@ -272,16 +285,33 @@ pub enum Intent {
 	},
 }
 
-/// What became of a message the owner sent, as the app saw it. `model::Message` is neither
-/// `Copy` nor `Debug`, so this borrows it and is not derived either.
-#[derive(Clone, PartialEq, Eq)]
-pub struct Delivery<'a> {
+/// Where a port is standing when it names a service action, so it can say which message it
+/// means without looking at the timeline itself.
+#[derive(Clone, Copy, Debug)]
+pub struct IntentContext<'a> {
 	pub channel: model::Id,
-	pub message: &'a model::Message,
 	pub me: model::Id,
-	/// Why it did not arrive, when it did not. The app's own failure text, so a port never
-	/// has to know the protocol's wording.
-	pub failure: Option<&'a str>,
+	/// The owner's last message in this conversation, which is what a tidy-up action means.
+	pub previous: Option<&'a Previous>,
+}
+
+/// What became of a message the owner sent, as the app saw it. A failure carries the app's
+/// own text, so a port never has to know the protocol's wording. `model::Message` is
+/// neither `Copy` nor `Debug`, so this borrows it and is not derived for either.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Delivery<'a> {
+	Sent {
+		channel: model::Id,
+		message: &'a model::Message,
+		me: model::Id,
+	},
+	Failed {
+		channel: model::Id,
+		me: model::Id,
+		/// The body that was going out, which is what a port can describe it by.
+		content: &'a str,
+		failure: &'a str,
+	},
 }
 
 /// How many messages may carry a line at once. A conversation is longer than this, and the
@@ -442,6 +472,24 @@ pub trait Plugin {
 	/// Rewrite the files about to be sent, by name. A port that cannot read a file's bytes
 	/// still gets here: renaming is the part the pipeline can honestly offer.
 	fn stage_files(&mut self, _files: &mut Vec<Staged>) {}
+	/// The button this port offers in the composer's row, if it offers one. A port gets a
+	/// single button, which is what the original's chat bar gives a plugin.
+	fn composer_button(&self) -> Option<ComposerButton> {
+		None
+	}
+	/// The owner pressed one of this port's buttons.
+	fn press_composer(&mut self, _id: &str) {}
+	/// A service action to carry out, handed over once.
+	fn take_intent(&mut self, _context: &IntentContext<'_>) -> Option<Intent> {
+		None
+	}
+	/// What became of a message the owner just sent.
+	fn delivered(&mut self, _event: &Delivery<'_>) {}
+	/// Text to put in the composer, handed over once. The composer owns the caret, so a
+	/// port says what it means rather than reaching into the field.
+	fn take_compose(&mut self) -> Option<String> {
+		None
+	}
 	/// A line to show in the window, handed over once. The host owns the toast area.
 	fn take_toast(&mut self) -> Option<String> {
 		None
@@ -494,6 +542,8 @@ pub struct Registry {
 	plugins: Vec<Box<dyn Plugin>>,
 	entries: BTreeMap<String, Entry>,
 	pending: Vec<PendingReply>,
+	/// How many ports are on, kept as it changes so the host can watch it cheaply.
+	enabled_count: usize,
 }
 
 impl Default for Registry {
@@ -551,7 +601,6 @@ impl Registry {
 			Box::new(clean::ZeroWidthSanitizer::default()),
 			Box::new(clean::SafeNumbers),
 			Box::new(clean::TalkInReverse::default()),
-			Box::new(clean::SilentMessageToggle::default()),
 			Box::new(inspect::ClientSideBlock::default()),
 			Box::new(inspect::ReplaceGoogleSearch::default()),
 			Box::new(inspect::BaseDecoder::default()),
@@ -559,6 +608,12 @@ impl Registry {
 			Box::new(files::FixFileExtensions::default()),
 			Box::new(files::DownloadAllAttachments::default()),
 			Box::new(marker::AntiRickroll::default()),
+			Box::new(files::QuickMention::default()),
+			Box::new(files::QuickReply::default()),
+			Box::new(aftermath::GhostPingAlert::default()),
+			Box::new(aftermath::DetectBlock::default()),
+			Box::new(aftermath::QuickDelete::default()),
+			Box::new(aftermath::AutoChannelReact::default()),
 			Box::new(blockkeywords::BlockKeywords::default()),
 			Box::new(silenceusers::SilenceUsers::default()),
 			Box::new(splitlarge::SplitLargeMessages::default()),
@@ -584,6 +639,7 @@ impl Registry {
 			plugins,
 			entries,
 			pending: Vec::new(),
+			enabled_count: 0,
 		};
 		// Every port starts from the defaults it declares, as TestCord does on a fresh install.
 		registry.reconfigure();
@@ -624,7 +680,10 @@ impl Registry {
 			return;
 		}
 		entry.enabled = enabled;
-		if !enabled {
+		if enabled {
+			self.enabled_count += 1;
+		} else {
+			self.enabled_count = self.enabled_count.saturating_sub(1);
 			self.plugins[index].reset();
 		}
 	}
@@ -820,6 +879,80 @@ impl Registry {
 		false
 	}
 
+	/// How many ports are on, which is what the host watches to know when to rebuild the
+	/// composer's row.
+	pub fn enabled_count(&self) -> usize {
+		self.enabled_count
+	}
+
+	/// The buttons the active ports offer, first owner of an id winning, in registry order.
+	pub fn composer_buttons(&self) -> Vec<ComposerButton> {
+		if !self.any_enabled() {
+			return Vec::new();
+		}
+		let mut buttons: Vec<ComposerButton> = Vec::new();
+		for index in self.active() {
+			if let Some(button) = self.plugins[index].composer_button()
+				&& !buttons.iter().any(|existing| existing.id == button.id)
+			{
+				buttons.push(button);
+			}
+		}
+		buttons
+	}
+
+	/// Give the press to the port that owns the button.
+	pub fn press_composer(&mut self, id: &str) {
+		if !self.any_enabled() {
+			return;
+		}
+		for index in self.active() {
+			if self.plugins[index]
+				.composer_button()
+				.is_some_and(|button| button.id == id)
+			{
+				self.plugins[index].press_composer(id);
+				return;
+			}
+		}
+	}
+
+	/// Take the service action the first active port is handing over, if any.
+	pub fn take_intent(&mut self, context: &IntentContext<'_>) -> Option<Intent> {
+		if !self.any_enabled() {
+			return None;
+		}
+		for index in self.active() {
+			if let Some(intent) = self.plugins[index].take_intent(context) {
+				return Some(intent);
+			}
+		}
+		None
+	}
+
+	/// Tell the active ports what became of a send.
+	pub fn delivered(&mut self, event: &Delivery<'_>) {
+		if !self.any_enabled() {
+			return;
+		}
+		for index in self.active() {
+			self.plugins[index].delivered(event);
+		}
+	}
+
+	/// Take the text the first active port is handing over for the composer, if any.
+	pub fn take_compose(&mut self) -> Option<String> {
+		if !self.any_enabled() {
+			return None;
+		}
+		for index in self.active() {
+			if let Some(text) = self.plugins[index].take_compose() {
+				return Some(text);
+			}
+		}
+		None
+	}
+
 	/// Take the line the first active port is handing over, if any.
 	pub fn take_toast(&mut self) -> Option<String> {
 		if !self.any_enabled() {
@@ -962,6 +1095,24 @@ impl Registry {
 	pub fn summary(&self, id: &str) -> Option<String> {
 		self.resolve(id)
 			.and_then(|index| self.plugins[index].summary())
+	}
+
+	/// The last `lines` lines of a port's record, for showing on the settings page.
+	pub fn tail(&self, id: &str, lines: usize) -> String {
+		let Some(index) = self.resolve(id) else {
+			return String::new();
+		};
+		let Some(full) = self.plugins[index].export() else {
+			return String::new();
+		};
+		full.lines()
+			.rev()
+			.take(lines.clamp(1, 200))
+			.collect::<Vec<_>>()
+			.into_iter()
+			.rev()
+			.collect::<Vec<_>>()
+			.join("\n")
 	}
 
 	pub fn export(&self, id: &str) -> Option<String> {

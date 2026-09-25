@@ -108,6 +108,7 @@ mod user_menu;
 mod verification;
 mod voice;
 use client_core::{Command, MAX_CONTENT, MAX_DRAFT_BYTES, NavStep, State};
+use design::LazyHover;
 use egui::{RichText, TextEdit};
 pub use local_time::{Counter, Display};
 use model::{Freshness, Id};
@@ -254,6 +255,9 @@ pub struct MessagingUi {
 	profile_image: Option<(u64, model::Attachment)>,
 	user_action: Option<user_menu::Action>,
 	pending_mention: Option<Id>,
+	/// Text a bundled port asked to put in the composer, taken once. The composer owns
+	/// where the caret is, so a port hands the line over rather than writing it.
+	pending_compose: Option<String>,
 	contact_editor: contact_editor::ContactEditor,
 	profile_link: Option<String>,
 	profile_formatted: markdown::FormatCache,
@@ -2718,6 +2722,39 @@ impl MessagingUi {
                             .on_hover_text("Choose, drop, or paste files (Ctrl/Cmd/Option+V). Up to 10 files and 500 MB total; account limits may be lower. Send starts the upload."))
                     };
                     if !editing_here { self.extensions.composer_menu(ui, state); }
+                    // The bundled ports' own buttons, which is where the original puts its
+                    // chat bar buttons: next to the attach button, before the send button.
+                    if !editing_here {
+                        // The list is shared and short-lived, so it is cloned rather than
+                        // borrowed across the request the press queues.
+                        let buttons = self.testcord.composer_buttons.clone();
+                        for button in buttons.iter() {
+                            let tooltip = button.tooltip.clone();
+                            let pressed: bool = if let Some(active) = button.active {
+                                ui.add_enabled(
+                                    !self.upload_busy && state.can_send(channel),
+                                    egui::Button::new(RichText::new(&button.label).strong())
+                                        .selected(active),
+                                )
+                                .on_hover_text_with(move || tooltip.clone())
+                                .clicked()
+                            } else {
+                                let tooltip = button.tooltip.clone();
+                                ui.add_enabled(
+                                    !self.upload_busy && state.can_send(channel),
+                                    egui::Button::new(&button.label),
+                                )
+                                .on_hover_text_with(move || tooltip.clone())
+                                .clicked()
+                            };
+                            if pressed {
+                                self.testcord
+                                    .request(crate::testcord::Request::ComposerButton {
+                                        id: button.id.clone(),
+                                    });
+                            }
+                        }
+                    }
                     if attach.is_some_and(|attach| attach.clicked()) {
                         self.attach_requested = true;
                     }
@@ -2842,6 +2879,13 @@ impl MessagingUi {
                             &mut new_draft
                         };
 						let mut mention_changed = false;
+						match self.apply_pending_compose(ctx, composer_id, draft, remaining) {
+							None => {}
+							Some(MentionWrite::Inserted) => mention_changed = true,
+							Some(MentionWrite::DidNotFit) => {
+								state.status = "That text will not fit. Shorten this message or free draft space.";
+							}
+						}
 						match self.apply_pending_mention(ctx, composer_id, draft, remaining) {
 							None => {}
 							Some(MentionWrite::Inserted) => mention_changed = true,
@@ -3132,6 +3176,55 @@ impl MessagingUi {
 	fn shows_title_bar(&self) -> bool {
 		!cfg!(target_os = "linux") && !self.hide_title_bar
 	}
+	/// Put `text` in the composer where the caret is, for a bundled port that asked for it.
+	///
+	/// The draft's own byte ceiling still applies, and a line that will not fit is reported
+	/// rather than trimmed: a port's text is part of what you meant to send.
+	pub fn compose_text(&mut self, text: String) {
+		self.pending_compose = Some(text);
+	}
+
+	/// Take the text a port handed over and write it at the caret, the same way a mention
+	/// is written. `None` once there is nothing left to write.
+	pub fn take_pending_compose(&mut self) -> Option<String> {
+		self.pending_compose.take()
+	}
+
+	fn apply_pending_compose(
+		&mut self,
+		ctx: &egui::Context,
+		composer_id: egui::Id,
+		draft: &mut String,
+		remaining: usize,
+	) -> Option<MentionWrite> {
+		let text = self.pending_compose.take()?;
+		if text.is_empty() {
+			return None;
+		}
+		let loaded = egui::text_edit::TextEditState::load(ctx, composer_id);
+		let had_editor = loaded.is_some();
+		let mut edit_state = loaded.unwrap_or_default();
+		let range = edit_state
+			.cursor
+			.char_range()
+			.filter(|_| had_editor)
+			.or_else(|| {
+				Some(egui::text::CCursorRange::one(egui::text::CCursor::new(
+					draft.chars().count(),
+				)))
+			});
+		let Some(cursor) = emoji_picker::insert(draft, &text, range, remaining) else {
+			return Some(MentionWrite::DidNotFit);
+		};
+		edit_state
+			.cursor
+			.set_char_range(Some(egui::text::CCursorRange::one(
+				egui::text::CCursor::new(cursor),
+			)));
+		edit_state.store(ctx, composer_id);
+		Some(MentionWrite::Inserted)
+	}
+
 	fn apply_pending_mention(
 		&mut self,
 		ctx: &egui::Context,
