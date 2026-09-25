@@ -138,7 +138,7 @@ impl crate::Plugin for AskMeToMute {
 
 	fn run_action(&self, action: &str, _message: &model::Message) -> Option<crate::ActionResult> {
 		(action == "mute-reminder").then_some(crate::ActionResult::Notice(
-			"Mute reminders are handled by the app itself",
+			"Mute reminders are handled by the app itself".to_string(),
 		))
 	}
 }
@@ -353,7 +353,7 @@ mod tests {
 		assert_eq!(
 			plugin.run_action("mute-reminder", &message("hi")),
 			Some(crate::ActionResult::Notice(
-				"Mute reminders are handled by the app itself"
+				"Mute reminders are handled by the app itself".to_string()
 			))
 		);
 		assert!(plugin.run_action("other", &message("hi")).is_none());

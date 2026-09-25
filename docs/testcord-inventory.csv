@@ -112,7 +112,7 @@ plugins,quickReply,QuickReply,Ping reply by default,"Devs.fawn,Devs.Ven,Devs.pyl
 plugins,reactErrorDecoder,ReactErrorDecoder,,"Devs.Cyn,Devs.maisymoe",0,True,False,False,False,False,,rewrite,
 plugins,readAllNotificationsButton,ReadAllNotificationsButton,Read all server notifications with a single button click!,"Devs.kemo,EquicordDevs.KrystalSkull",0,False,False,False,False,False,,portable-ui,
 plugins,relationshipNotifier,RelationshipNotifier,"Notifies you when a friend, group chat, or server removes you.",Devs.nick,1,True,False,False,True,False,,rewrite,
-plugins,replaceGoogleSearch,ReplaceGoogleSearch,Name of the custom search engine,"Devs.Moxxie,Devs.Ethan",4,False,False,False,False,False,,portable-logic,
+plugins,replaceGoogleSearch,ReplaceGoogleSearch,Name of the custom search engine,"Devs.Moxxie,Devs.Ethan",4,False,False,False,False,False,,portable-logic,inspect
 plugins,replyTimestamp,ReplyTimestamp,Shows a timestamp on replied-message previews,Devs.Kyuuhachi,0,True,False,False,False,False,,rewrite,
 plugins,revealAllSpoilers,RevealAllSpoilers,Automatically reveal all spoilers without needing to hold Ctrl. No spoilers at all when enabled.,"Devs.whqwert,TestcordDevs.x2b",1,True,False,False,False,False,,rewrite,
 plugins,reverseImageSearch,ReverseImageSearch,Adds ImageSearch to image context menus,"Devs.Ven,Devs.Nuckyz",1,True,False,False,False,False,,rewrite,
@@ -194,7 +194,7 @@ equicordplugins,channelTabs,ChannelTabs,"Group your commonly visited channels in
 equicordplugins,cleanChannelName,CleanChannelName,Remove emoji and decoration from channel names. Reverts to the original while you're editing the channel.,Devs.AutumnVN,1,True,False,False,True,False,,rewrite,
 equicordplugins,cleanerChannelGroups,CleanerChannelGroups,"Hides all channels in collapsed categories, even if they have unread messages.",EquicordDevs.justjxke,0,True,False,False,False,False,,rewrite,
 equicordplugins,clickableRoles,ClickableRoles,Click on roles in user profiles and the member list to see which members have them.,Devs.prism,0,True,False,False,False,False,,rewrite,
-equicordplugins,clientSideBlock,ClientSideBlock,Hide voice channels containing blocked users.,"Devs.Samwich,EquicordDevs.KamiRu",8,False,False,False,False,False,,portable-logic,
+equicordplugins,clientSideBlock,ClientSideBlock,Hide voice channels containing blocked users.,"Devs.Samwich,EquicordDevs.KamiRu",8,False,False,False,False,False,,portable-logic,inspect
 equicordplugins,clipUpload.desktop,ClipUpload,Adds a button to upload a local video file as a Discord clip.,"EquicordDevs.qdnx,EquicordDevs.BachLe200",1,True,False,False,False,False,native.ts,native-feature,
 equicordplugins,clipsEnhancements.discordDesktop,ClipsEnhancements,When should clips be tagged with the current Rich Presence?,"Devs.niko,Devs.Joona,EquicordDevs.keircn",2,True,False,False,False,False,,rewrite,
 equicordplugins,collapsibleUi,CollapsibleUI,"Native collapsible channel, member, chat button, and user area surfaces.",EquicordDevs.benjii,2,False,False,False,False,False,,portable-logic,

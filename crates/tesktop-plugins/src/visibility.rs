@@ -82,7 +82,7 @@ impl crate::Plugin for HideMessages {
 		}
 		self.hide(message.id);
 		Some(crate::ActionResult::Notice(
-			"Message hidden until you restart",
+			"Message hidden until you restart".to_string(),
 		))
 	}
 
@@ -191,7 +191,7 @@ mod tests {
 		assert_eq!(
 			hide.run_action("hide", &message(1)),
 			Some(crate::ActionResult::Notice(
-				"Message hidden until you restart"
+				"Message hidden until you restart".to_string()
 			))
 		);
 		assert!(hide.ignore(&message(1)));

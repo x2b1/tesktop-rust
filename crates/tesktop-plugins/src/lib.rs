@@ -18,6 +18,7 @@ pub mod clearurls;
 pub mod commands;
 pub mod copy;
 pub mod display;
+pub mod inspect;
 pub mod messagelogger;
 pub mod noreplymention;
 pub mod notify;
@@ -314,7 +315,8 @@ pub struct MessageAction {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ActionResult {
 	Clipboard(String),
-	Notice(&'static str),
+	/// A line for the window, written by the port rather than the host.
+	Notice(String),
 }
 
 pub trait Plugin {
@@ -482,6 +484,9 @@ impl Registry {
 			Box::new(clean::SafeNumbers),
 			Box::new(clean::TalkInReverse::default()),
 			Box::new(clean::SilentMessageToggle::default()),
+			Box::new(inspect::ClientSideBlock::default()),
+			Box::new(inspect::ReplaceGoogleSearch::default()),
+			Box::new(inspect::BaseDecoder::default()),
 			Box::new(blockkeywords::BlockKeywords::default()),
 			Box::new(silenceusers::SilenceUsers::default()),
 			Box::new(splitlarge::SplitLargeMessages::default()),
