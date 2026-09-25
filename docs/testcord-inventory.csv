@@ -504,7 +504,7 @@ testcordplugins,allConnectionsEnabled,AllConnectionsEnabled,Enables all connecti
 testcordplugins,amrpcStatusDisplayType.desktop,AMRPCStatusDisplayType,Make MusicRPC show the track / artist name in the member list,Devs.nin0dev,0,False,False,False,False,False,,portable-logic,
 testcordplugins,animalese,Animalese,Volume of the animalese sound,TestcordDevs.x2b,2,False,False,False,False,False,,portable-logic,
 testcordplugins,animstatus,AnimatedStatus,,,6,False,False,False,False,False,,portable-logic,
-testcordplugins,annoiler,Annoiler,"Makes you send messages with spoilers around every single character. Originally made by Kyza for Powercord, Us",TestcordDevs.x2b,0,False,False,False,False,False,,portable-ui,
+testcordplugins,annoiler,Annoiler,"Makes you send messages with spoilers around every single character. Originally made by Kyza for Powercord, Us",TestcordDevs.x2b,0,False,False,False,False,False,,portable-ui,commands
 testcordplugins,antiDeco,AntiDisconnect,Automatically reconnects to voice channel in case of forced disconnection,TestcordDevs.x2b,1,False,False,False,True,False,,portable-hook,
 testcordplugins,antiDeleteMessage,AntiDeleteMessage,Enable automatic message restoration (toggle with toolbar button),"{name:""Nightcord"",id:0n}",6,False,False,False,True,False,,portable-hook,
 testcordplugins,antiGroup,AntiGroup,Enable AntiGroup plugin,"
@@ -562,7 +562,7 @@ testcordplugins,betterScreenshare.desktop,BetterScreenshare,This plugin allows y
 testcordplugins,betterforwardmeta,BetterForwardMeta,Access server profile under forwarded messages (if available) and always show time,TestcordDevs.x2b,0,True,False,False,False,False,,rewrite,
 testcordplugins,betterplusreacts,BetterPlusReacts,The amount of plus before :emoji: is the message to add it to,TestcordDevs.x2b,0,True,False,False,False,False,,rewrite,
 testcordplugins,bigFileUpload,BigFileUpload,Select the file uploader service,Devs.ScattrdBlade,28,True,False,False,False,False,native.ts,native-feature,
-testcordplugins,boldText,BoldText,/bold turns your message into 𝐮𝐧𝐢𝐜𝐨𝐝𝐞 bold (works where markdown can't).,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-ui,
+testcordplugins,boldText,BoldText,/bold turns your message into 𝐮𝐧𝐢𝐜𝐨𝐝𝐞 bold (works where markdown can't).,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-ui,commands
 testcordplugins,bulkFriendRemove,BulkFriendRemove,Delete multiple friends at once.,"{name:""Nightcord"",id:0n}",1,False,False,False,False,False,,portable-logic,
 testcordplugins,bypassAccounts,PBKDF2,Enable Alt+G hotkey to quickly open account switcher,TestcordDevs.dot,1,False,False,False,False,False,,excluded,
 testcordplugins,bypassBlockedOrIgnored,BypassBlockedOrIgnored,Bypass the blocked or ignored user modal if is present in voice channels.,"{
@@ -580,7 +580,7 @@ testcordplugins,chatGPT,ChatGPT,Your OpenAI API key (obtained from https://platf
 testcordplugins,chatgptwriting,ChatGPTWriting,Where to show the button,TestcordDevs.x2b,6,False,False,False,False,False,,portable-logic,
 testcordplugins,chatsScrapper,ChatsScrapper,Where to show the button,TestcordDevs.x2b,3,False,False,False,False,False,,portable-logic,
 testcordplugins,chromeTabs,ChromeTabs,Browser-style channel tabs styled after Google Chrome,TestcordDevs.SirPhantom89,2,True,False,False,True,False,,rewrite,
-testcordplugins,clapText,ClapText,Adds /clap to 👏 put 👏 claps 👏 between 👏 your 👏 words.,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-ui,
+testcordplugins,clapText,ClapText,Adds /clap to 👏 put 👏 claps 👏 between 👏 your 👏 words.,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-ui,commands
 testcordplugins,clickSparkles,ClickSparkles,Sprinkles little neon sparkles wherever you click.,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-logic,
 testcordplugins,clientSideBadges,ClientSideBadges,Adds client-side badges to your profile. Other users can't see them!,"
 Devs.nin0dev,
@@ -680,7 +680,7 @@ testcordplugins,lastfmRichPresence,Last.fm,Your Last.fm API key. Get one free at
 testcordplugins,lazyMessageRender,LazyMessageRender,Prevents message action toolbar from clipping under the message above. content-visibility was removed — Discor,TestcordDevs.x2b,0,False,False,False,False,False,,portable-logic,
 testcordplugins,leaveAllGroups,LeaveAllGroups,Enable the LeaveAllGroups plugin,TestcordDevs.x2b,6,False,False,False,False,False,,excluded,
 testcordplugins,leaveAllServers,LeaveAllServers,Do not show or select servers you own,"{name:""Nightcord"",id:0n}",1,False,False,False,False,False,,excluded,
-testcordplugins,leetText,LeetText,/leet rewrites your message in 1337 5p34k.,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-ui,
+testcordplugins,leetText,LeetText,/leet rewrites your message in 1337 5p34k.,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-ui,commands
 testcordplugins,liveWallpaper,LiveWallpaper,"Wallpaper opacity (0 = invisible, 0.5 = max)","{name:""Nightcord"",id:0n}",6,False,False,False,False,False,,portable-logic,
 testcordplugins,localmessageedit,LocalMessageEditor,Edit and delete any message locally to demonstrate Discord security vulnerabilities,(Devsasany).nobody,1,True,False,False,False,False,,excluded,
 testcordplugins,lockGroup,LockGroup,Show notifications for actions,"
@@ -800,7 +800,7 @@ testcordplugins,showTypingUsers,ShowTypingUsers,Shows a badge in the channel hea
 testcordplugins,shytyping,ShyTyping,Always show you are typing in your current voice channel,TestcordDevs.x2b,3,True,False,False,False,False,,rewrite,
 testcordplugins,sillyMaxwell,Maxwell :3,Silly Silly Silly,"TestcordDevs.x2b,TestcordDevs.nnenaza",0,False,False,False,False,False,,portable-logic,
 testcordplugins,simplifiedProfileNotes,SimplifiedProfileNotes,Hide the note box when no note is set for a user,TestcordDevs.x2b,1,True,False,False,False,False,,rewrite,
-testcordplugins,smallCaps,SmallCaps,/smallcaps writes your message in ꜱᴍᴀʟʟ ᴄᴀᴘꜱ.,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-ui,
+testcordplugins,smallCaps,SmallCaps,/smallcaps writes your message in ꜱᴍᴀʟʟ ᴄᴀᴘꜱ.,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-ui,commands
 testcordplugins,smoothmessages,SmoothMessages,Fade messages in while they slide.,TestcordDevs.x2b,2,False,False,False,True,False,,portable-hook,
 testcordplugins,socket.desktop,Socket,self explanatory,Devs.nin0dev,4,False,False,False,False,False,native.ts,native-feature,
 testcordplugins,soloaudio,SoloAudio,Re-clicking the same Solo target unmutes / restores everyone,"{name:""you"",id:0n}",5,False,False,False,False,False,,portable-logic,
@@ -848,7 +848,7 @@ testcordplugins,userflags,UserFlags,Add flags to users that will always show und
 testcordplugins,userpluginInstaller,UserpluginInstaller,Comma separated list of channels where the Install Plugin button should be displayed,"Devs.nin0dev,TestcordDevs.sirphantom89",4,False,False,False,False,True,native.ts,native-feature,
 testcordplugins,vAnalyzer-main,vAnalyzer,"Analyze message attachments, trace URLs, check certificates, avoid scams and more.","{name:""nay-cat"",id:1159977353661919363n}",2,False,False,False,True,True,analyzers/CertPL/native.ts;analyzers/CordCat/native.ts;analyzers/CrtSh/native.ts;analyzers/DiscordInvite/native.ts;analyzers/FishFish/native.ts;analyzers/HybridAnalysis/native.ts;analyzers/ModularScan/native.ts;analyzers/Sucuri/native.ts;analyzers/VirusTotal/native.ts;analyzers/WaybackMachine/native.ts;analyzers/WhereGoes/native.ts;native.ts,native-feature,
 testcordplugins,vaporScrollbar,VaporScrollbar,Replaces scrollbars with a neon pink-to-cyan vaporwave gradient.,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-logic,
-testcordplugins,vaporwaveText,VaporwaveText,Adds /vaporwave to turn your message into ａｅｓｔｈｅｔｉｃ fullwidth text.,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-ui,
+testcordplugins,vaporwaveText,VaporwaveText,Adds /vaporwave to turn your message into ａｅｓｔｈｅｔｉｃ fullwidth text.,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-ui,commands
 testcordplugins,vc-NewlinesInCommands,NewlinesInCommands,Allows shift+enter to create new lines in command inputs.,TestcordDevs.x2b,0,True,False,False,False,False,,rewrite,
 testcordplugins,vc-autocorrect,AutoCorrect,Enable auto correct,TestcordDevs.x2b,3,True,False,False,False,False,,rewrite,
 testcordplugins,vc-betterActivities,BetterActivities,Show activity icons in the member list,"
@@ -879,7 +879,7 @@ name:""void"",
 ",0,False,False,False,False,False,,portable-logic,
 testcordplugins,venfetch,venfetch,neofetch for vencord,Devs.nin0dev,0,False,False,False,False,False,native.ts,native-feature,
 testcordplugins,versions,Versions,Adds extra information to the version info,TestcordDevs.x2b,0,False,False,False,False,False,,portable-logic,
-testcordplugins,vibeCheck,VibeCheck,Adds /vibe to drop a random vaporwave mood into chat.,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-ui,
+testcordplugins,vibeCheck,VibeCheck,Adds /vibe to drop a random vaporwave mood into chat.,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-ui,commands
 testcordplugins,videoStartNotifier,VideoStartNotifier,Play notification sound in private voice calls (DMs),TestcordDevs.x2b,2,False,False,False,False,False,,portable-logic,
 testcordplugins,viewRawVariant,ViewRawVariant,"Copy/View raw content of any message, channel, or guild, but show in the right click menu.","Devs.KingFish,Devs.Ven,Devs.rad,Devs.ImL",1,False,False,False,False,False,,portable-logic,
 testcordplugins,voiceChannelSearch,VoiceChannelSearch,Search and join any voice channel across all your servers.,"{name:""Nightcord"",id:0n}",0,False,False,False,False,False,,portable-logic,

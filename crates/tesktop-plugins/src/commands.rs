@@ -181,16 +181,191 @@ text_command!(
 	&["vaporwaveText"]
 );
 
-/// The expansion of a typed line, if a port claims it.
+/// The expansion of a typed line, if a port claims it. A command may take no argument.
 pub fn expand(plugin: &dyn crate::Plugin, line: &str) -> Option<Claim> {
-	let (name, argument) = line.split_once(char::is_whitespace)?;
-	let name = name.strip_prefix('/')?;
+	let (name, argument) = line
+		.strip_prefix('/')
+		.map(|rest| rest.split_once(char::is_whitespace).unwrap_or((rest, "")))?;
 	plugin
 		.command_names()
 		.iter()
 		.any(|known| known.eq_ignore_ascii_case(name))
 		.then(|| plugin.command(argument.trim()))
 		.flatten()
+}
+
+/// Annoiler: every character wrapped in a spoiler, as Kyza's original did.
+pub struct Annoiler {
+	enabled: Option<bool>,
+}
+
+impl Default for Annoiler {
+	fn default() -> Self {
+		Self {
+			enabled: Some(true),
+		}
+	}
+}
+
+impl crate::Plugin for Annoiler {
+	fn meta(&self) -> crate::Meta {
+		crate::Meta {
+			id: "Annoiler",
+			name: "Annoiler",
+			description: "Puts a spoiler around every character you send.",
+			authors: "x2b",
+			tags: &["Chat", "Fun"],
+			aliases: &["annoiler"],
+			default_enabled: false,
+		}
+	}
+
+	fn settings(&self) -> &'static [Setting] {
+		LEET_SETTINGS
+	}
+
+	fn configure(&mut self, values: &Values) {
+		self.enabled = Some(flag_or(values, LEET_SETTINGS, "enabled"));
+	}
+
+	fn command(&self, argument: &str) -> Option<Claim> {
+		self.enabled.unwrap_or(true).then(|| Claim {
+			body: argument.chars().map(|c| format!("||{c}||")).collect(),
+		})
+	}
+
+	fn command_names(&self) -> &'static [&'static str] {
+		&["annoil"]
+	}
+
+	fn command_about(&self) -> &'static str {
+		"Puts a spoiler around every character."
+	}
+}
+
+/// ClapText: a clap between every word.
+pub struct ClapText {
+	enabled: Option<bool>,
+}
+
+impl Default for ClapText {
+	fn default() -> Self {
+		Self {
+			enabled: Some(true),
+		}
+	}
+}
+
+impl crate::Plugin for ClapText {
+	fn meta(&self) -> crate::Meta {
+		crate::Meta {
+			id: "ClapText",
+			name: "ClapText",
+			description: "Puts a clap between every word you send.",
+			authors: "Sharp",
+			tags: &["Fun", "Commands"],
+			aliases: &["clapText"],
+			default_enabled: false,
+		}
+	}
+
+	fn settings(&self) -> &'static [Setting] {
+		LEET_SETTINGS
+	}
+
+	fn configure(&mut self, values: &Values) {
+		self.enabled = Some(flag_or(values, LEET_SETTINGS, "enabled"));
+	}
+
+	fn command(&self, argument: &str) -> Option<Claim> {
+		self.enabled.unwrap_or(true).then(|| Claim {
+			body: argument
+				.split(char::is_whitespace)
+				.filter(|word| !word.is_empty())
+				.collect::<Vec<_>>()
+				.join(" 👏 "),
+		})
+	}
+
+	fn command_names(&self) -> &'static [&'static str] {
+		&["clap"]
+	}
+
+	fn command_about(&self) -> &'static str {
+		"Puts a clap between every word."
+	}
+}
+
+const VIBES: &[&str] = &[
+	"✦ the vibes are immaculate ✦",
+	"🌴 endless summer, endless mall 🌴",
+	"📼 rewinding to a time that never was 📼",
+	"🛍️ welcome to the mall, population: you 🛍️",
+	"🌅 chasing a sunset that never sets 🌅",
+	"💾 saving your aesthetic... done 💾",
+	"🪩 disco ball energy detected 🪩",
+	"🌊 floating on a sea of neon 🌊",
+	"☎️ this call is being routed through 1987 ☎️",
+	"🍹 sipping something pink by the fountain 🍹",
+];
+
+/// VibeCheck: a random mood from TestCord's own list. The pick is by the clock rather than a
+/// random number, so the same second always gives the same line.
+pub struct VibeCheck {
+	enabled: Option<bool>,
+}
+
+impl Default for VibeCheck {
+	fn default() -> Self {
+		Self {
+			enabled: Some(true),
+		}
+	}
+}
+
+impl crate::Plugin for VibeCheck {
+	fn meta(&self) -> crate::Meta {
+		crate::Meta {
+			id: "VibeCheck",
+			name: "VibeCheck",
+			description: "Drops a random vaporwave mood into chat.",
+			authors: "Sharp",
+			tags: &["Commands", "Fun"],
+			aliases: &["vibeCheck"],
+			default_enabled: false,
+		}
+	}
+
+	fn settings(&self) -> &'static [Setting] {
+		LEET_SETTINGS
+	}
+
+	fn configure(&mut self, values: &Values) {
+		self.enabled = Some(flag_or(values, LEET_SETTINGS, "enabled"));
+	}
+
+	fn command(&self, _argument: &str) -> Option<Claim> {
+		self.enabled.unwrap_or(true).then(|| Claim {
+			body: vibe().to_string(),
+		})
+	}
+
+	fn command_names(&self) -> &'static [&'static str] {
+		&["vibe"]
+	}
+
+	fn command_about(&self) -> &'static str {
+		"Sends a random vaporwave vibe."
+	}
+}
+
+/// A mood from the list, chosen by the wall clock so it is stable within the second.
+pub fn vibe() -> &'static str {
+	let seconds = std::time::SystemTime::now()
+		.duration_since(std::time::UNIX_EPOCH)
+		.map(|age| age.as_secs())
+		.unwrap_or_default();
+	VIBES[seconds as usize % VIBES.len()]
 }
 
 #[cfg(test)]
@@ -217,6 +392,34 @@ mod tests {
 	fn fullwidth_only_touches_printable_ascii() {
 		assert_eq!(fullwidth("a b~"), "ａ　ｂ～");
 		assert_eq!(fullwidth("日本"), "日本");
+	}
+
+	#[test]
+	fn every_character_gets_its_own_spoiler() {
+		let annoiler = Annoiler::default();
+		assert_eq!(
+			expand(&annoiler, "/annoil hi").map(|claim| claim.body),
+			Some("||h||||i||".to_string())
+		);
+	}
+
+	#[test]
+	fn a_clap_goes_between_the_words() {
+		let clap = ClapText::default();
+		assert_eq!(
+			expand(&clap, "/clap  two   words ").map(|claim| claim.body),
+			Some("two 👏 words".to_string())
+		);
+	}
+
+	#[test]
+	fn a_mood_comes_from_the_list() {
+		let vibes: Vec<&str> = (0..40).map(|_| vibe()).collect();
+		for mood in &vibes {
+			assert!(VIBES.contains(mood), "{mood} is not one of ours");
+		}
+		let check = VibeCheck::default();
+		assert!(expand(&check, "/vibe").is_some());
 	}
 
 	#[test]
@@ -250,9 +453,10 @@ mod tests {
 		let plugin = LeetText::default();
 		assert!(expand(&plugin, "/unknown hello").is_none());
 		assert!(expand(&plugin, "hello /leet").is_none());
-		assert!(
-			expand(&plugin, "/leet").is_none(),
-			"a command needs its argument"
+		// A command with no argument still expands, to nothing useful.
+		assert_eq!(
+			expand(&plugin, "/leet").map(|claim| claim.body),
+			Some(String::new())
 		);
 	}
 
