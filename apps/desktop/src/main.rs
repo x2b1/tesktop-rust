@@ -3918,7 +3918,15 @@ impl Desktop {
 		}
 		self.tesktop_send_replies();
 		self.tesktop_run_action(ctx);
+		self.tesktop_toast();
 		self.tesktop_open_url();
+	}
+
+	/// A line a port asked to show, in the same toast area the rest of the app uses.
+	fn tesktop_toast(&mut self) {
+		if let Some(line) = self.tesktop.take_toast() {
+			self.messaging.toasts.push(ui::design::Level::Info, line);
+		}
 	}
 
 	/// An address a port asked for, opened with the desktop's own handler. The scheme is

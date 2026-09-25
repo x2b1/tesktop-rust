@@ -13,6 +13,7 @@ pub mod blockkeywords;
 pub mod body;
 pub mod burst;
 pub mod casing;
+pub mod clean;
 pub mod clearurls;
 pub mod commands;
 pub mod copy;
@@ -372,6 +373,10 @@ pub trait Plugin {
 	}
 	/// Rewrite an accepted inbound message before it enters the timeline.
 	fn mutate_incoming(&mut self, _message: &mut Message) {}
+	/// A line to show in the window, handed over once. The host owns the toast area.
+	fn take_toast(&mut self) -> Option<String> {
+		None
+	}
 	/// An address the owner asked to open, handed over once. The host opens it; a port that
 	/// watched a message for a reason is not the one that calls the desktop.
 	fn take_url(&mut self) -> Option<String> {
@@ -473,6 +478,10 @@ impl Registry {
 			Box::new(speech::SpaceOut::default()),
 			Box::new(speech::AntiNameChange::default()),
 			Box::new(speech::WordCount::default()),
+			Box::new(clean::ZeroWidthSanitizer::default()),
+			Box::new(clean::SafeNumbers),
+			Box::new(clean::TalkInReverse::default()),
+			Box::new(clean::SilentMessageToggle::default()),
 			Box::new(blockkeywords::BlockKeywords::default()),
 			Box::new(silenceusers::SilenceUsers::default()),
 			Box::new(splitlarge::SplitLargeMessages::default()),
@@ -697,6 +706,19 @@ impl Registry {
 			}
 		}
 		false
+	}
+
+	/// Take the line the first active port is handing over, if any.
+	pub fn take_toast(&mut self) -> Option<String> {
+		if !self.any_enabled() {
+			return None;
+		}
+		for index in self.active() {
+			if let Some(line) = self.plugins[index].take_toast() {
+				return Some(line);
+			}
+		}
+		None
 	}
 
 	/// Take the address the first active port is handing over, if any.

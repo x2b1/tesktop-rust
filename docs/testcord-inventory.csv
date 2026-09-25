@@ -130,7 +130,7 @@ plugins,showHiddenChannels,ShowHiddenChannels,The style used to display hidden c
 plugins,showHiddenThings,ShowHiddenThings,Displays various hidden & moderator-only things regardless of permissions.,Devs.Dolfies,0,True,False,False,False,False,,rewrite,
 plugins,showMeYourName,ShowMeYourName,Display custom name format in messages.,"EquicordDevs.Etorix,Devs.Rini,Devs.TheKo",35,True,False,False,True,False,,rewrite,
 plugins,showTimeoutDuration,ShowTimeoutDuration,How to display the timeout duration,"Devs.Ven,Devs.Sqaaakoi",1,True,False,False,False,False,,rewrite,
-plugins,silentMessageToggle,SilentMessageToggle,How to persist the silent message toggle state,"Devs.Nuckyz,Devs.CatNoir,EquicordDevs.Z1",3,False,False,False,False,False,,portable-logic,
+plugins,silentMessageToggle,SilentMessageToggle,How to persist the silent message toggle state,"Devs.Nuckyz,Devs.CatNoir,EquicordDevs.Z1",3,False,False,False,False,False,,portable-logic,clean
 plugins,silentTyping,SilentTyping,Toggle functionality of your own typing indicator globally.,"Devs.Ven,Devs.Rini,Devs.ImBanana,Equicor",17,True,False,False,True,False,,rewrite,
 plugins,sortFriendRequests,SortFriends,Show dates on friend requests,"Devs.Megu,EquicordDevs.CallMeGii",1,True,False,False,False,False,,rewrite,
 plugins,spotifyCrack,SpotifyCrack,Disable Spotify auto-pause,"Devs.Cyn,Devs.Nuckyz",2,True,False,False,False,False,,rewrite,
@@ -340,7 +340,7 @@ equicordplugins,stickerBlocker,StickerBlocker,Whether to show a snazzy cat gif,D
 equicordplugins,stopAutoUnread,StopAutoUnread,,EquicordDevs.SobakinTech,0,True,False,False,False,False,,rewrite,display
 equicordplugins,streaks,Streaks,Shows a streak next to a user when you exchange DMs with them on consecutive days.,"EquicordDevs.Moowi,Devs.thororen",1,False,False,False,True,True,,portable-hook,
 equicordplugins,streamingCodecDisabler,StreamingCodecDisabler,Make Discord not consider using AV1 for streaming.,EquicordDevs.davidkra230,5,True,False,False,False,False,,rewrite,
-equicordplugins,talkInReverse,TalkInReverse,Reverses the message content before sending it.,EquicordDevs.Tolgchu,1,False,False,False,False,False,,portable-logic,
+equicordplugins,talkInReverse,TalkInReverse,Reverses the message content before sending it.,EquicordDevs.Tolgchu,1,False,False,False,False,False,,portable-logic,clean
 equicordplugins,themeLibrary,ThemeLibrary,A library of themes for Vencord.,EquicordDevs.Fafa,1,False,False,False,False,False,native.ts,native-feature,
 equicordplugins,tidalEmbeds,TidalEmbeds,Embeds TIDAL songs to make them playable in Discord.,EquicordDevs.vmohammad,0,True,False,False,False,True,,rewrite,
 equicordplugins,timezones,Timezones,Show your own timezone in profiles and message headers,"Devs.Aria,EquicordDevs.creations",15,False,False,False,False,True,,portable-ui,
@@ -493,7 +493,7 @@ testcordplugins,Vimium,Vimium,Key to toggle link hints (Vimium style),TestcordDe
 testcordplugins,WebCordHardened,WebCordHardened,Block Discord telemetry endpoints.,"{name:""irritably"",id:928787166916640838n",10,False,False,False,False,False,,excluded,
 testcordplugins,WebhookSend,WebhookSend,Send Discord webhooks from a tabbed modal with visual embed builder and saved history.,TestcordDevs.x2b,1,False,False,False,False,False,native.ts,native-feature,
 testcordplugins,ZIPplus,ZIP+,Automatically zip specified file types and folders before upload,"EquicordDevs.justjxke,EquicordDevs.SSnow",3,True,False,False,False,False,,rewrite,
-testcordplugins,ZeroWidthSanitizer,ZeroWidthSanitizer,Sanitize outgoing messages (before sending),"{name:""Irritably"",id:928787166916640838n",4,False,False,False,False,False,,portable-logic,
+testcordplugins,ZeroWidthSanitizer,ZeroWidthSanitizer,Sanitize outgoing messages (before sending),"{name:""Irritably"",id:928787166916640838n",4,False,False,False,False,False,,portable-logic,clean
 testcordplugins,abreviation,Abbreviation,Enable Abbreviation plugin,TestcordDevs.x2b,8,False,False,False,False,False,,portable-logic,
 testcordplugins,accroche,Hook,Enable Hook plugin,"
 {
@@ -777,7 +777,7 @@ testcordplugins,runInConsole,RunInConsole,Allows you to run code blocks in the c
 testcordplugins,rzblack,Voice Channel Blacklist,Server Mute blacklisted users,"TestcordDevs.SirPhantom89,",6,False,False,False,True,False,,portable-hook,
 testcordplugins,rzengz,AutoJumpToMention,Automatically takes you to the message when someone mentions you,TestcordDevs.SirPhantom89,1,False,False,False,True,False,,portable-hook,
 testcordplugins,rznoone,Pin to Voice Channel,Reconnect if disconnected,TestcordDevs.SirPhantom89,6,False,False,False,False,False,,portable-logic,
-testcordplugins,safeNumbers,SafeNumbers,Toggle safe numbers replacement on or off.,TestcordDevs.x2b,2,False,False,False,False,False,,portable-logic,
+testcordplugins,safeNumbers,SafeNumbers,Toggle safe numbers replacement on or off.,TestcordDevs.x2b,2,False,False,False,False,False,,portable-logic,clean
 testcordplugins,saveUserGifs,SaveUserGifs,Where to scan for GIFs,TestcordDevs.nnenaza,5,False,False,False,False,False,,portable-logic,
 testcordplugins,selfDestruct,SelfDestruct,Where to show the button,"{name:""Nightcord"",id:0n}",5,False,False,False,True,True,,portable-hook,
 testcordplugins,selfForward,SelfForward,Adds the current channel to the forward list popup,"{name:""VillainsRule"",id:0n}",0,True,False,False,False,False,,excluded,

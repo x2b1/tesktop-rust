@@ -32,6 +32,7 @@ remembered state.
 | `split` | The same body, after the rewrite | Return several bodies, sent in order with `chunk_delay_ms` between them |
 | `notice` | An accepted message, before the state owner queues an alert | Silence the sound, or add a toast in the window; the host also supplies the local hour and whether a game is running |
 | `presence` | Startup and settings changes | Ask the owner to be set do not disturb while a game runs |
+| `take_toast` | After a port rewrote something | Hand a line to the host, which shows it in the app's own toast area |
 | `take_url` | After a message arrives | Hand an address to the host, which checks the scheme and opens it |
 | `message_actions` / `run_action` | A message's own menu, then the entry the owner picked | Offer a clipboard or notice action on that message |
 | `display` | Every frame, folded into one `Display` | Choose the clock format, an offset, relative rounding, the edited marker, the composer counter, and whether read state waits for you |
@@ -92,6 +93,10 @@ MessageLogger record is session memory and is never written to disk; copy it out
 | SpaceOut | `/spaceout` separates every character, spaces included, so the gap between two words becomes three | Nothing; the port is complete |
 | AntiNameChange | A mention of someone you track keeps the alias you gave them, and an alias can never smuggle a mention of its own | Nothing; the port is complete |
 | WordCount | A count under every message of more than five words, counting characters as a reader sees them | Nothing; the port is complete |
+| ZeroWidthSanitizer | Strips the invisible characters out of what you send and out of your edits, and says how many it removed | Nothing; the port is complete |
+| SafeNumbers | Digits become mathematical figures, while a mention still mentions and an address still opens | Nothing; the port is complete |
+| TalkInReverse | Your message arrives with its characters reversed, reversed by character so nothing comes out as mojibake | The composer button, which is yours |
+| SilentMessageToggle | The silent marker is added once, at the front or the back as you choose | The composer button, which is yours |
 | HopOn | A message matching your pattern opens an address you choose, once per run, and the host refuses anything but web links and the launcher schemes a game needs | Nothing; the port is complete |
 | IRememberYou | Who you have talked to, oldest first, bounded and evicting the oldest, with servers optionally left out | The account-list export screen, which is yours |
 | AskMeToMute | A reminder entry, explaining the app owns muting | Muting, which the app owns |
