@@ -1,0 +1,156 @@
+#!/usr/bin/env python3
+"""Inventory of the TestCord plugin set, with a portability verdict per plugin.
+
+Reads a TestCord checkout and writes `docs/testcord-inventory.csv` plus a short summary.
+The point is to make "port everything" auditable: every plugin is listed once, with the
+hooks it uses and what it would take to run natively in tesktop-rust.
+
+    python3 tools/generate-testcord-inventory.py /path/to/TestCord-ref
+"""
+
+from __future__ import annotations
+
+import csv
+import pathlib
+import re
+import sys
+
+ROOTS = ("plugins", "equicordplugins", "testcordplugins")
+SOURCE = "src"
+
+# Selfbot, token, mass-messaging, anti-logging and surveillance features. The native client's
+# product boundaries exclude these, so they are never ported.
+EXCLUDED = {
+    "token", "tokenlogin", "tokenimporter", "importmultitokens", "dxtokenimporter", "getmytoken",
+    "bypassaccounts", "multiinstance", "fakeaccounts", "fakeuserswitcher", "fakeuserprofile",
+    "fakeuserprofiles", "fakeprofile", "fakefriends", "fakedm", "fakeconnections", "fakeperm",
+    "fakevoicepremium", "fakeindicators", "fakemutedeafen", "morealts", "impersonate", "spoofmsgv2",
+    "systemmessagespoofer", "badgespoofer", "silentcall", "silentdelete", "silentedit", "dmbomb",
+    "massdm", "sendtoalldms", "purgedms", "purgemessages", "messagescrapper", "chatscrapper",
+    "friendscrapper", "stalker", "surveillance", "localmessageedit", "rpunisher", "guildcopier",
+    "serverpruner", "leaveallservers", "leaveallgroups", "muteallservers", "automessagesender",
+    "automessagerepeater", "selfforward", "autodeco", "antiantilog", "antilogpremium", "antifilter",
+    "opsecillegalcord", "securecordopossum", "webcordhardened", "goofcordsec", "notelemetry",
+    "ghostselfbot", "ghostclient", "sniper", "nitrosniper", "apisniper", "floodpanel",
+}
+
+# Features that only exist because the client patches Discord's own minified internals; a native
+# client has no such surface, so a port is a rewrite against this app's state.
+WEB_ONLY_MARKERS = (
+    'find: "experiments"',
+    "PlatformEmulator",
+    "streamingCodecDisabler",
+    "e_(",
+)
+
+NAME = re.compile(r'^\s*name:\s*"([^"]+)"', re.M)
+DESCRIPTION = re.compile(r'^\s*description:\s*"([^"]+)"', re.M)
+AUTHORS = re.compile(r"^\s*authors:\s*\[([^\]]*)\]", re.M)
+SETTING_KEYS = re.compile(r'^\s{4}([a-zA-Z][a-zA-Z0-9]*):\s*\{', re.M)
+COMMAND = re.compile(r'^\s*commands:\s*\[', re.M)
+FLUX = re.compile(r'^\s*flux:\s*\{', re.M)
+PATCHES = re.compile(r'^\s{4}patches:\s*\[\s*\{', re.M)
+BEFORE_SEND = re.compile(r"^\s*onBeforeMessageSend:", re.M)
+BEFORE_EDIT = re.compile(r"^\s*onBeforeMessageEdit:", re.M)
+RENDER = re.compile(r"^\s*render(Message|MemberList|Nickname|Profile|ChatBar)", re.M)
+STYLE = re.compile(r'^\s*managedStyle:|import\s+"\./style\.css', re.M)
+
+
+def plugin_name(folder: str, source: str) -> str:
+    found = NAME.search(source)
+    return found.group(1) if found else folder.split(".")[0]
+
+
+def verdict(folder: str, source: str, natives: list[str]) -> str:
+    identifier = folder.split(".")[0].lower()
+    if identifier in EXCLUDED or plugin_name(folder, source).lower() in EXCLUDED:
+        return "excluded"
+    if any(marker in source for marker in WEB_ONLY_MARKERS):
+        return "excluded-web-only"
+    if natives:
+        return "native-feature"
+    if PATCHES.search(source):
+        # A patch plugin is a rewrite here: its hooks may port, but the patch itself
+        # targets Discord's own JavaScript, which this client never runs.
+        return "rewrite"
+    if BEFORE_SEND.search(source) or BEFORE_EDIT.search(source) or FLUX.search(source):
+        return "portable-hook"
+    if COMMAND.search(source) or RENDER.search(source) or STYLE.search(source):
+        return "portable-ui"
+    return "portable-logic"
+
+
+def ported_ids(root: pathlib.Path) -> dict[str, str]:
+    """Plugin ids that already exist in the native runtime, mapped to their Rust module."""
+    found: dict[str, str] = {}
+    crate = root / "crates" / "tesktop-plugins" / "src"
+    if not crate.is_dir():
+        return found
+    for module in sorted(crate.glob("*.rs")):
+        for identifier in re.findall(r'id:\s*"([^"]+)"', module.read_text(encoding="utf-8")):
+            found.setdefault(identifier.lower(), module.stem)
+    return found
+
+
+def main() -> int:
+    if len(sys.argv) != 2:
+        print(__doc__)
+        return 2
+    root = pathlib.Path(sys.argv[1]).resolve()
+    native_root = pathlib.Path(__file__).resolve().parent.parent
+    ported = ported_ids(native_root)
+    rows = []
+    for group in ROOTS:
+        base = root / SOURCE / group
+        if not base.is_dir():
+            continue
+        for folder in sorted(base.iterdir()):
+            if not folder.is_dir() or folder.name.startswith(("_", ".")):
+                continue
+            index = folder / "index.ts"
+            if not index.exists():
+                index = folder / "index.tsx"
+            if not index.exists():
+                continue
+            source = index.read_text(encoding="utf-8", errors="replace")
+            description = DESCRIPTION.search(source)
+            authors = AUTHORS.search(source)
+            natives = sorted(
+                str(child.relative_to(folder)) for child in folder.rglob("native*.ts")
+            )
+            rows.append(
+                {
+                    "group": group,
+                    "folder": folder.name,
+                    "name": plugin_name(folder.name, source),
+                    "description": (description.group(1) if description else "")[:110],
+                    "authors": (authors.group(1).replace(" ", "") if authors else "")[:40],
+                    "settings": len(SETTING_KEYS.findall(source)),
+                    "patches": bool(PATCHES.search(source)),
+                    "before_send": bool(BEFORE_SEND.search(source)),
+                    "before_edit": bool(BEFORE_EDIT.search(source)),
+                    "flux": bool(FLUX.search(source)),
+                    "render": bool(RENDER.search(source)),
+                    "native": ";".join(natives),
+                    "verdict": verdict(folder.name, source, natives),
+                    "ported": ported.get(plugin_name(folder.name, source).lower(), ""),
+                }
+            )
+    out = pathlib.Path(__file__).resolve().parent.parent / "docs" / "testcord-inventory.csv"
+    with out.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()))
+        writer.writeheader()
+        writer.writerows(rows)
+    counts: dict[str, int] = {}
+    for row in rows:
+        counts[row["verdict"]] = counts.get(row["verdict"], 0) + 1
+    done = sum(1 for row in rows if row["ported"])
+    print(f"{len(rows)} plugins -> {out}")
+    for key in sorted(counts):
+        print(f"  {key}: {counts[key]}")
+    print(f"  ported: {done}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

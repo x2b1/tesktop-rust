@@ -71,15 +71,26 @@ MessageLogger record is session memory and is never written to disk; copy it out
 | SplitLargeMessages | Splits an oversized body on newlines, spaces or an exact length and sends the parts in order with your delay | Reading the account's Nitro tier for the 4000-character limit, and slowmode awareness |
 | NoReplyMention | Applies a reply-mention policy: never ping, ping only listed people, or leave your choice alone | Reading the Shift key: this client shows an explicit mention switch in the reply header, so the port applies a policy at send time instead |
 
-## Deliberately not ported
+## The rest of TestCord
 
-TestCord carries roughly 790 plugins across its Vencord, Equicord and TestCord folders. Around
-half of them exist to patch Discord's minified internals through webpack, which a native client
-does not run; they would have to be rewritten against this app's own state instead of
-transliterated. About fifty are selfbot, token, mass-message or anti-logging features that this
-client's product boundaries exclude, and they stay excluded. Everything else needs the same
-treatment as the four ports above: a manifest, a settings table, and hooks onto the pipeline
-above.
+`tools/generate-testcord-inventory.py <TestCord checkout>` regenerates
+[testcord-inventory.csv](testcord-inventory.csv), which lists every plugin once with the hooks
+it uses and a verdict:
+
+| Verdict | Count | What it takes |
+|---|---:|---|
+| `portable-logic` | 229 | Settings and pure logic; the shape of the ports above |
+| `portable-hook` | 75 | A hook on the message pipeline, plus whatever else it does |
+| `portable-ui` | 76 | Declarative surfaces: commands, buttons, decorations, styles |
+| `native-feature` | 67 | Ship a `native.ts`; here that is a Rust module doing the same work |
+| `rewrite` | 284 | Patch Discord's own JavaScript; must be rebuilt against this client's state |
+| `excluded` | 58 | Selfbot, token, mass-messaging, anti-logging or surveillance features |
+| `excluded-web-only` | 1 | Only meaningful inside a patched web client |
+
+The `ported` column fills in as the runtime grows, so the remaining work is a count rather than
+a guess. The 284 rewrites are the honest ceiling on a native client: their entire premise is
+rewriting Discord's minified internals, which this app never loads, so each one needs a design of
+its own against the state owner rather than a translation.
 
 ## Tests
 
