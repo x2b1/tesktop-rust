@@ -23,5 +23,6 @@ The packaged platform icons built from the same artwork live in `packaging/` (`m
 and `Serein.icon`, `windows/Serein.ico`, `linux/hicolor/*`).
 
 Brand palette: `#8BBEFF` → `#506DDC` → `#2D247C` plate gradient, `#F5FAFF` and `#D1E0FF` waves.
-The interface accent (`design::DEFAULT_PRIMARY_RGB`, `#1a72e8`) is drawn from the same family and
-is tuned so white text on it keeps a 4.5:1 contrast ratio.
+The interface accent (`design::DEFAULT_PRIMARY_RGB`, `#5865f2`) is blurple, calibrated against a
+reference client rather than drawn from the plate gradient above, and is tuned so white text on it
+keeps a 4.5:1 contrast ratio.

@@ -1725,7 +1725,7 @@ impl MessagingUi {
 	) {
 		let colors = design::palette(ui);
 		egui::Panel::top("channel-header")
-			.exact_size(48.0)
+			.exact_size(49.0)
 			.show_separator_line(false)
 			.frame(
 				egui::Frame::new()
@@ -3509,7 +3509,7 @@ impl MessagingUi {
 				egui::Panel::right("people-pane")
 					.resizable(false)
 					.show_separator_line(!design::has_window_background(ui))
-					.exact_size(240.0)
+					.exact_size(232.0)
 					.frame(
 						egui::Frame::new()
 							.fill(design::section_surface(

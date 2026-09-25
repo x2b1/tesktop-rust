@@ -16,6 +16,7 @@ pub mod copy;
 pub mod display;
 pub mod messagelogger;
 pub mod noreplymention;
+pub mod notify;
 pub mod sendtext;
 pub mod silenceusers;
 pub mod splitlarge;
@@ -309,6 +310,10 @@ pub trait Plugin {
 	}
 	/// Rewrite an accepted inbound message before it enters the timeline.
 	fn mutate_incoming(&mut self, _message: &mut Message) {}
+	/// What this plugin wants announced for an accepted message.
+	fn notice(&self, _event: &notify::Notify<'_>) -> notify::Notice {
+		notify::Notice::default()
+	}
 	/// A rewrite applied while a message is formatted, never to the stored message.
 	fn body_transform(&self) -> Option<body::BodyTransform> {
 		None
@@ -370,6 +375,9 @@ impl Registry {
 			Box::new(sendtext::ProfanityFilter::default()),
 			Box::new(sendtext::JsTextReplace::default()),
 			Box::new(sendtext::Signature::default()),
+			Box::new(notify::PingNotifications::default()),
+			Box::new(notify::OnePingPerDm::default()),
+			Box::new(notify::MessageNotifier::default()),
 			Box::new(blockkeywords::BlockKeywords::default()),
 			Box::new(silenceusers::SilenceUsers::default()),
 			Box::new(splitlarge::SplitLargeMessages::default()),
@@ -391,11 +399,14 @@ impl Registry {
 				)
 			})
 			.collect();
-		Self {
+		let mut registry = Self {
 			plugins,
 			entries,
 			pending: Vec::new(),
-		}
+		};
+		// Every port starts from the defaults it declares, as TestCord does on a fresh install.
+		registry.reconfigure();
+		registry
 	}
 
 	pub fn metas(&self) -> Vec<Meta> {
@@ -550,6 +561,18 @@ impl Registry {
 				.body_transform()
 				.map(|transform| (self.plugins[index].meta().id, transform))
 		})
+	}
+
+	/// Fold every active port's opinion about announcing a message.
+	pub fn notice(&self, event: &notify::Notify<'_>) -> notify::Notice {
+		if !self.any_enabled() {
+			return notify::Notice::default();
+		}
+		self.active()
+			.into_iter()
+			.fold(notify::Notice::default(), |notice, index| {
+				notice.merge(self.plugins[index].notice(event))
+			})
 	}
 
 	/// Fold every active plugin's display wishes into one resolved view.

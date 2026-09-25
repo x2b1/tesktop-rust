@@ -3,8 +3,9 @@ use client_core::{Command, State};
 use egui::{Align2, Color32, FontId};
 use model::Id;
 
-/// Fixed width of the server rail column.
-pub(super) const RAIL_WIDTH: f32 = 68.0;
+/// Fixed width of the server rail column. Matches the reference client, which sizes this
+/// as a 40px icon plus 16px of padding on each side.
+pub(super) const RAIL_WIDTH: f32 = 72.0;
 
 #[derive(Default)]
 pub(super) struct RailCache {

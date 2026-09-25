@@ -3907,6 +3907,39 @@ impl Desktop {
 		self.tesktop_run_action(ctx);
 	}
 
+	/// What the bundled ports want announced for an accepted message.
+	fn tesktop_notice(&self, message: &model::Message) -> tesktop_plugins::notify::Notice {
+		let me = self
+			.state
+			.user
+			.as_ref()
+			.map_or(model::Id(0), |user| user.id);
+		let channel = message.channel;
+		let guild = self.state.channel(channel).and_then(|found| found.guild);
+		let mentions_me = message.mentions.iter().any(|user| user.id == me)
+			|| message.content.contains(&format!("<@{me}>"))
+			|| message.content.contains(&format!("<@!{me}>"));
+		// The oldest message the window still holds is the one that starts an unread run.
+		let oldest_unread = self.state.unread(channel).is_some_and(|unread| unread)
+			&& self
+				.state
+				.timeline
+				.iter()
+				.next()
+				.is_some_and(|oldest| oldest.id == message.id);
+		self.tesktop.notice(&tesktop_plugins::notify::Notify {
+			message,
+			channel,
+			guild,
+			direct: guild.is_none() || mentions_me,
+			mentions_me,
+			everyone: message.mention_everyone,
+			oldest_unread,
+			visible: self.state.selected == Some(channel),
+			me,
+		})
+	}
+
 	/// Run a message-menu entry a plugin offered, and put its result on the clipboard.
 	fn tesktop_run_action(&mut self, ctx: &egui::Context) {
 		let Some(picked) = self.messaging.testcord.picked.take() else {
@@ -5427,9 +5460,20 @@ impl Desktop {
 			if event.generation != self.state.generation {
 				continue;
 			}
-			// Plugins see the message as it will be stored: pings can be taken out first.
+			// Plugins see the message as it will be stored: pings can be taken out first, and
+			// the alert it earns is decided before the state owner queues one.
 			if let Event::Message(message) = &mut event.event {
 				self.tesktop.mutate_incoming(message);
+				let notice = self.tesktop_notice(message);
+				if !notice.announce {
+					message.suppress_notifications = true;
+				}
+				if notice.toast {
+					self.messaging.toasts.push(
+						ui::design::Level::Info,
+						format!("{} sent a message", message.author.name),
+					);
+				}
 			}
 			// A hidden message is treated as if the service had never sent it.
 			if self.tesktop_observe(&event.event) {

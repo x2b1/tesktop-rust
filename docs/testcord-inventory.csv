@@ -95,7 +95,7 @@ plugins,noSystemBadge.discordDesktop,NoSystemBadge,Disables the taskbar and syst
 plugins,noTypingAnimation,NoTypingAnimation,Disables the CPU-intensive typing dots animation,Devs.AutumnVN,0,True,False,False,False,False,,rewrite,
 plugins,noUnblockToJump,NoUnblockToJump,Allows you to jump to messages of blocked or ignored users and likely spammers without unblocking them,Devs.Rini,0,True,False,False,False,False,,rewrite,
 plugins,notificationVolume,NotificationVolume,Notification volume,Devs.philipbry,1,True,False,False,False,False,,rewrite,
-plugins,onePingPerDM,OnePingPerDM,Select the type of DM for the plugin to affect,Devs.ProffDea,5,True,False,False,False,False,,rewrite,
+plugins,onePingPerDM,OnePingPerDM,Select the type of DM for the plugin to affect,Devs.ProffDea,5,True,False,False,False,False,,rewrite,notify
 plugins,openInApp,OpenInApp,Open Spotify links in the Spotify app,"Devs.Ven,Devs.surgedevs",7,True,False,False,False,False,native.ts,native-feature,
 plugins,overrideForumDefaults,OverrideForumDefaults,Which layout to use as default,Devs.Inbestigator,2,True,False,False,False,False,,rewrite,
 plugins,pauseInvitesForever,PauseInvitesForever,Brings back the option to pause invites indefinitely that stupit Discord removed.,"Devs.Dolfies,Devs.amia",0,True,False,False,False,False,,rewrite,
@@ -271,7 +271,7 @@ equicordplugins,messageColors,MessageColors,Displays color codes like #FF0042 in
 equicordplugins,messageFetchTimer,MessageFetchTimer,Show fetch time icon in message bar,EquicordDevs.GroupXyz,4,False,False,False,False,False,,portable-logic,
 equicordplugins,messageLinkTooltip,MessageLinkTooltip,Show tooltip when hovering over message links,Devs.Kyuuhachi,4,True,False,False,False,False,,rewrite,
 equicordplugins,messageLoggerEnhanced,MessageLoggerEnhanced,"Improves Message Logger with edited message history, ghost ping detection and more","Devs.Aria,EquicordDevs.keircn,TestcordDe",3,True,False,False,True,False,,rewrite,
-equicordplugins,messageNotifier,MessageNotifier,Comma separated list of user ids to get message toasts for,"EquicordDevs.cassie,EquicordDevs.mochien",2,False,False,False,True,False,,portable-hook,
+equicordplugins,messageNotifier,MessageNotifier,Comma separated list of user ids to get message toasts for,"EquicordDevs.cassie,EquicordDevs.mochien",2,False,False,False,True,False,,portable-hook,notify
 equicordplugins,messagePeek,MessagePeek,Hide message previews and timestamps for muted DMs and group chats.,"Devs.prism,EquicordDevs.justjxke",1,True,False,False,False,True,,rewrite,
 equicordplugins,messageTranslate,MessageTranslate,"Auto translate messages to your language with caching, per-channel toggles, and more options.",EquicordDevs.creations,0,True,False,False,False,False,,rewrite,
 equicordplugins,micLoopbackTester,MicLoopbackTester,Adds mic loopback test icon to the user panel,EquicordDevs.benjii,1,False,False,False,False,False,,portable-logic,
@@ -296,7 +296,7 @@ equicordplugins,orbolayBridge,OrbolayBridge,Port to connect to,EquicordDevs.Spik
 equicordplugins,partyMode,PartyMode,Party intensity,Devs.UwUDev,1,False,False,False,False,False,,portable-logic,
 equicordplugins,pendingFriendRequest,CancelFriendRequest,Adds a way to cancel outgoing friend requests from profiles.,EquicordDevs.omaw,1,True,False,False,False,False,,rewrite,
 equicordplugins,pinIcon,PinIcon,Adds a pin icon to pinned messages,EquicordDevs.iamme,0,True,False,False,False,False,,rewrite,
-equicordplugins,pingNotifications,PingNotifications,Notify when friends send messages in servers,EquicordDevs.smuki,6,False,False,False,True,False,,portable-hook,
+equicordplugins,pingNotifications,PingNotifications,Notify when friends send messages in servers,EquicordDevs.smuki,6,False,False,False,True,False,,portable-hook,notify
 equicordplugins,polishWording,PolishWording,Quick disable. Turns off message modifying without requiring a client reload.,"Devs.Samwich,EquicordDevs.WKoA",7,False,True,False,False,False,,portable-hook,sendtext
 equicordplugins,profileSets,ProfileSets,Avatar size in preset list.,"EquicordDevs.omaw,EquicordDevs.justjxke",2,False,False,False,False,False,,portable-logic,
 equicordplugins,questify,Questify,"Enhance specific Quest features, disable annoyances, or completely remove Quests.",EquicordDevs.Etorix,2,True,False,False,True,False,native.ts,native-feature,

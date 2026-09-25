@@ -1,8 +1,10 @@
 # Serein interface direction
 
 Serein follows the familiar three-column messaging layout and density of a modern desktop chat
-client, but it is not a visual clone: it uses its own cool blue-grey neutrals, the Serein azure
-accent, softer corner radii and its own server-rail selection language. The palette, typography
+client. Its default preset is calibrated against a reference client: surfaces, text, presence and
+accent tones are measured from it rather than invented, and the dark surfaces are neutral greys
+with no blue cast. It is still its own client — it keeps softer corner radii than the reference
+layout, its own server-rail selection language, and its own extra presets. The palette, typography
 and spacing live in `crates/ui/src/design.rs`; every view resolves colours through
 `design::palette(ui)`.
 
@@ -10,16 +12,21 @@ and spacing live in `crates/ui/src/design.rs`; every view resolves colours throu
 
 The `Palette` carries surface roles: `base` (title strip and server rail), `sidebar`
 (channel and member lists), `chat`, `raised` (composer, cards, search field, popovers), `hover`,
-`selected`, `border`, `text_strong`/`text`/`muted`, `link`, `accent` (Serein azure `#1a72e8`),
+`selected`, `border`, `text_strong`/`text`/`muted`, `link`, `accent` (blurple `#5865f2`),
 presence
 colours, mention colours and an optional two-stop `backdrop` gradient. `canvas` and `surface`
 remain as aliases of `chat` and `sidebar` for older call sites.
+
+The reference client expresses hover, selection and borders as translucent tints rather than as
+separate solid colours, so they composite correctly over whatever sits beneath them. `Palette`
+keeps handing out opaque fills, so `design::over` flattens those tints onto the base surface;
+`design::overlay` holds the measured tint/alpha pairs.
 
 A process-wide `Variant` recolours the whole application on top of egui's light/dark preference:
 
 | Preset | Surfaces |
 |---|---|
-| Serein | House neutrals: dark (`#0d1016` / `#12161f` / `#161b25` / `#1d2431`) or light (`#dde3ec` / `#eef1f7` / white), following System/Light/Dark |
+| Serein | Measured neutrals: dark (`#121214` / `#121214` / `#1a1a1e` / `#242429`) or light (`#dde3ec` / `#eef1f7` / white), following System/Light/Dark |
 | Eclipse | Deep black surfaces for OLED displays |
 | Slate | Lighter blue-grey surfaces (`#1b1f2a` / `#262b38` / `#2c3140`) |
 | Nightfall, Ember, Verdant, Afterglow | Gradient backdrop painted under translucent dark surfaces |

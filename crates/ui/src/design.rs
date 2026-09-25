@@ -249,8 +249,30 @@ const fn rgba(value: u32, alpha: u8) -> Color32 {
 		alpha,
 	)
 }
-/// tesktop2 azure: the house accent, packed for call sites that speak in integer colours.
-pub const DEFAULT_PRIMARY_RGB: u32 = 0x1a72e8;
+/// Interactive-state overlays, measured from the reference client. It expresses hover,
+/// selection and borders as translucent tints rather than as separate solid colours, so
+/// they sit correctly on any surface. These are the tints; [`over`] flattens one onto a
+/// surface so `Palette` can keep handing out opaque fills. Theme-varying entries are
+/// indexed by `usize::from(dark)` to match the extension-palette convention.
+mod overlay {
+	/// Hover uses one tint in both themes.
+	pub(super) const NORMAL: (u32, u8) = (0x9595a2, 0x29);
+	/// [light, dark] — selection is more opaque on a light surface.
+	pub(super) const STRONG: [(u32, u8); 2] = [(0x96969f, 0x3d), (0x9696a0, 0x33)];
+	/// [light, dark] — the chat and frame hairline is stronger in light.
+	pub(super) const BORDER: [(u32, u8); 2] = [(0x97979e, 0x47), (0x94949c, 0x1f)];
+}
+/// Flatten a translucent tint onto an opaque surface with straight alpha compositing.
+fn over(surface: Color32, (tint, alpha): (u32, u8)) -> Color32 {
+	let a = f32::from(alpha) / 255.0;
+	let [sr, sg, sb, _] = surface.to_srgba_unmultiplied();
+	let [tr, tg, tb, _] = rgb(tint).to_srgba_unmultiplied();
+	let mix = |s: u8, t: u8| (f32::from(s) + (f32::from(t) - f32::from(s)) * a).round() as u8;
+	Color32::from_rgb(mix(sr, tr), mix(sg, tg), mix(sb, tb))
+}
+/// The house accent, packed for call sites that speak in integer colours. This is blurple,
+/// measured from the reference client rather than chosen, so the accent agrees with it.
+pub const DEFAULT_PRIMARY_RGB: u32 = 0x5865f2;
 pub const DEFAULT_PRIMARY_COLOR: [u8; 3] = [
 	(DEFAULT_PRIMARY_RGB >> 16) as u8,
 	(DEFAULT_PRIMARY_RGB >> 8) as u8,
@@ -261,7 +283,8 @@ const PRIMARY: Color32 = Color32::from_rgb(
 	DEFAULT_PRIMARY_COLOR[1],
 	DEFAULT_PRIMARY_COLOR[2],
 );
-const MENTION_BG: Color32 = rgba(DEFAULT_PRIMARY_RGB, 76);
+/// Mention pills sit behind a mention at the same alpha the reference client uses.
+const MENTION_BG: Color32 = rgba(DEFAULT_PRIMARY_RGB, 61);
 fn dark_common(
 	base: Color32,
 	sidebar: Color32,
@@ -279,15 +302,17 @@ fn dark_common(
 		hover,
 		selected,
 		border,
-		text_strong: rgb(0xeef1f6),
-		text: rgb(0xc9cfdb),
-		muted: rgb(0x8b93a5),
-		link: rgb(0x54abff),
+		// Text and status tones are shared by every dark variant. The reference client
+		// collapses body and heading text onto one neutral, so these do too.
+		text_strong: rgb(0xefeff1),
+		text: rgb(0xefeff1),
+		muted: rgb(0x96979e),
+		link: rgb(0x4d96ee),
 		accent: PRIMARY,
 		accent_text: Color32::WHITE,
-		positive: rgb(0x2fb87a),
-		warning: rgb(0xe8a33d),
-		danger: rgb(0xef5561),
+		positive: rgb(0x3d9e60),
+		warning: rgb(0xfdb833),
+		danger: rgb(0xda3e44),
 		mention_bg: MENTION_BG,
 		mention_text: rgb(0xbcd9ff),
 		backdrop: None,
@@ -312,38 +337,48 @@ fn gradient(stops: [u32; 2]) -> Palette {
 }
 pub fn builtin_colors(dark: bool, variant: Variant) -> Palette {
 	let palette = match variant {
-		Variant::Standard if dark => dark_common(
-			rgb(0x0d1016),
-			rgb(0x12161f),
-			rgb(0x161b25),
-			rgb(0x1d2431),
-			rgb(0x222a39),
-			rgb(0x2b3547),
-			rgb(0x212836),
-		),
-		Variant::Standard => Palette {
-			base: rgb(0xdde3ec),
-			sidebar: rgb(0xeef1f7),
-			chat: Color32::WHITE,
-			raised: rgb(0xe6ebf3),
-			hover: rgb(0xe3e9f2),
-			selected: rgb(0xd1d9e6),
-			border: rgb(0xd9e0ea),
-			text_strong: rgb(0x0b0f16),
-			text: rgb(0x2c3340),
-			muted: rgb(0x5b6473),
-			link: rgb(0x0b63d6),
-			accent: PRIMARY,
-			accent_text: Color32::WHITE,
-			positive: rgb(0x1c9c63),
-			warning: rgb(0xc8860f),
-			danger: rgb(0xd23742),
-			mention_bg: MENTION_BG,
-			mention_text: rgb(0x14508f),
-			backdrop: None,
-			canvas: Color32::WHITE,
-			surface: rgb(0xeef1f7),
-		},
+		Variant::Standard if dark => {
+			// Neutral greys straight off the reference client's surface ladder. It keeps no
+			// blue cast, so the cool tint that used to live here is gone on purpose.
+			let base = rgb(0x121214);
+			dark_common(
+				base,
+				base,
+				rgb(0x1a1a1e),
+				rgb(0x242429),
+				over(base, overlay::NORMAL),
+				over(base, overlay::STRONG[1]),
+				over(base, overlay::BORDER[1]),
+			)
+		}
+		Variant::Standard => {
+			// The light ladder, measured the same way. Its window and rail sit one step below
+			// the conversation area, and every raised surface is flat white.
+			let base = rgb(0xf3f3f4);
+			Palette {
+				base,
+				sidebar: base,
+				chat: rgb(0xfbfbfb),
+				raised: Color32::WHITE,
+				hover: over(base, overlay::NORMAL),
+				selected: over(base, overlay::STRONG[0]),
+				border: over(base, overlay::BORDER[0]),
+				text_strong: rgb(0x2e2e34),
+				text: rgb(0x2e2e34),
+				muted: rgb(0x6c6d76),
+				link: rgb(0x006dd4),
+				accent: PRIMARY,
+				accent_text: Color32::WHITE,
+				positive: rgb(0x269153),
+				warning: rgb(0xbb7300),
+				danger: rgb(0xd6363f),
+				mention_bg: MENTION_BG,
+				mention_text: rgb(0x14508f),
+				backdrop: None,
+				canvas: rgb(0xfbfbfb),
+				surface: base,
+			}
+		}
 		Variant::Eclipse => dark_common(
 			Color32::BLACK,
 			rgb(0x070708),
@@ -710,7 +745,7 @@ fn customize(mut palette: Palette, primary: Option<[u8; 3]>) -> Palette {
 			Color32::BLACK
 		};
 		// Mention pills tint with the user's accent too, not just the default house colour.
-		palette.mention_bg = palette.accent.gamma_multiply(76.0 / 255.0);
+		palette.mention_bg = palette.accent.gamma_multiply(61.0 / 255.0);
 		palette.mention_text = readable_tint(palette.accent, palette.chat);
 	}
 	palette
@@ -1345,7 +1380,7 @@ fn wide_button(
 }
 /// Deterministic fallback avatar colours drawn from the tesktop2 palette, keyed by the display name.
 fn fallback_avatar_color(name: &str) -> Color32 {
-	const COLORS: [u32; 5] = [DEFAULT_PRIMARY_RGB, 0x6b7a94, 0x2fb87a, 0xe8a33d, 0xef5561];
+	const COLORS: [u32; 5] = [DEFAULT_PRIMARY_RGB, 0x6b7a94, 0x3d9e60, 0xfdb833, 0xda3e44];
 	let hash = name
 		.bytes()
 		.fold(0u32, |h, b| h.wrapping_mul(31).wrapping_add(b as u32));
@@ -1568,6 +1603,78 @@ fn contrast(a: Color32, b: Color32) -> f32 {
 
 #[cfg(test)]
 mod tests {
+	#[test]
+	fn over_flattens_a_tint_onto_a_surface() {
+		use super::*;
+		// A fully transparent tint must leave the surface untouched, and a fully opaque one
+		// must replace it, so the blend cannot drift at either end of the alpha range.
+		assert_eq!(over(rgb(0x121214), (0xffffff, 0)), rgb(0x121214));
+		assert_eq!(over(rgb(0x121214), (0xffffff, 255)), rgb(0xffffff));
+		// A half-alpha black tint lands halfway to black, in every channel.
+		assert_eq!(over(rgb(0x808080), (0x000000, 128)), rgb(0x404040));
+		// The measured tints are what the reference client paints over the same base.
+		assert_eq!(over(rgb(0x121214), overlay::BORDER[1]), rgb(0x222225));
+		assert_eq!(over(rgb(0x121214), overlay::NORMAL), rgb(0x27272b));
+		assert_eq!(over(rgb(0x121214), overlay::STRONG[1]), rgb(0x2c2c30));
+		// The light theme uses a stronger selection and hairline over its own base.
+		assert_eq!(over(rgb(0xf3f3f4), overlay::STRONG[0]), rgb(0xdddde0));
+		assert_eq!(over(rgb(0xf3f3f4), overlay::BORDER[0]), rgb(0xd9d9dc));
+	}
+
+	#[test]
+	fn both_themes_are_calibrated() {
+		use super::*;
+		// Light: window/rail one step below the conversation area, raised surfaces flat white.
+		let light = builtin_colors(false, Variant::Standard);
+		assert_eq!(light.base, rgb(0xf3f3f4));
+		assert_eq!(light.sidebar, rgb(0xf3f3f4));
+		assert_eq!(light.chat, rgb(0xfbfbfb));
+		assert_eq!(light.raised, Color32::WHITE);
+		assert_eq!(light.text, rgb(0x2e2e34));
+		assert_eq!(light.muted, rgb(0x6c6d76));
+		assert_eq!(light.link, rgb(0x006dd4));
+		assert_eq!(light.positive, rgb(0x269153));
+		assert_eq!(light.warning, rgb(0xbb7300));
+		assert_eq!(light.danger, rgb(0xd6363f));
+		// The accent is the same blurple in both themes.
+		assert_eq!(light.accent, rgb(0x5865f2));
+		// Canvas and surface stay aliases of chat and sidebar for older call sites.
+		assert_eq!(light.canvas, light.chat);
+		assert_eq!(light.surface, light.sidebar);
+	}
+
+	#[test]
+	fn the_default_dark_surfaces_are_neutral() {
+		use super::*;
+		let p = builtin_colors(true, Variant::Standard);
+		// Calibrated against a reference client, whose own greys still carry a few points
+		// of blue (its chat surface is 26/26/30). The bound is set from those measured
+		// values, so it rejects a return to the old +9..+20 cast without rejecting the
+		// reference palette itself.
+		for surface in [p.base, p.sidebar, p.chat, p.raised] {
+			let [r, g, b, _] = surface.to_srgba_unmultiplied();
+			assert!(
+				r.abs_diff(g) <= 5 && g.abs_diff(b) <= 5,
+				"surface {surface:?} is too blue: {r},{g},{b}"
+			);
+		}
+		assert_eq!(p.base, rgb(0x121214));
+		assert_eq!(p.sidebar, rgb(0x121214));
+		assert_eq!(p.chat, rgb(0x1a1a1e));
+		assert_eq!(p.raised, rgb(0x242429));
+	}
+
+	#[test]
+	fn the_accent_keeps_white_text_readable() {
+		use super::*;
+		// `customize` flips the label colour when a custom accent is too light, so the
+		// house accent must already clear the 4.5:1 bar with white on its own.
+		let p = builtin_colors(true, Variant::Standard);
+		assert_eq!(p.accent, rgb(0x5865f2));
+		assert_eq!(p.accent_text, Color32::WHITE);
+		assert!(contrast(Color32::WHITE, p.accent) >= 4.5);
+	}
+
 	#[test]
 	fn action_button_text_uses_the_current_palette() {
 		use super::*;
@@ -1836,7 +1943,7 @@ pub fn build_badge(ui: &mut egui::Ui, build: Build) -> Option<egui::Response> {
 		Channel::Dev => (
 			"DEV",
 			"Local development build. Unofficial client; live compatibility is unverified.",
-			[rgb(0xe8a33d), rgb(0xe8590c)],
+			[rgb(0xfdb833), rgb(0xe8590c)],
 		),
 	};
 	let font = FontId::new(10.0, semibold_family(ui.ctx()));

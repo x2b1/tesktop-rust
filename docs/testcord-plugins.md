@@ -28,6 +28,7 @@ remembered state.
 | `on_created` / `on_edited` / `on_deleted` | The same events, after `ignore` | Record them, queue a reply |
 | `before_send` / `before_edit` | Every outgoing body and its reply mention | Rewrite either, or refuse it with a reason |
 | `split` | The same body, after the rewrite | Return several bodies, sent in order with `chunk_delay_ms` between them |
+| `notice` | An accepted message, before the state owner queues an alert | Silence the sound, or add a toast in the window |
 | `message_actions` / `run_action` | A message's own menu, then the entry the owner picked | Offer a clipboard or notice action on that message |
 | `display` | Every frame, folded into one `Display` | Choose the clock format, an offset, relative rounding, the edited marker, the composer counter, and whether read state waits for you |
 
@@ -54,6 +55,7 @@ message path.
 | Split message parts | 8 parts per message, 16 queued, 2000 characters each by default |
 | Muted and exempt lists | 256 ids each |
 | Clock offset | -720 to 840 minutes, a real time zone |
+| Notification lists | 256 ids per list |
 | Message-menu entries | 8 per message, 128 characters per label |
 | Message log | 2000 entries, 4 MiB, 2000 characters per body, 256 KiB per export |
 
@@ -80,6 +82,9 @@ MessageLogger record is session memory and is never written to disk; copy it out
 | ProfanityFilter | Removes filtered whole words from what you send, tidies the spaces and punctuation it leaves, and either sends a duck or refuses the message | The keyboard shortcut that toggles it |
 | JsTextReplace | Applies your own find and replace rules, in order, each with an optional condition | The repeating rule editor widget: rules live in one multiline field, one per line, `find => replace` with an optional `\| if: text` |
 | Signature | Appends your signature under every message you send | The composer button and composer menu entry that toggle it |
+| PingNotifications | In servers, only ping on a direct mention, with friends and direct messages able to opt back in | The mention formatting it also rewrites, which this client renders itself |
+| OnePingPerDM | A run of unread direct messages pings once, at the oldest, with scope, mention and ignore-list rules | The desktop-type check, which this client answers from the channel's guild instead |
+| MessageNotifier | A toast for the listed people even where the app's own alert stays quiet | Nothing; the port is complete |
 | CharacterCounter | A composer counter from the first character, coloured by percentage like TestCord | Nothing; the port is complete |
 | StopAutoUnread | Messages stay unread while you read them, until you mark them yourself | Nothing; the port is complete |
 | CopyUserURLs | Adds a Copy user link entry to a message's menu | The user context menu in the member list, which is a separate surface |
