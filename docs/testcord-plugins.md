@@ -150,6 +150,24 @@ a guess. The 284 rewrites are the honest ceiling on a native client: their entir
 rewriting Discord's minified internals, which this app never loads, so each one needs a design of
 its own against the state owner rather than a translation.
 
+## The seams still missing
+
+Four hooks would unlock most of what is left in the portable tiers, and each is deliberately
+not faked until the app can honour it:
+
+- **A plugin-driven attachment action.** `LongMsgTxt`, `AutoZipper` and `FixFileExtensions`
+  change a file before it is sent. Nothing should rewrite an upload until the app hands a port
+  the file it is about to send.
+- **Text into the composer.** `QuickMention`, `QuickReply` and the canned-reply plugins all end
+  in a cursor insertion. The registry can hand the host a line today, but the host has no way to
+  put it where the caret is, and a port must not write into the field itself.
+- **A line under a message.** `AntiRickroll` and the other accessory plugins draw one warning
+  per message. The per-message count added for `WordCount` proves the position and the drawing;
+  what is missing is a per-message value rather than a flag on the whole timeline.
+- **An attachment and channel surface.** `DownloadAllAttachments`, `FastDeleteChannels` and
+  `GuildPickerDumper` act on things other than a message body. The app owns the file picker and
+  the confirmation dialogs, so a port should report intent the way `AskMeToMute` does.
+
 ## Tests
 
 `cargo test -p tesktop-plugins` covers the registry, the bounds, settings persistence and
