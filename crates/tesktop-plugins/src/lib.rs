@@ -20,6 +20,7 @@ pub mod commands;
 pub mod copy;
 pub mod display;
 pub mod files;
+pub mod filter;
 pub mod forget;
 pub mod inspect;
 pub mod marker;
@@ -624,6 +625,7 @@ impl Registry {
 			Box::new(aftermath::AutoChannelReact::default()),
 			Box::new(reacts::CustomReactionButtons::default()),
 			Box::new(reacts::Abbreviation::default()),
+			Box::new(filter::RobloxFilter::default()),
 			Box::new(forget::AutoDeleter::default()),
 			Box::new(blockkeywords::BlockKeywords::default()),
 			Box::new(silenceusers::SilenceUsers::default()),

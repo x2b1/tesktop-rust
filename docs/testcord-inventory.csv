@@ -767,7 +767,7 @@ testcordplugins,relationshipPruner,RelationshipPruner,"Adds a way to easily prun
 Devs.Samwich
 ,TestcordDevs.x2b",0,True,False,False,False,False,,rewrite,
 testcordplugins,repeatMessage,RepeatMessage,"Allows you to repeat messages quickly. If you hold shift while clicking the Repeat option, it will reply to th",TestcordDevs.x2b,1,False,False,False,False,False,,portable-logic,
-testcordplugins,robloxfilter,RobloxFilter,"Enable filtering (censor/replace/block). When off, messages pass through freely.",TestcordDevs.x2b,7,False,False,False,False,False,,portable-logic,
+testcordplugins,robloxfilter,RobloxFilter,"Enable filtering (censor/replace/block). When off, messages pass through freely.",TestcordDevs.x2b,7,False,False,False,False,False,,portable-logic,filter
 testcordplugins,roleDuplication,RoleDuplication,Be able to duplicate/clone roles,"
 {
 name:""iamme"",
