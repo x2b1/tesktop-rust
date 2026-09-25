@@ -1,9 +1,9 @@
 ---
-name: serein-delivery
-description: Deliver Serein feature and fix requests as tested pull requests with native before/after screenshots and measured performance. Use for implementation in this repository, including task-scoped CI repairs; skip read-only questions and unrelated projects.
+name: tesktop2-delivery
+description: Deliver tesktop2 feature and fix requests as tested pull requests with native before/after screenshots and measured performance. Use for implementation in this repository, including task-scoped CI repairs; skip read-only questions and unrelated projects.
 ---
 
-# Serein delivery
+# tesktop2 delivery
 
 Follow root `AGENTS.md` and the documentation. This skill supplies the evidence and PR procedure;
 it does not grant new account, deployment, microphone or credential permissions.

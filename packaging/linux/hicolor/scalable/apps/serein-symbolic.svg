@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
-  <title>Serein symbolic icon</title>
-  <desc>Serein chat-wave app icon, revision 2. Shared aligned vector contours; no embedded raster images.</desc>
+  <title>tesktop2 symbolic icon</title>
+  <desc>tesktop2 chat-wave app icon, revision 2. Shared aligned vector contours; no embedded raster images.</desc>
 
-<path id="serein-upper-wave" d="M 314.783558 234.20198
+<path id="tesktop2-upper-wave" d="M 314.783558 234.20198
 C 369.35641 195.47439 437.473531 173.370297 510.986139 173.370297
 C 694.49505 173.370297 833.394059 301.116832 833.394059 483.611881
 C 833.394059 508.473142 830.796539 532.186662 825.834189 554.582178
@@ -13,7 +13,7 @@ C 549.512871 399.461386 477.528713 428.863366 413.655446 426.835644
 C 351.809901 425.821782 304.158416 404.530693 281.853465 362.962376
 C 258.534653 320.380198 271.788806 264.713179 314.783558 234.20198
 Z" fill="#000000"/>
-<path id="serein-lower-wave" d="M 212.815588 358.906931
+<path id="tesktop2-lower-wave" d="M 212.815588 358.906931
 C 196.566109 396.162707 187.564356 437.786303 187.564356 482.59802
 C 187.564356 563.706931 204.8 620.483168 246.368317 673.20396
 C 271.714851 705.647525 259.548515 738.091089 232.174257 796.89505

@@ -1728,7 +1728,7 @@ mod tests {
 				.is_none()
 		);
 		let inspector = parse_package(include_bytes!(
-			"../../../examples/extensions/packages/conversation-inspector.serein-extension"
+			"../../../examples/extensions/packages/conversation-inspector.tesktop2-extension"
 		))
 		.unwrap();
 		let app = snapshot(&state, &ui::MessagingUi::default(), &inspector.manifest).unwrap();
@@ -1830,7 +1830,7 @@ mod tests {
 		.unwrap();
 		assert!(granted.channel_metadata.is_some());
 		let inspector = parse_package(include_bytes!(
-			"../../../examples/extensions/packages/guild-inspector.serein-extension"
+			"../../../examples/extensions/packages/guild-inspector.tesktop2-extension"
 		))
 		.unwrap();
 		let output = invoke(
@@ -1922,7 +1922,7 @@ mod tests {
 		assert!(app.message_details.as_ref().unwrap().truncated);
 		assert!(app.timeline.as_ref().unwrap().truncated);
 		let toolbox = parse_package(include_bytes!(
-			"../../../examples/extensions/packages/app-toolbox.serein-extension"
+			"../../../examples/extensions/packages/app-toolbox.tesktop2-extension"
 		))
 		.unwrap();
 		let output = invoke(

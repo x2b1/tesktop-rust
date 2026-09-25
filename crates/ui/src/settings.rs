@@ -820,7 +820,7 @@ impl MessagingUi {
 					ui,
 					"Hide window decorations",
 					Some(
-						"Remove the system title bar and borders. Use your window manager to move, resize or close Serein.",
+						"Remove the system title bar and borders. Use your window manager to move, resize or close tesktop2.",
 					),
 					&mut self.hide_window_decorations,
 				);

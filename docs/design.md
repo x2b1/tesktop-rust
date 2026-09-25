@@ -1,6 +1,6 @@
-# Serein interface direction
+# tesktop2 interface direction
 
-Serein follows the familiar three-column messaging layout and density of a modern desktop chat
+tesktop2 follows the familiar three-column messaging layout and density of a modern desktop chat
 client. Its default preset is calibrated against a reference client: surfaces, text, presence and
 accent tones are measured from it rather than invented, and the dark surfaces are neutral greys
 with no blue cast. It is still its own client — it keeps softer corner radii than the reference
@@ -26,7 +26,7 @@ A process-wide `Variant` recolours the whole application on top of egui's light/
 
 | Preset | Surfaces |
 |---|---|
-| Serein | Measured neutrals: dark (`#121214` / `#121214` / `#1a1a1e` / `#242429`) or light (`#dde3ec` / `#eef1f7` / white), following System/Light/Dark |
+| tesktop2 | Measured neutrals: dark (`#121214` / `#121214` / `#1a1a1e` / `#242429`) or light (`#dde3ec` / `#eef1f7` / white), following System/Light/Dark |
 | Eclipse | Deep black surfaces for OLED displays |
 | Slate | Lighter blue-grey surfaces (`#1b1f2a` / `#262b38` / `#2c3140`) |
 | Nightfall, Ember, Verdant, Afterglow | Gradient backdrop painted under translucent dark surfaces |
@@ -34,15 +34,15 @@ A process-wide `Variant` recolours the whole application on top of egui's light/
 Gradient presets paint a full-window mesh in the background layer each frame and use
 translucent panel fills; they always use dark text. Presets are chosen from the account card's
 settings menu (swatch row) and persist in the application-wide SQLite `theme_variant` row next
-to the light/dark appearance; unknown keys fall back to Serein. The keys written by earlier
+to the light/dark appearance; unknown keys fall back to tesktop2. The keys written by earlier
 builds (`onyx`, `ash`, `midnight-blurple`, `crimson-moon`, `forest`, `sunset`) still resolve to
 their renamed presets, so a stored preference survives the rename. `--demo --demo-theme=<key>` and
 `--demo-light` open fixtures in a preset for screenshots.
 
 ## Brand mark and server rail
 
-The application mark is the Serein chat-wave (`assets/brand/`), not a third-party logo. Its
-silhouette is rasterized into the shared icon atlas as `serein-mark` and painted wherever the
+The application mark is the tesktop2 chat-wave (`assets/brand/`), not a third-party logo. Its
+silhouette is rasterized into the shared icon atlas as `tesktop2-mark` and painted wherever the
 client identifies itself: the loading screen, the sign-in card and its button, the login header
 and the Direct Messages tile at the top of the server rail.
 
@@ -116,11 +116,11 @@ above the conversation) or 16:9 tiles with name badges (guild channels), a botto
 of dark pills (mute with settings chevron, camera, screen share, activities, soundboard, more)
 and a red hang-up button, a green "In a call" badge in the header, mute/deafen toggles in the
 account card, and a "Voice Connected" panel above it while connected. Camera, screen share,
-activities and soundboard are shown disabled: Serein has no such features.
+activities and soundboard are shown disabled: tesktop2 has no such features.
 
 ## Verification notes
 
-Native macOS captures at 1120×760 in Serein dark, Eclipse, Slate, Nightfall and light were
+Native macOS captures at 1120×760 in tesktop2 dark, Eclipse, Slate, Nightfall and light were
 inspected on September 10, 2026 with the offline fixtures (`--demo`, `--demo-chat`,
 `--demo-notifications`, `--demo-voice`). Keyboard reachability of channel rows, the forum row,
 toolbar actions and members is covered by headless egui tests. Screen-reader/IME behaviour and

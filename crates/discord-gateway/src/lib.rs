@@ -994,11 +994,12 @@ async fn run_inner(
 	outgoing_activity.update_presence(&own_presence.borrow_and_update())?;
 	let mut member_diagnostics = Diagnostics::new(
 		"members",
-		std::env::var_os("SEREIN_MEMBER_DIAGNOSTICS").as_deref() == Some(std::ffi::OsStr::new("1")),
+		std::env::var_os("TESKTOP2_MEMBER_DIAGNOSTICS").as_deref()
+			== Some(std::ffi::OsStr::new("1")),
 	);
 	let mut gateway_diagnostics = Diagnostics::new(
 		"gateway",
-		std::env::var_os("SEREIN_GATEWAY_DIAGNOSTICS").as_deref()
+		std::env::var_os("TESKTOP2_GATEWAY_DIAGNOSTICS").as_deref()
 			== Some(std::ffi::OsStr::new("1")),
 	);
 	let mut state = ResumeState::default();

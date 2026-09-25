@@ -46,7 +46,7 @@ impl CaptchaView {
 	) -> Result<Self, &'static str> {
 		let (capability, _, html) = page(challenge, dark)?;
 		let script = script.replace(
-			"__SEREIN_CAPTCHA_CONFIG__",
+			"__TESKTOP2_CAPTCHA_CONFIG__",
 			&config(challenge, dark, &capability).to_string(),
 		);
 		let (send, results) = mpsc::sync_channel(1);
@@ -56,15 +56,15 @@ impl CaptchaView {
 			.with_user_agent(client_core::fingerprint::user_agent())
 			.with_visible(false)
 			.with_incognito(true).with_devtools(false)
-			.with_custom_protocol("serein-captcha".into(), move |_, request| {
-				let valid = request.method() == "GET" && request.uri() == "serein-captcha://verification.invalid/";
+			.with_custom_protocol("tesktop2-captcha".into(), move |_, request| {
+				let valid = request.method() == "GET" && request.uri() == "tesktop2-captcha://verification.invalid/";
 				wry::http::Response::builder().status(if valid {200} else {404})
 					.header("Content-Type", "text/html; charset=utf-8")
 					.header("Cache-Control", "no-store")
 					.header("Content-Security-Policy", "default-src 'none'; script-src https://hcaptcha.com https://*.hcaptcha.com; frame-src https://hcaptcha.com https://*.hcaptcha.com; connect-src https://hcaptcha.com https://*.hcaptcha.com; style-src 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com; img-src data: https://hcaptcha.com https://*.hcaptcha.com; base-uri 'none'; form-action 'none'")
 					.body(Cow::Owned(if valid {html.as_bytes().to_vec()} else {Vec::new()})).expect("static response headers")
 			})
-			.with_url("serein-captcha://verification.invalid/")
+			.with_url("tesktop2-captcha://verification.invalid/")
 			.with_initialization_script_for_main_only(script, true)
 			.with_navigation_handler(|url| own_origin(&url) || hcaptcha_origin(&url))
 			.with_new_window_req_handler(|_, _| wry::NewWindowResponse::Deny)
@@ -125,7 +125,7 @@ pub(super) fn page(
 		+ ":";
 	let config = config(challenge, dark, &capability);
 	let script =
-		include_str!("captcha.js").replace("__SEREIN_CAPTCHA_CONFIG__", &config.to_string());
+		include_str!("captcha.js").replace("__TESKTOP2_CAPTCHA_CONFIG__", &config.to_string());
 	let html = include_str!("captcha.html")
 		.replace("__THEME__", if dark { "dark" } else { "light" })
 		.replace("__BACKGROUND__", if dark { "#18191c" } else { "#f7f8fa" })
@@ -154,10 +154,10 @@ pub(super) fn parse_result(body: &str, capability: &str) -> Option<Result<Soluti
 fn own_origin(value: &str) -> bool {
 	url::Url::parse(value).is_ok_and(|url| {
 		((url.scheme() == "https"
-			&& url.host_str() == Some("serein-captcha.verification.invalid")
+			&& url.host_str() == Some("tesktop2-captcha.verification.invalid")
 			&& url.port_or_known_default() == Some(443))
 			|| (cfg!(target_os = "macos")
-				&& url.scheme() == "serein-captcha"
+				&& url.scheme() == "tesktop2-captcha"
 				&& url.host_str() == Some("verification.invalid")
 				&& url.port().is_none()))
 			&& url.username().is_empty()
@@ -184,15 +184,15 @@ mod tests {
 	#[test]
 	fn ipc_is_restricted_to_the_local_verification_page() {
 		assert!(super::own_origin(
-			"https://serein-captcha.verification.invalid/"
+			"https://tesktop2-captcha.verification.invalid/"
 		));
 		for url in [
 			"https://discord.com/",
-			"https://serein-captcha.verification.invalid.evil.test/",
-			"http://serein-captcha.verification.invalid/",
-			"https://user@serein-captcha.verification.invalid/",
-			"https://serein-captcha.verification.invalid:444/",
-			"https://serein-captcha.verification.invalid/other",
+			"https://tesktop2-captcha.verification.invalid.evil.test/",
+			"http://tesktop2-captcha.verification.invalid/",
+			"https://user@tesktop2-captcha.verification.invalid/",
+			"https://tesktop2-captcha.verification.invalid:444/",
+			"https://tesktop2-captcha.verification.invalid/other",
 		] {
 			assert!(!super::own_origin(url));
 		}
@@ -231,7 +231,7 @@ mod tests {
 				);
 				let challenge = Challenge::new("synthetic-sitekey".into(), None, None, None, false)
 					.expect("synthetic challenge");
-				let script = r#"(() => { const config = __SEREIN_CAPTCHA_CONFIG__; document.addEventListener('DOMContentLoaded', () => { if(window === window.top && location.origin === 'https://serein-captcha.verification.invalid' && document.getElementById('captcha')) { document.getElementById('status').textContent = 'Offline verification surface loaded.'; window.ipc.postMessage(config.capability + 'verified:synthetic-passcode'); } }); })();"#;
+				let script = r#"(() => { const config = __TESKTOP2_CAPTCHA_CONFIG__; document.addEventListener('DOMContentLoaded', () => { if(window === window.top && location.origin === 'https://tesktop2-captcha.verification.invalid' && document.getElementById('captcha')) { document.getElementById('status').textContent = 'Offline verification surface loaded.'; window.ipc.postMessage(config.capability + 'verified:synthetic-passcode'); } }); })();"#;
 				let view = CaptchaView::build(window.clone(), &challenge, true, || {}, script)
 					.expect("native webview");
 				view.set_bounds(0, 0, 500, 400);

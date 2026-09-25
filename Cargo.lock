@@ -6279,51 +6279,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "serein"
-version = "0.1.0"
-dependencies = [
- "arboard",
- "client-core",
- "cpal",
- "dirs",
- "discord-api",
- "discord-gateway",
- "discord-protocol",
- "discord-voice",
- "eframe",
- "extensions",
- "find-msvc-tools",
- "futures-util",
- "getrandom 0.4.3",
- "image",
- "local-store",
- "log",
- "md4",
- "model",
- "opus2",
- "platform",
- "png",
- "rasterlottie",
- "reqwest",
- "rtrb",
- "semver",
- "serde",
- "serde_json",
- "sha2 0.10.9",
- "symphonia",
- "tesktop-plugins",
- "test-support",
- "time",
- "tokio",
- "tokio-tungstenite",
- "ui",
- "url",
- "winit",
- "zeroize",
- "zip",
-]
-
-[[package]]
 name = "serein-extension-sdk"
 version = "0.1.0"
 dependencies = [
@@ -7046,6 +7001,51 @@ dependencies = [
  "serde_json",
  "test-support",
  "url",
+]
+
+[[package]]
+name = "tesktop2"
+version = "0.1.0"
+dependencies = [
+ "arboard",
+ "client-core",
+ "cpal",
+ "dirs",
+ "discord-api",
+ "discord-gateway",
+ "discord-protocol",
+ "discord-voice",
+ "eframe",
+ "extensions",
+ "find-msvc-tools",
+ "futures-util",
+ "getrandom 0.4.3",
+ "image",
+ "local-store",
+ "log",
+ "md4",
+ "model",
+ "opus2",
+ "platform",
+ "png",
+ "rasterlottie",
+ "reqwest",
+ "rtrb",
+ "semver",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "symphonia",
+ "tesktop-plugins",
+ "test-support",
+ "time",
+ "tokio",
+ "tokio-tungstenite",
+ "ui",
+ "url",
+ "winit",
+ "zeroize",
+ "zip",
 ]
 
 [[package]]

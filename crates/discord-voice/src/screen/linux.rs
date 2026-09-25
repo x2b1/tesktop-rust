@@ -20,7 +20,7 @@ pub(super) fn x11_session() -> bool {
 }
 
 fn note(event: &str, value: &str) {
-	if std::env::var_os("SEREIN_VOICE_DIAGNOSTICS").is_some_and(|set| set == "1") {
+	if std::env::var_os("TESKTOP2_VOICE_DIAGNOSTICS").is_some_and(|set| set == "1") {
 		eprintln!("[tesktop2 voice Screen] {event}={value}");
 	}
 }

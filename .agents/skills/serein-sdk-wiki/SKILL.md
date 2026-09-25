@@ -1,9 +1,9 @@
 ---
-name: serein-sdk-wiki
-description: Keep Serein's creator wiki synchronized with reviewed extension SDK, capability, ABI, example, theme and authoring-documentation changes. Use during SDK delivery or an explicit wiki refresh.
+name: tesktop2-sdk-wiki
+description: Keep tesktop2's creator wiki synchronized with reviewed extension SDK, capability, ABI, example, theme and authoring-documentation changes. Use during SDK delivery or an explicit wiki refresh.
 ---
 
-# Maintain the Serein SDK wiki
+# Maintain the tesktop2 SDK wiki
 
 The creator wiki is `https://github.com/ViceVerse-cz/Serein/wiki`; its separate Git
 remote is `https://github.com/ViceVerse-cz/Serein.wiki.git`. The authoritative sources
@@ -47,8 +47,8 @@ and edits; use another clone if necessary.
 From the repository root (replace values with the current pushed revision/status):
 
 ```powershell
-python .agents/skills/serein-sdk-wiki/scripts/sync.py --source-ref <full-pushed-commit> --wiki-dir target/<wiki-clone> --status "Preview SDK — PR #373, not yet released"
-python .agents/skills/serein-sdk-wiki/scripts/sync.py --source-ref <full-pushed-commit> --wiki-dir target/<wiki-clone> --status "Preview SDK — PR #373, not yet released" --check
+python .agents/skills/tesktop2-sdk-wiki/scripts/sync.py --source-ref <full-pushed-commit> --wiki-dir target/<wiki-clone> --status "Preview SDK — PR #373, not yet released"
+python .agents/skills/tesktop2-sdk-wiki/scripts/sync.py --source-ref <full-pushed-commit> --wiki-dir target/<wiki-clone> --status "Preview SDK — PR #373, not yet released" --check
 git -C target/<wiki-clone> diff --check
 git -C target/<wiki-clone> diff --stat
 git -C target/<wiki-clone> diff
@@ -63,7 +63,7 @@ compares generated output without writing. It never fetches, commits or pushes.
 Review the pages as documentation, including navigation, examples, capability
 restrictions and preview status; generation alone does not establish accuracy.
 After changing the helper, run
-`python .agents/skills/serein-sdk-wiki/scripts/test_sync.py`.
+`python .agents/skills/tesktop2-sdk-wiki/scripts/test_sync.py`.
 
 ## Publish
 

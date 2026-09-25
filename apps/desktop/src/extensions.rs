@@ -122,60 +122,60 @@ pub(crate) fn starters() -> Result<Vec<Starter>, String> {
 		#[cfg(any(test, feature = "demo"))]
 		(
 			include_bytes!(
-				"../../../examples/extensions/packages/message-delete-protector.serein-extension"
+				"../../../examples/extensions/packages/message-delete-protector.tesktop2-extension"
 			),
 			"Keep messages already seen in this session visible in red after deletion. Cleared when disabled or signed out.",
 		),
 		#[cfg(any(test, feature = "demo"))]
 		(
 			include_bytes!(
-				"../../../examples/extensions/packages/emoji-sticker-images.serein-extension"
+				"../../../examples/extensions/packages/emoji-sticker-images.tesktop2-extension"
 			),
 			"While enabled, selecting custom emoji or stickers sends an image attachment immediately.",
 		),
 		#[cfg(any(test, feature = "demo"))]
 		(
-			include_bytes!("../../../extensions/ocean.serein-extension"),
+			include_bytes!("../../../extensions/ocean.tesktop2-extension"),
 			"Deep blue surfaces with a bright ocean accent.",
 		),
 		#[cfg(any(test, feature = "demo"))]
 		(
-			include_bytes!("../../../extensions/midnight.serein-extension"),
+			include_bytes!("../../../extensions/midnight.tesktop2-extension"),
 			"Inky midnight surfaces with a vivid violet accent.",
 		),
 		#[cfg(any(test, feature = "demo"))]
 		(
-			include_bytes!("../../../extensions/rose.serein-extension"),
+			include_bytes!("../../../extensions/rose.tesktop2-extension"),
 			"Soft rose surfaces with a warm pink accent.",
 		),
 		#[cfg(any(test, feature = "demo"))]
 		(
-			include_bytes!("../../../extensions/forest.serein-extension"),
+			include_bytes!("../../../extensions/forest.tesktop2-extension"),
 			"Calm forest greens and fresh leafy accents.",
 		),
 		#[cfg(any(test, feature = "demo"))]
 		(
-			include_bytes!("../../../extensions/latte.serein-extension"),
+			include_bytes!("../../../extensions/latte.tesktop2-extension"),
 			"Warm coffee tones and a creamy caramel accent.",
 		),
 		#[cfg(any(test, feature = "demo"))]
 		(
-			include_bytes!("../../../extensions/golden.serein-extension"),
+			include_bytes!("../../../extensions/golden.tesktop2-extension"),
 			"Warm charcoal and gold, with rounded, roomy controls.",
 		),
 		#[cfg(any(test, feature = "demo"))]
 		(
-			include_bytes!("../../../extensions/katana.serein-extension"),
+			include_bytes!("../../../extensions/katana.tesktop2-extension"),
 			"Katana's dark charcoal surfaces and sharp red accents. Light mode uses built-in colors.",
 		),
 		#[cfg(any(test, feature = "demo"))]
 		(
-			include_bytes!("../../../extensions/obsidian.serein-extension"),
+			include_bytes!("../../../extensions/obsidian.tesktop2-extension"),
 			"Obsidian violet surfaces and lavender accents in light and dark.",
 		),
 		#[cfg(any(test, feature = "demo"))]
 		(
-			include_bytes!("../../../extensions/teal.serein-extension"),
+			include_bytes!("../../../extensions/teal.tesktop2-extension"),
 			"Cool blue-green surfaces with fresh teal accents.",
 		),
 	];
@@ -266,7 +266,7 @@ pub fn demo_check_examples() -> Result<bool, String> {
 			return Err("Theme starter must only supply a valid palette".into());
 		}
 	}
-	let root = std::env::temp_dir().join(format!("serein-theme-check-{}", std::process::id()));
+	let root = std::env::temp_dir().join(format!("tesktop2-theme-check-{}", std::process::id()));
 	fs::create_dir(&root).map_err(|_| "Cannot create isolated theme check directory")?;
 	let result = (|| {
 		for starter in self::starters()?
@@ -459,7 +459,7 @@ impl ExtensionHost {
 		let context = self.context.clone();
 		self.active = Some((token, receiver));
 		if std::thread::Builder::new()
-			.name("serein-extension".into())
+			.name("tesktop2-extension".into())
 			.spawn(move || {
 				let result = run(&root, job, &gate);
 				let _ = sender.send(result);
@@ -1403,7 +1403,7 @@ fn demo_preview(id: &str) -> Option<&'static [u8]> {
 	#[cfg(feature = "demo")]
 	{
 		match id {
-			"serein-ocean" => Some(include_bytes!("../../../extensions/previews/ocean.png")),
+			"tesktop2-ocean" => Some(include_bytes!("../../../extensions/previews/ocean.png")),
 			_ => None,
 		}
 	}
@@ -1660,7 +1660,7 @@ mod tests {
 			let mut nonce = [0; 16];
 			getrandom::fill(&mut nonce).unwrap();
 			let path =
-				std::env::temp_dir().join(format!("serein-extension-test-{}", digest(&nonce)));
+				std::env::temp_dir().join(format!("tesktop2-extension-test-{}", digest(&nonce)));
 			fs::create_dir(&path).unwrap();
 			Self(path)
 		}
@@ -1711,9 +1711,10 @@ mod tests {
 			}
 		}
 		assert!(!root.exists(), "preview must not install a theme");
-		let original =
-			extensions::parse_package(include_bytes!("../../../extensions/ocean.serein-extension"))
-				.unwrap();
+		let original = extensions::parse_package(include_bytes!(
+			"../../../extensions/ocean.tesktop2-extension"
+		))
+		.unwrap();
 		let directory = root.join("themes").join(&original.manifest.id);
 		fs::create_dir_all(&directory).unwrap();
 		fs::write(directory.join("package.json"), b"invalid").unwrap();
@@ -1804,7 +1805,7 @@ mod tests {
 		let profile = Profile::new();
 		let root = profile.0.join("extensions");
 		let package = extensions::parse_package(include_bytes!(
-			"../../../examples/extensions/packages/message-counter.serein-extension"
+			"../../../examples/extensions/packages/message-counter.tesktop2-extension"
 		))
 		.unwrap();
 		enable(

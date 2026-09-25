@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-Installs or uninstalls Serein for the current Windows user without elevation.
+Installs or uninstalls tesktop2 for the current Windows user without elevation.
 Preserves write permissions for seamless in-app autoupdates.
 #>
 param(
@@ -9,20 +9,20 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$appName = 'Serein'
-$publisher = 'Serein contributors'
+$appName = 'tesktop2'
+$publisher = 'tesktop2 contributors'
 $website = 'https://github.com/ViceVerse-cz/Serein'
 $installDir = Join-Path $env:LOCALAPPDATA "Programs\$appName"
 $uninstallKey = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\$appName"
 $shortcut = Join-Path ([Environment]::GetFolderPath('Programs')) "$appName.lnk"
 
-# Check if Serein is currently running
-$running = Get-Process serein -ErrorAction SilentlyContinue
+# Check if tesktop2 is currently running
+$running = Get-Process tesktop2 -ErrorAction SilentlyContinue
 if ($running) {
     if ($Quiet) {
         $running | Stop-Process -Force
     } else {
-        throw "Serein is currently running. Please close Serein before running setup."
+        throw "tesktop2 is currently running. Please close tesktop2 before running setup."
     }
 }
 
@@ -41,21 +41,21 @@ if ($Uninstall) {
         Remove-Item -LiteralPath $installDir -Recurse -Force
     }
     if (!$Quiet) {
-        Write-Host "Serein was successfully uninstalled."
+        Write-Host "tesktop2 was successfully uninstalled."
     }
     return
 }
 
 # Install
 $distDir = $PSScriptRoot
-$executable = Join-Path $distDir 'serein.exe'
+$executable = Join-Path $distDir 'tesktop2.exe'
 if (!(Test-Path -LiteralPath $executable)) {
-    $candidate = Join-Path (Join-Path $distDir '..\..\dist') 'serein.exe'
+    $candidate = Join-Path (Join-Path $distDir '..\..\dist') 'tesktop2.exe'
     if (Test-Path -LiteralPath $candidate) {
         $distDir = (Resolve-Path (Join-Path $distDir '..\..\dist')).Path
         $executable = $candidate
     } else {
-        throw "serein.exe not found in $distDir. Run this script from the release package directory or build the project first."
+        throw "tesktop2.exe not found in $distDir. Run this script from the release package directory or build the project first."
     }
 }
 
@@ -76,7 +76,7 @@ if (Test-Path -LiteralPath $notificationScript) {
 # Determine version
 $version = '0.1.0'
 try {
-    $versionInfo = (Get-Item -LiteralPath (Join-Path $installDir 'serein.exe')).VersionInfo.ProductVersion
+    $versionInfo = (Get-Item -LiteralPath (Join-Path $installDir 'tesktop2.exe')).VersionInfo.ProductVersion
     if ($versionInfo) { $version = $versionInfo }
 } catch {}
 
@@ -89,7 +89,7 @@ $uninstallCmd = "powershell.exe -NoProfile -ExecutionPolicy Bypass -File `"$inst
 Set-ItemProperty -LiteralPath $uninstallKey -Name 'DisplayName' -Value $appName
 Set-ItemProperty -LiteralPath $uninstallKey -Name 'DisplayVersion' -Value $version
 Set-ItemProperty -LiteralPath $uninstallKey -Name 'Publisher' -Value $publisher
-Set-ItemProperty -LiteralPath $uninstallKey -Name 'DisplayIcon' -Value "$installDir\serein.exe,0"
+Set-ItemProperty -LiteralPath $uninstallKey -Name 'DisplayIcon' -Value "$installDir\tesktop2.exe,0"
 Set-ItemProperty -LiteralPath $uninstallKey -Name 'InstallLocation' -Value $installDir
 Set-ItemProperty -LiteralPath $uninstallKey -Name 'UninstallString' -Value $uninstallCmd
 Set-ItemProperty -LiteralPath $uninstallKey -Name 'QuietUninstallString' -Value "$uninstallCmd -Quiet"
@@ -98,5 +98,5 @@ Set-ItemProperty -LiteralPath $uninstallKey -Name 'NoModify' -Value 1 -Type DWor
 Set-ItemProperty -LiteralPath $uninstallKey -Name 'NoRepair' -Value 1 -Type DWord
 
 if (!$Quiet) {
-    Write-Host "Serein $version installed successfully to $installDir"
+    Write-Host "tesktop2 $version installed successfully to $installDir"
 }

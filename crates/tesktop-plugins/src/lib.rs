@@ -249,6 +249,41 @@ pub struct Previous {
 	pub replying: bool,
 }
 
+/// A service action a port wants carried out, named rather than performed: the app owns the
+/// confirmation, the permissions, the request id and the retry, and a port that could do
+/// any of those itself would be acting outside the client. `emoji` is a `String`, so this
+/// is `Clone` rather than `Copy`.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Intent {
+	Delete {
+		channel: model::Id,
+		message: model::Id,
+	},
+	Pin {
+		channel: model::Id,
+		message: model::Id,
+		pinned: bool,
+	},
+	React {
+		channel: model::Id,
+		message: model::Id,
+		emoji: String,
+		add: bool,
+	},
+}
+
+/// What became of a message the owner sent, as the app saw it. `model::Message` is neither
+/// `Copy` nor `Debug`, so this borrows it and is not derived either.
+#[derive(Clone, PartialEq, Eq)]
+pub struct Delivery<'a> {
+	pub channel: model::Id,
+	pub message: &'a model::Message,
+	pub me: model::Id,
+	/// Why it did not arrive, when it did not. The app's own failure text, so a port never
+	/// has to know the protocol's wording.
+	pub failure: Option<&'a str>,
+}
+
 /// How many messages may carry a line at once. A conversation is longer than this, and the
 /// map is rebuilt every tick, so a message outside it simply goes unmarked.
 pub const MAX_MARKERS: usize = 256;

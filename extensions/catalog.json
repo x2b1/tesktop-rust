@@ -4,15 +4,15 @@
     {
       "manifest": {
         "api_version": 1,
-        "id": "serein-ocean",
+        "id": "tesktop2-ocean",
         "name": "Ocean",
         "version": "1.0.0",
-        "author": "Serein contributors",
+        "author": "tesktop2 contributors",
         "license": "MIT OR Apache-2.0",
         "source": "https://github.com/ViceVerse-cz/rustcord",
         "kind": "theme"
       },
-      "release_url": "https://raw.githubusercontent.com/ViceVerse-cz/rustcord/cb637f07ea9ff643325533820fd1ba052a00176d/extensions/ocean.serein-extension",
+      "release_url": "https://raw.githubusercontent.com/ViceVerse-cz/rustcord/cb637f07ea9ff643325533820fd1ba052a00176d/extensions/ocean.tesktop2-extension",
       "sha256": "ec95e43e6167d95393b279062b41587408ad270ebcc61a5eed2a71865c8387cd",
       "download_bytes": 960,
       "source_commit": "cb637f07ea9ff643325533820fd1ba052a00176d",

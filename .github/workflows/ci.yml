@@ -46,7 +46,7 @@ jobs:
         run: cargo xtask package
       - uses: actions/upload-artifact@v7.0.1
         with:
-          name: serein-${{ runner.os }}-${{ runner.arch }}-unsigned
+          name: tesktop2-${{ runner.os }}-${{ runner.arch }}-unsigned
           path: dist/
   extension-sdk:
     runs-on: ubuntu-latest

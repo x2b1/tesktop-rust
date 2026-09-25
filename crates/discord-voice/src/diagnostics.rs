@@ -239,7 +239,7 @@ impl Metrics {
 	pub fn new(scope: Scope) -> Self {
 		static REPORTER: OnceLock<Option<mpsc::SyncSender<Report>>> = OnceLock::new();
 		let send = REPORTER.get_or_init(|| {
-			if std::env::var_os("SEREIN_VOICE_DIAGNOSTICS").is_none_or(|v| v != "1") {
+			if std::env::var_os("TESKTOP2_VOICE_DIAGNOSTICS").is_none_or(|v| v != "1") {
 				return None;
 			}
 			let (send, receive) = mpsc::sync_channel::<Report>(8);

@@ -1,18 +1,24 @@
-# tesktop-rust
+# tesktop2
 
-**tesktop2** is the Tesktop/TestCord distribution of the native Serein client, and this
-repository is its home. The native Rust/egui/wgpu UI and networking runtime are based on
-[Serein](https://github.com/ViceVerse-cz/Serein); Tesktop features are layered on top without
-replacing that client. Serein remains the upstream project and is used under its original
-MIT/Apache-2.0 terms.
+**tesktop2** is a native Discord desktop client written in Rust on egui and wgpu, plus the
+Tesktop/TestCord distribution of it. This repository is its home.
+
+The native UI and networking runtime are based on
+[Serein](https://github.com/ViceVerse-cz/Serein), which remains the upstream project and is
+used under its original MIT/Apache-2.0 terms. Tesktop and TestCord features are layered on top
+without replacing that client.
+
+The default theme is calibrated against a reference client rather than chosen: surfaces, text,
+presence and accent tones were measured from it, so the interface agrees with what people
+already use. See [docs/design.md](docs/design.md).
 
 TestCord plugins are ported natively here rather than injected into a web client; see
 [docs/testcord-plugins.md](docs/testcord-plugins.md) for the contract, the bounds, the ports
 that ship today and what is deliberately left out.
 
 <p align="center">
-  <a href="https://github.com/ViceVerse-cz/rustcord">
-    <img src="docs/preview.png" alt="Serein Native Discord Client" width="900" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);" />
+  <a href="https://github.com/ViceVerse-cz/Serein">
+    <img src="docs/preview.png" alt="tesktop2 native Discord client" width="900" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);" />
   </a>
 </p>
 
@@ -21,7 +27,7 @@ that ship today and what is deliberately left out.
 </p>
 
 <h3 align="center">
-  <a href="https://discord.gg/UqTDGCENaN">💬 Join our Discord server for updates</a>
+  <a href="https://discord.gg/5Sm6P8khRQ">💬 Join our Discord server for updates</a>
 </h3>
 
 <p align="center">
@@ -35,8 +41,8 @@ that ship today and what is deliberately left out.
 </p>
 
 <p align="center">
-  <a href="https://discord.gg/UqTDGCENaN"><img src="https://img.shields.io/badge/Discord-Join%20our%20Discord%20server%20for%20updates-5865F2?logo=discord&logoColor=white" alt="Discord" /></a>
-  <a href="https://github.com/ViceVerse-cz/rustcord/releases"><img src="https://img.shields.io/github/v/release/ViceVerse-cz/rustcord?label=release&color=blue" alt="GitHub Release" /></a>
+  <a href="https://discord.gg/5Sm6P8khRQ"><img src="https://img.shields.io/badge/Discord-Join%20our%20Discord%20server%20for%20updates-5865F2?logo=discord&logoColor=white" alt="Discord" /></a>
+  <a href="https://github.com/ViceVerse-cz/Serein/releases"><img src="https://img.shields.io/github/v/release/ViceVerse-cz/Serein?label=release&color=blue" alt="GitHub Release" /></a>
   <a href="Cargo.toml"><img src="https://img.shields.io/badge/rust-1.98.1_pinned-blue.svg?logo=rust" alt="Rust 1.98.1 Pinned" /></a>
   <a href="crates/ui"><img src="https://img.shields.io/badge/ui-egui%20%2F%20wgpu-orange.svg" alt="UI egui/wgpu" /></a>
   <a href="docs/platform-support.md"><img src="https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-informational.svg" alt="Platform Support" /></a>
@@ -47,13 +53,13 @@ that ship today and what is deliberately left out.
 
 > [!WARNING]
 > **Unofficial and not endorsed by Discord.**
-> Serein communicates directly with Discord's public gateway and REST endpoints for your existing account. Automating normal accounts outside the official OAuth2/bot API violates Discord's Terms of Service and carries risk of account termination. Technical interoperability does not imply platform approval. Review the [compatibility matrix](docs/discord-compatibility.md) and [authentication guide](docs/authentication.md) before use.
+> tesktop2 communicates directly with Discord's public gateway and REST endpoints for your existing account. Automating normal accounts outside the official OAuth2/bot API violates Discord's Terms of Service and carries risk of account termination. Technical interoperability does not imply platform approval. Review the [compatibility matrix](docs/discord-compatibility.md) and [authentication guide](docs/authentication.md) before use.
 
 ---
 
 ## Downloads & Installation
 
-Pre-compiled releases for macOS, Linux, and Windows are published on GitHub [Releases](https://github.com/ViceVerse-cz/rustcord/releases).
+Pre-compiled releases for macOS, Linux, and Windows are published on GitHub [Releases](https://github.com/ViceVerse-cz/Serein/releases).
 
 | Platform | Format | Architectures | Details |
 |---|---|---|---|
@@ -72,15 +78,15 @@ Flatpak is the recommended distribution format for Linux, featuring sandbox isol
 
 - **One-Click Repository Install (Automatic Updates)**:
   ```sh
-  flatpak install --user https://viceverse-cz.github.io/Serein/flatpak/serein.flatpakref
+  flatpak install --user https://viceverse-cz.github.io/tesktop2/flatpak/tesktop2.flatpakref
   ```
   Once installed, your desktop software store (GNOME Software, KDE Discover) or `flatpak update` will automatically discover and install updates.
 
 - **Standalone Offline Bundle**:
-  Download `Serein-linux.flatpak` from [Releases](https://github.com/ViceVerse-cz/rustcord/releases):
+  Download `tesktop2-linux.flatpak` from [Releases](https://github.com/ViceVerse-cz/Serein/releases):
   ```sh
-  flatpak install --user ./Serein-linux.flatpak
-  flatpak run cz.viceverse.serein
+  flatpak install --user ./tesktop2-linux.flatpak
+  flatpak run cz.viceverse.tesktop2
   ```
 
 See [Flatpak guide](packaging/flatpak/README.md) for sandbox permissions and source build details.
@@ -89,38 +95,38 @@ See [Flatpak guide](packaging/flatpak/README.md) for sandbox permissions and sou
 
 Configure the signed package repository for your distribution with one command:
 ```sh
-curl -fsSL https://viceverse-cz.github.io/Serein/setup.sh | sh
+curl -fsSL https://viceverse-cz.github.io/tesktop2/setup.sh | sh
 ```
 The script detects your distribution (Ubuntu/Debian, Fedora, openSUSE, Arch Linux), cryptographically verifies the GPG signing key, and configures the repository with an option to install immediately.
 
-After setup, manage Serein with your native package manager:
+After setup, manage tesktop2 with your native package manager:
 ```sh
-# Ubuntu / Debian: sudo apt install serein
-# Fedora:          sudo dnf install serein
-# openSUSE:        sudo zypper install serein
-# Arch Linux:      sudo pacman -S serein
+# Ubuntu / Debian: sudo apt install tesktop2
+# Fedora:          sudo dnf install tesktop2
+# openSUSE:        sudo zypper install tesktop2
+# Arch Linux:      sudo pacman -S tesktop2
 ```
-Your normal system updates (`apt upgrade`, `dnf upgrade`, `zypper update`, `pacman -Syu`) will keep Serein updated. See [Signed package repositories](packaging/repositories/README.md) for manual GPG verification steps.
+Your normal system updates (`apt upgrade`, `dnf upgrade`, `zypper update`, `pacman -Syu`) will keep tesktop2 updated. See [Signed package repositories](packaging/repositories/README.md) for manual GPG verification steps.
 
 #### 3. Gentoo (source or binary)
 
-Gentoo users can install Serein from the [vitaly-zdanevich-overlay](https://github.com/vitaly-zdanevich/gentoo-overlay) overlay. It provides a source ebuild ([net-im/serein](https://github.com/vitaly-zdanevich/gentoo-overlay/tree/main/net-im/serein)) and a prebuilt amd64 ebuild ([net-im/serein-bin](https://github.com/vitaly-zdanevich/gentoo-overlay/tree/main/net-im/serein-bin)).
+Gentoo users can install tesktop2 from the [vitaly-zdanevich-overlay](https://github.com/vitaly-zdanevich/gentoo-overlay) overlay. It provides a source ebuild ([net-im/tesktop2](https://github.com/vitaly-zdanevich/gentoo-overlay/tree/main/net-im/tesktop2)) and a prebuilt amd64 ebuild ([net-im/tesktop2-bin](https://github.com/vitaly-zdanevich/gentoo-overlay/tree/main/net-im/tesktop2-bin)).
 
 ```sh
 sudo eselect repository add vitaly-zdanevich-overlay git https://github.com/vitaly-zdanevich/gentoo-overlay.git
 sudo emaint sync -r vitaly-zdanevich-overlay
-echo 'net-im/serein ~amd64' | sudo tee /etc/portage/package.accept_keywords/serein
-sudo emerge --ask net-im/serein
+echo 'net-im/tesktop2 ~amd64' | sudo tee /etc/portage/package.accept_keywords/tesktop2
+sudo emerge --ask net-im/tesktop2
 ```
 
-Use `net-im/serein-bin` in the keyword file and emerge command to install the prebuilt binary instead. The source ebuild requires Rust 1.98.1 or newer. The binary ebuild targets amd64 systems with glibc 2.43 or newer. The two ebuilds install the same files, so choose one.
+Use `net-im/tesktop2-bin` in the keyword file and emerge command to install the prebuilt binary instead. The source ebuild requires Rust 1.98.1 or newer. The binary ebuild targets amd64 systems with glibc 2.43 or newer. The two ebuilds install the same files, so choose one.
 
 #### 4. Standalone AppImage (Portable)
 
-Download `serein-<version>-Linux-X64.AppImage` from [Releases](https://github.com/ViceVerse-cz/rustcord/releases), make it executable, and run:
+Download `tesktop2-<version>-Linux-X64.AppImage` from [Releases](https://github.com/ViceVerse-cz/Serein/releases), make it executable, and run:
 ```sh
-chmod +x ./serein-*-Linux-X64.AppImage
-./serein-*-Linux-X64.AppImage
+chmod +x ./tesktop2-*-Linux-X64.AppImage
+./tesktop2-*-Linux-X64.AppImage
 ```
 Keep the AppImage in a writable directory to receive in-app updates via **Settings → Updates**. Note that the tesktop2 Linux build uses host GTK 3 and WebKit2GTK 4.1 libraries; see [AppImage setup and runtime dependencies](packaging/appimage/README.md) for host requirements.
 
@@ -130,9 +136,9 @@ Keep the AppImage in a writable directory to receive in-app updates via **Settin
 <summary><h3>🪟 Windows (Installer, PowerShell, Portable)</h3></summary>
 
 #### 1. Setup Installer (Recommended)
-Download the `Windows-X64-Setup.exe` or `Windows-ARM64-Setup.exe` asset for your system from [Releases](https://github.com/ViceVerse-cz/rustcord/releases) and run it:
-- Installs per-user to `%LOCALAPPDATA%\Programs\Serein` without requiring administrator/UAC elevation.
-- Automatically registers Start Menu shortcuts and configures AppUserModelID (`cz.viceverse.serein`) for native Windows toast notifications.
+Download the `Windows-X64-Setup.exe` or `Windows-ARM64-Setup.exe` asset for your system from [Releases](https://github.com/ViceVerse-cz/Serein/releases) and run it:
+- Installs per-user to `%LOCALAPPDATA%\Programs\tesktop2` without requiring administrator/UAC elevation.
+- Automatically registers Start Menu shortcuts and configures AppUserModelID (`cz.viceverse.tesktop2`) for native Windows toast notifications.
 - Registers in Windows Settings (Installed Apps / Add or Remove Programs) with full uninstall support.
 - Fully compatible with in-app self-updates: updates automatically synchronize the registered version.
 
@@ -147,11 +153,11 @@ powershell -ExecutionPolicy Bypass -File .\setup.ps1 -Uninstall
 ```
 
 #### 3. Portable Archive
-Extract the `Windows-X64.zip` or `Windows-ARM64.zip` asset for your system anywhere and launch `serein.exe`. To enable native desktop notifications:
+Extract the `Windows-X64.zip` or `Windows-ARM64.zip` asset for your system anywhere and launch `tesktop2.exe`. To enable native desktop notifications:
 ```powershell
 powershell -File .\install-notifications.ps1
 ```
-Run the script from the extracted folder beside `serein.exe`. If PowerShell's `RemoteSigned` policy blocks the downloaded script, review it and run `Unblock-File -LiteralPath .\install-notifications.ps1` in that folder before retrying. The Windows installer registers the shortcut automatically, so installed builds do not need this script.
+Run the script from the extracted folder beside `tesktop2.exe`. If PowerShell's `RemoteSigned` policy blocks the downloaded script, review it and run `Unblock-File -LiteralPath .\install-notifications.ps1` in that folder before retrying. The Windows installer registers the shortcut automatically, so installed builds do not need this script.
 
 </details>
 
@@ -160,13 +166,13 @@ Run the script from the extracted folder beside `serein.exe`. If PowerShell's `R
 
 #### Homebrew Cask
 ```sh
-brew tap ViceVerse-cz/serein https://github.com/ViceVerse-cz/Serein.git
-brew install --cask serein
+brew tap ViceVerse-cz/tesktop2 https://github.com/ViceVerse-cz/Serein.git
+brew install --cask tesktop2
 ```
-The explicit repository URL keeps the cask in this repository; a separate `homebrew-serein` tap is not required.
+The explicit repository URL keeps the cask in this repository; a separate `homebrew-tesktop2` tap is not required.
 
 #### Standalone Bundle
-Download `serein-<version>-macOS-ARM64.zip` from [Releases](https://github.com/ViceVerse-cz/rustcord/releases), unzip, and drag `Serein.app` to your `/Applications` folder.
+Download `tesktop2-<version>-macOS-ARM64.zip` from [Releases](https://github.com/ViceVerse-cz/Serein/releases), unzip, and drag `tesktop2.app` to your `/Applications` folder.
 
 </details>
 
@@ -208,17 +214,17 @@ Download `serein-<version>-macOS-ARM64.zip` from [Releases](https://github.com/V
 
 > **Testing Scenario:** Browsing channels while joined in a Voice Channel (VC) and streaming screen at 60 FPS on macOS.
 
-| Metric | Official Discord Client (Electron) | Serein (Native Rust + egui/wgpu) | Advantage |
+| Metric | Official Discord Client (Electron) | tesktop2 (Native Rust + egui/wgpu) | Advantage |
 |---|:---:|:---:|:---:|
 | **Memory (RAM)** | **1,178.4 MB** *(across 7 helper processes)* | **129.7 MB** *(single unified process)* | **~9× less memory (-89%)** |
 | **CPU Usage** | **22.8%** *(Renderer + Helper processes)* | **8.1%** | **~2.8× lower CPU (-64%)** |
 
-| Official Discord (Electron) | Serein (Native Rust) |
+| Official Discord (Electron) | tesktop2 (Native Rust) |
 | :---: | :---: |
 | **RAM: ~1,178.4 MB across 7 processes** | **RAM: 129.7 MB single process** |
-| <img src="docs/screenshots/perf-discord-ram.png" alt="Discord RAM Usage" width="450" /> | <img src="docs/screenshots/perf-serein-ram.png" alt="Serein RAM Usage" width="450" /> |
+| <img src="docs/screenshots/perf-discord-ram.png" alt="Discord RAM Usage" width="450" /> | <img src="docs/screenshots/perf-tesktop2-ram.png" alt="tesktop2 RAM Usage" width="450" /> |
 | **CPU: 22.8% total** | **CPU: 8.1% total** |
-| <img src="docs/screenshots/perf-discord-cpu.png" alt="Discord CPU Usage" width="450" /> | <img src="docs/screenshots/perf-serein-cpu.png" alt="Serein CPU Usage" width="450" /> |
+| <img src="docs/screenshots/perf-discord-cpu.png" alt="Discord CPU Usage" width="450" /> | <img src="docs/screenshots/perf-tesktop2-cpu.png" alt="tesktop2 CPU Usage" width="450" /> |
 
 ---
 
@@ -282,7 +288,7 @@ cargo xtask package
 | **Profile Cards & Editing** | Implemented | On-demand profile popouts with banners, bios, badges, connections; native in-app editor for display name, bio, pronouns, and custom accent color with live preview |
 | **Server & Group Actions** | Implemented | Server dropdown with friend invites and leave server; group DM actions (edit name/icon preview, mute, leave) |
 | **Context Menus & Shortcuts** | Implemented | Right-click context menus for messages, media (save/copy), server channels, and members |
-| **Typing Indicators** | Implemented | Displays incoming typing with short expiry; Serein strictly avoids emitting outgoing typing signals |
+| **Typing Indicators** | Implemented | Displays incoming typing with short expiry; tesktop2 strictly avoids emitting outgoing typing signals |
 | **Persistence & Drafts** | Implemented | Bounded SQLite cache for history, drafts, settings, and diagnostics; OS credential store for auth tokens; sanitary logout |
 | **Internationalization** | Partial | Bundled Inter font, CJK and Arabic font fallbacks included; full IME and bidirectional editing unverified |
 
@@ -290,10 +296,10 @@ cargo xtask package
 
 ## Architecture Overview
 
-Serein is engineered as a clean multi-crate Cargo workspace, isolating UI rendering from networking, persistence, and service protocols:
+tesktop2 is engineered as a clean multi-crate Cargo workspace, isolating UI rendering from networking, persistence, and service protocols:
 
 ```
-rustcord/
+tesktop2/
 ├── apps/
 │   └── desktop/          # Application entrypoint, CLI flags, window lifecycle
 ├── crates/
@@ -320,7 +326,7 @@ rustcord/
 - **Token Protection:** Tokens are saved solely in the native OS credential store (macOS Keychain, Windows Credential Manager, Linux Secret Service). Plaintext token fallback is strictly prohibited. Active tokens remain redacted in memory.
 - **Local Cache Bounds:** SQLite databases store recent channel history, drafts, settings, diagnostics, and image preview metadata within bounded byte and count limits. The local SQLite store is **not** encrypted by the application.
 - **Sanitary Logout:** Executing an explicit logout destroys active network sessions, purges active secrets from memory, deletes the token from the OS credential store, and erases that account's local cache and drafts.
-- **Zero Telemetry:** Serein contains no analytics, telemetry, background crash collectors, or tracking beacons.
+- **Zero Telemetry:** tesktop2 contains no analytics, telemetry, background crash collectors, or tracking beacons.
 - **Platform Integrity:** No fingerprint spoofing, CAPTCHA/MFA bypasses, bot substitutions, token scrapers, or third-party relays.
 
 For full details, review the [Storage Policy](docs/storage-policy.md) and [Threat Model](docs/threat-model.md).
@@ -347,7 +353,7 @@ For full details, review the [Storage Policy](docs/storage-policy.md) and [Threa
 
 ## License
 
-Original Serein code is dual-licensed under either:
+Original tesktop2 code is dual-licensed under either:
 - **MIT License** ([LICENSE-MIT](LICENSE-MIT))
 - **Apache License, Version 2.0** ([LICENSE-APACHE](LICENSE-APACHE))
 

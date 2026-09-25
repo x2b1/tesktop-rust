@@ -1,4 +1,4 @@
-//! Offline debug check: cargo run --locked -p serein --example extension_settings
+//! Offline debug check: cargo run --locked -p tesktop2 --example extension_settings
 use eframe::egui;
 
 fn texts(shape: &egui::Shape, labels: &mut Vec<String>) {
@@ -16,9 +16,9 @@ fn main() {
 	let mut messaging = ui::MessagingUi::default();
 	let packages: [&[u8]; 2] = [
 		include_bytes!(
-			"../../../examples/extensions/packages/message-delete-protector.serein-extension"
+			"../../../examples/extensions/packages/message-delete-protector.tesktop2-extension"
 		),
-		include_bytes!("../../../extensions/ocean.serein-extension"),
+		include_bytes!("../../../extensions/ocean.tesktop2-extension"),
 	];
 	messaging.extensions.set_entries(
 		packages

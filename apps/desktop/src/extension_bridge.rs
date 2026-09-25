@@ -413,7 +413,7 @@ impl Bridge {
 			.map(|u| u.id.0.to_string());
 		if self.host.is_none() {
 			let root = if demo {
-				Some(std::env::temp_dir().join("serein-extension-demo"))
+				Some(std::env::temp_dir().join("tesktop2-extension-demo"))
 			} else {
 				dirs::data_local_dir().map(|root| root.join("tesktop2").join("extensions"))
 			};
@@ -841,7 +841,7 @@ impl Bridge {
 					let (send, receive) = mpsc::sync_channel(1);
 					let future = platform::save::theme_destination(
 						window.clone(),
-						&format!("{}.serein-extension", package.manifest.id),
+						&format!("{}.tesktop2-extension", package.manifest.id),
 					);
 					let ctx = ctx.clone();
 					runtime.spawn(async move {
@@ -1720,13 +1720,14 @@ mod tests {
 
 	#[test]
 	fn cancelled_import_cannot_replace_the_catalog_bytes_the_user_approved() {
-		let package =
-			extensions::parse_package(include_bytes!("../../../extensions/ocean.serein-extension"))
-				.unwrap();
+		let package = extensions::parse_package(include_bytes!(
+			"../../../extensions/ocean.tesktop2-extension"
+		))
+		.unwrap();
 		let manifest = package.manifest;
 		let id = manifest.id.clone();
 		let imported = InstallSource::Local {
-			path: PathBuf::from("original.serein-extension"),
+			path: PathBuf::from("original.tesktop2-extension"),
 			sha256: "a".repeat(64),
 			manifest: manifest.clone(),
 		};

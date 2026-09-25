@@ -1,7 +1,7 @@
 (() => {
   "use strict";
-  if (window !== window.top || !["https://serein-captcha.verification.invalid/", "serein-captcha://verification.invalid/"].includes(location.href)) return;
-  const config = __SEREIN_CAPTCHA_CONFIG__;
+  if (window !== window.top || !["https://tesktop2-captcha.verification.invalid/", "tesktop2-captcha://verification.invalid/"].includes(location.href)) return;
+  const config = __TESKTOP2_CAPTCHA_CONFIG__;
   let finished = false;
   document.addEventListener("keydown", event => {
     if (event.key === "Escape") send("cancelled");
@@ -26,7 +26,7 @@
           size: config.invisible ? "invisible" : (window.innerWidth < 330 ? "compact" : "normal"),
           callback: value => {
             if (typeof value !== "string" || value.length < 1 || value.length > 8192 || !/^[\x21-\x7e]+$/.test(value)) return fail();
-            status.textContent = "Verified. Returning to Serein…";
+            status.textContent = "Verified. Returning to tesktop2…";
             send("verified", value);
           },
           "expired-callback": () => send("expired"),

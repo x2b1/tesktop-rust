@@ -137,7 +137,7 @@ impl Audio {
 			let runtime = runtime.clone();
 			let context = context.clone();
 			std::thread::Builder::new()
-				.name("serein-attachment-audio".into())
+				.name("tesktop2-attachment-audio".into())
 				.spawn(move || {
 					worker(receiver, status, gate, worker_wake, runtime, context);
 				})

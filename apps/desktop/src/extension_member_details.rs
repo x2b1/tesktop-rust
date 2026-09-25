@@ -240,7 +240,7 @@ mod tests {
 			"Server bio"
 		);
 		let package = parse_package(include_bytes!(
-			"../../../examples/extensions/packages/guild-inspector.serein-extension"
+			"../../../examples/extensions/packages/guild-inspector.tesktop2-extension"
 		))
 		.unwrap();
 		let invocation = Invocation {

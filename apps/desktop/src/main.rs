@@ -625,7 +625,7 @@ impl FrameMetrics {
 	fn new(sample: Option<(Duration, Duration)>) -> Self {
 		Self {
 			enabled: sample.is_some()
-				|| std::env::var_os("SEREIN_FRAME_DIAGNOSTICS").is_some_and(|v| v == "1"),
+				|| std::env::var_os("TESKTOP2_FRAME_DIAGNOSTICS").is_some_and(|v| v == "1"),
 			started: None,
 			sample: sample.map(|(warmup, duration)| FrameSample {
 				ready: std::time::Instant::now() + warmup,
@@ -655,7 +655,7 @@ impl FrameMetrics {
 		}
 		let started = *sample.started.get_or_insert_with(|| {
 			Self::sample_record(serde_json::json!({
-				"serein_frame_sample": "start",
+				"tesktop2_frame_sample": "start",
 				"viewport_size": viewport_size,
 				"pixels_per_point": pixels_per_point,
 			}));
@@ -667,7 +667,7 @@ impl FrameMetrics {
 		}
 		sample.complete = true;
 		Self::sample_record(serde_json::json!({
-			"serein_frame_sample": "complete",
+			"tesktop2_frame_sample": "complete",
 			"elapsed_ms": elapsed.as_millis(),
 			"callbacks": self.frames,
 			"without_input": self.inputless,
@@ -1657,7 +1657,7 @@ impl Desktop {
 		messaging.build = ui::design::Build {
 			channel: if cfg!(debug_assertions) {
 				ui::design::Channel::Dev
-			} else if option_env!("SEREIN_CHANNEL") == Some("nightly") {
+			} else if option_env!("TESKTOP2_CHANNEL") == Some("nightly") {
 				ui::design::Channel::Nightly
 			} else {
 				ui::design::Channel::Stable
@@ -3952,9 +3952,7 @@ impl Desktop {
 		// does, and is empty whenever no port draws anything.
 		if self.tesktop_dirty || self.tesktop_markers_channel != self.state.selected {
 			self.tesktop_markers_channel = self.state.selected;
-			let markers = self
-				.tesktop
-				.message_markers(self.state.timeline.iter());
+			let markers = self.tesktop.message_markers(self.state.timeline.iter());
 			self.messaging.message_markers = std::sync::Arc::new(markers);
 		}
 		// Rebuilding the rows is only worth its allocations while the page is open or a change
@@ -4138,7 +4136,7 @@ impl Desktop {
 					if let Err(error) = self.downloads.start(
 						file.clone(),
 						self.runtime.handle(),
-						&ctx,
+						ctx,
 						self.window.clone(),
 					) {
 						self.state.status = error;
@@ -5363,7 +5361,7 @@ impl Desktop {
 						if self.messaging.custom_font.busy && self.font_picker.is_none() {
 							self.messaging.custom_font.busy = false;
 							self.messaging.custom_font.status =
-								"Local storage worker stopped. Restart Serein to save fonts.";
+								"Local storage worker stopped. Restart tesktop2 to save fonts.";
 						}
 						if self.messaging.channel_preferences_reload
 							|| self.messaging.channel_preferences_load_pending
@@ -5987,8 +5985,8 @@ impl Desktop {
 		}
 		if let Some(failure) = terminal {
 			for (setting, scope) in [
-				("SEREIN_MEMBER_DIAGNOSTICS", "members"),
-				("SEREIN_GATEWAY_DIAGNOSTICS", "gateway"),
+				("TESKTOP2_MEMBER_DIAGNOSTICS", "members"),
+				("TESKTOP2_GATEWAY_DIAGNOSTICS", "gateway"),
 			] {
 				if std::env::var_os(setting).as_deref() == Some(std::ffi::OsStr::new("1")) {
 					use std::io::Write;

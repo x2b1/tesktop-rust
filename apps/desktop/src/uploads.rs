@@ -1011,7 +1011,7 @@ mod tests {
 		let runtime = tokio::runtime::Handle::current();
 		let mut uploads = Uploads::default();
 		let path = std::env::temp_dir().join(format!(
-			"serein-drop-{}-{}.txt",
+			"tesktop2-drop-{}-{}.txt",
 			std::process::id(),
 			std::time::SystemTime::now()
 				.duration_since(std::time::UNIX_EPOCH)

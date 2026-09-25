@@ -2184,7 +2184,7 @@ mod tests {
 		for source in [
 			"\u{1f600}",
 			"\u{1f600} \u{1f389}\n\u{1f388}",
-			"<:serein_wave:9001>",
+			"<:tesktop2_wave:9001>",
 			"**\u{1f600}**",
 		] {
 			assert!(Formatted::parse(source).jumbo(), "{source}");
@@ -3137,7 +3137,7 @@ mod tests {
 	fn selecting_across_images_copies_unicode_and_custom_markup() {
 		let ctx = egui::Context::default();
 		crate::emoji::install(&ctx).unwrap();
-		let source = "A 👩🏽‍💻 ❤️ <:serein_wave:9001> Z";
+		let source = "A 👩🏽‍💻 ❤️ <:tesktop2_wave:9001> Z";
 		let parsed = Formatted::parse(source);
 		let mut avatars = crate::avatars::Avatars::default();
 		let mut clock = 0.0;
@@ -3257,7 +3257,7 @@ mod tests {
 			assert!(
 				matches!(
 					copied.map(str::trim_end),
-					Some("<:serein_wave:9001> Z" | " Z")
+					Some("<:tesktop2_wave:9001> Z" | " Z")
 				),
 				"partial emoji copied: {copied:?}"
 			);
@@ -3285,7 +3285,7 @@ mod tests {
 				),
 				(
 					"<:old_name:9001>",
-					":serein_wave:",
+					":tesktop2_wave:",
 					"From Emoji source server",
 				),
 				(

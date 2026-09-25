@@ -260,20 +260,20 @@ fn extension_fixture(
 	Box<dyn std::error::Error>,
 > {
 	let bytes: &[u8] = match id {
-		"serein-ocean" => include_bytes!("../../../extensions/ocean.serein-extension"),
+		"tesktop2-ocean" => include_bytes!("../../../extensions/ocean.tesktop2-extension"),
 		"message-delete-protector" => include_bytes!(
-			"../../../examples/extensions/packages/message-delete-protector.serein-extension"
+			"../../../examples/extensions/packages/message-delete-protector.tesktop2-extension"
 		),
-		"serein-midnight" => include_bytes!("../../../extensions/midnight.serein-extension"),
-		"serein-rose" => include_bytes!("../../../extensions/rose.serein-extension"),
-		"serein-forest" => include_bytes!("../../../extensions/forest.serein-extension"),
-		"serein-latte" => include_bytes!("../../../extensions/latte.serein-extension"),
-		"golden-theme" => include_bytes!("../../../extensions/golden.serein-extension"),
-		"black-theme" => include_bytes!("../../../extensions/katana.serein-extension"),
-		"obsidian-theme" => include_bytes!("../../../extensions/obsidian.serein-extension"),
-		"teal-theme" => include_bytes!("../../../extensions/teal.serein-extension"),
+		"tesktop2-midnight" => include_bytes!("../../../extensions/midnight.tesktop2-extension"),
+		"tesktop2-rose" => include_bytes!("../../../extensions/rose.tesktop2-extension"),
+		"tesktop2-forest" => include_bytes!("../../../extensions/forest.tesktop2-extension"),
+		"tesktop2-latte" => include_bytes!("../../../extensions/latte.tesktop2-extension"),
+		"golden-theme" => include_bytes!("../../../extensions/golden.tesktop2-extension"),
+		"black-theme" => include_bytes!("../../../extensions/katana.tesktop2-extension"),
+		"obsidian-theme" => include_bytes!("../../../extensions/obsidian.tesktop2-extension"),
+		"teal-theme" => include_bytes!("../../../extensions/teal.tesktop2-extension"),
 		"emoji-sticker-images" => include_bytes!(
-			"../../../examples/extensions/packages/emoji-sticker-images.serein-extension"
+			"../../../examples/extensions/packages/emoji-sticker-images.tesktop2-extension"
 		),
 		_ => return Err("Unknown fixture extension".into()),
 	};
@@ -294,27 +294,27 @@ fn seed_catalog(extensions: &mut ui::ExtensionUi, themes: bool) {
 	if themes {
 		let packages: [(&[u8], &str); 6] = [
 			(
-				include_bytes!("../../../extensions/ocean.serein-extension"),
+				include_bytes!("../../../extensions/ocean.tesktop2-extension"),
 				"",
 			),
 			(
-				include_bytes!("../../../extensions/obsidian.serein-extension"),
+				include_bytes!("../../../extensions/obsidian.tesktop2-extension"),
 				"Obsidian violet surfaces and lavender accents.",
 			),
 			(
-				include_bytes!("../../../extensions/forest.serein-extension"),
+				include_bytes!("../../../extensions/forest.tesktop2-extension"),
 				"Calm forest greens and fresh leafy accents.",
 			),
 			(
-				include_bytes!("../../../extensions/latte.serein-extension"),
+				include_bytes!("../../../extensions/latte.tesktop2-extension"),
 				"Warm coffee tones and a creamy caramel accent.",
 			),
 			(
-				include_bytes!("../../../extensions/rose.serein-extension"),
+				include_bytes!("../../../extensions/rose.tesktop2-extension"),
 				"Soft rose accents.",
 			),
 			(
-				include_bytes!("../../../extensions/midnight.serein-extension"),
+				include_bytes!("../../../extensions/midnight.tesktop2-extension"),
 				"Deep, quiet surfaces.",
 			),
 		];
@@ -379,7 +379,7 @@ fn seed_catalog(extensions: &mut ui::ExtensionUi, themes: bool) {
 	);
 	let previews = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../extensions/previews");
 	{
-		let (id, filename) = ("serein-ocean", "ocean.png");
+		let (id, filename) = ("tesktop2-ocean", "ocean.png");
 		let image = image::open(previews.join(filename))
 			.expect("valid fixture preview")
 			.to_rgba8();
@@ -690,7 +690,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 					if theme_preview {
 						prime_extension_chat(&mut state);
 						let package = extensions::parse_package(include_bytes!(
-							"../../../extensions/katana.serein-extension"
+							"../../../extensions/katana.tesktop2-extension"
 						))?;
 						messaging.extensions.receive_theme_edit(
 							Box::new(package),
@@ -702,7 +702,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 					}
 					if let Some(tab) = &theme_editor {
 						let mut package = extensions::parse_package(include_bytes!(
-							"../../../extensions/ocean.serein-extension"
+							"../../../extensions/ocean.tesktop2-extension"
 						))
 						.expect("valid theme fixture");
 						package.manifest.name = "My ocean".into();

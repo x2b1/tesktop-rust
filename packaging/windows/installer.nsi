@@ -1,5 +1,5 @@
-; Serein Windows Installer Script (NSIS Modern UI 2)
-; Installs per-user to $LOCALAPPDATA\Programs\Serein without elevation
+; tesktop2 Windows Installer Script (NSIS Modern UI 2)
+; Installs per-user to $LOCALAPPDATA\Programs\tesktop2 without elevation
 ; Preserves write permissions for seamless in-app autoupdates
 
 Unicode True
@@ -11,10 +11,10 @@ SetCompressor /SOLID lzma
 !include "LogicLib.nsh"
 !include "x64.nsh"
 
-!define PRODUCT_NAME "Serein"
-!define PRODUCT_PUBLISHER "Serein contributors"
+!define PRODUCT_NAME "tesktop2"
+!define PRODUCT_PUBLISHER "tesktop2 contributors"
 !define PRODUCT_WEB_SITE "https://github.com/ViceVerse-cz/Serein"
-!define APP_EXE "serein.exe"
+!define APP_EXE "tesktop2.exe"
 
 !ifndef VERSION
   !define VERSION "0.1.0"
@@ -37,22 +37,22 @@ SetCompressor /SOLID lzma
 !endif
 
 Name "${PRODUCT_NAME} ${VERSION}"
-OutFile "${OUTPUT_DIR}\serein-${VERSION}-setup.exe"
-InstallDir "$LOCALAPPDATA\Programs\Serein"
+OutFile "${OUTPUT_DIR}\tesktop2-${VERSION}-setup.exe"
+InstallDir "$LOCALAPPDATA\Programs\tesktop2"
 InstallDirRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}" "InstallLocation"
 
-!if /FileExists "packaging\windows\Serein.ico"
-  !define MUI_ICON "packaging\windows\Serein.ico"
-  !define MUI_UNICON "packaging\windows\Serein.ico"
-!else if /FileExists "${__FILEDIR__}\Serein.ico"
-  !define MUI_ICON "${__FILEDIR__}\Serein.ico"
-  !define MUI_UNICON "${__FILEDIR__}\Serein.ico"
-!else if /FileExists "Serein.ico"
-  !define MUI_ICON "Serein.ico"
-  !define MUI_UNICON "Serein.ico"
+!if /FileExists "packaging\windows\tesktop2.ico"
+  !define MUI_ICON "packaging\windows\tesktop2.ico"
+  !define MUI_UNICON "packaging\windows\tesktop2.ico"
+!else if /FileExists "${__FILEDIR__}\tesktop2.ico"
+  !define MUI_ICON "${__FILEDIR__}\tesktop2.ico"
+  !define MUI_UNICON "${__FILEDIR__}\tesktop2.ico"
+!else if /FileExists "tesktop2.ico"
+  !define MUI_ICON "tesktop2.ico"
+  !define MUI_UNICON "tesktop2.ico"
 !else
-  !define MUI_ICON "${__FILEDIR__}\Serein.ico"
-  !define MUI_UNICON "${__FILEDIR__}\Serein.ico"
+  !define MUI_ICON "${__FILEDIR__}\tesktop2.ico"
+  !define MUI_UNICON "${__FILEDIR__}\tesktop2.ico"
 !endif
 
 !define MUI_ABORTWARNING
@@ -80,10 +80,10 @@ Function .onInit
   ${EndIf}
 
   ${Do}
-    nsExec::Exec 'powershell -NoProfile -NonInteractive -Command "if (Get-Process serein -ErrorAction SilentlyContinue) { exit 1 } else { exit 0 }"'
+    nsExec::Exec 'powershell -NoProfile -NonInteractive -Command "if (Get-Process tesktop2 -ErrorAction SilentlyContinue) { exit 1 } else { exit 0 }"'
     Pop $0
     ${If} $0 != 0
-      MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "${PRODUCT_NAME} is currently running. Please close Serein before continuing." IDRETRY retry_init IDCANCEL cancel_init
+      MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "${PRODUCT_NAME} is currently running. Please close tesktop2 before continuing." IDRETRY retry_init IDCANCEL cancel_init
       retry_init:
         ${Continue}
       cancel_init:
@@ -134,10 +134,10 @@ Function un.onInit
   ${EndIf}
 
   ${Do}
-    nsExec::Exec 'powershell -NoProfile -NonInteractive -Command "if (Get-Process serein -ErrorAction SilentlyContinue) { exit 1 } else { exit 0 }"'
+    nsExec::Exec 'powershell -NoProfile -NonInteractive -Command "if (Get-Process tesktop2 -ErrorAction SilentlyContinue) { exit 1 } else { exit 0 }"'
     Pop $0
     ${If} $0 != 0
-      MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "${PRODUCT_NAME} is currently running. Please close Serein before uninstalling." IDRETRY retry_uninit IDCANCEL cancel_uninit
+      MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "${PRODUCT_NAME} is currently running. Please close tesktop2 before uninstalling." IDRETRY retry_uninit IDCANCEL cancel_uninit
       retry_uninit:
         ${Continue}
       cancel_uninit:

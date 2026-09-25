@@ -96,7 +96,7 @@ impl Camera {
 		let shared = Arc::new(Shared::default());
 		let worker = shared.clone();
 		if thread::Builder::new()
-			.name("serein-camera".into())
+			.name("tesktop2-camera".into())
 			.spawn(move || {
 				let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
 					#[cfg(target_os = "macos")]
@@ -534,7 +534,7 @@ mod macos {
 		}
 		let mut encoder = CameraEncoder::new()?;
 		let (send, receive) = mpsc::sync_channel(1);
-		let queue = DispatchQueue::new("serein.camera.frames", None);
+		let queue = DispatchQueue::new("tesktop2.camera.frames", None);
 		// SAFETY: Only this worker configures/owns the session. Delegate lives until
 		// capture is stopped and the serial callback queue has drained.
 		let capture = unsafe {

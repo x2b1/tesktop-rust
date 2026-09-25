@@ -958,7 +958,7 @@ pub fn paint_backdrop(ctx: &egui::Context) {
 
 pub const SEMIBOLD: &str = "semibold";
 pub const MEDIUM: &str = "medium";
-const WEIGHTS_KEY: &str = "serein-font-weights";
+const WEIGHTS_KEY: &str = "tesktop2-font-weights";
 // Called by `fonts::install` for one context; until then the weight families resolve to
 // the default face so headless contexts (tests) never reference an unknown family.
 thread_local! {

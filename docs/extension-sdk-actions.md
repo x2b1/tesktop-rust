@@ -6,7 +6,7 @@
 
 ## Outputs and host actions
 
-A handler returns a result describing what Serein should display or do. Some
+A handler returns a result describing what tesktop2 should display or do. Some
 fields update the plugin's local state immediately; a draft change or app action
 is a proposal that the user must approve. Capability consent and **Apply** are
 separate steps.
@@ -152,7 +152,7 @@ Follow an operation for its fields, example and additional checks.
 ### App actions
 
 `HostEffect::AppAction { action: AppAction }` proposes a typed operation through
-Serein's existing app controls. The outer `type` is `app_action`; the nested
+tesktop2's existing app controls. The outer `type` is `app_action`; the nested
 `action.type` selects the operation. Each operation has a separate write grant.
 Read-only grants never authorize writes. Most action grants do not disclose data;
 `account_control` also exposes own presence/activity preferences, and
@@ -207,11 +207,11 @@ For example, a handler with `message_send` can propose:
 {"effects":[{"type":"app_action","action":{"type":"send_message","channel_id":"20","content":"Hello from my tool"}}]}
 ```
 
-Serein displays the destination and exact text. Nothing is sent until Apply.
+tesktop2 displays the destination and exact text. Nothing is sent until Apply.
 Apply rechecks the account, selected channel, access and normal sending limits.
 This sends the proposed text only: the user's existing draft, reply and selected
 attachments remain intact. It does not attach files or automatically mention a
-reply target. Normal service failures remain visible in Serein's pending-message UI.
+reply target. Normal service failures remain visible in tesktop2's pending-message UI.
 
 #### Messages and read markers
 
@@ -228,7 +228,7 @@ to find IDs; these actions do not offer arbitrary message lookup.
 | `send_reply` / `SendReply` | `channel_id`, `message_id`, `content`: strings; `mention`: boolean | `message_send`; reply to a loaded message. `mention` controls whether the reply mentions its author. **Preview.** |
 | `send_sticker` / `SendSticker` | `channel_id`, `sticker_id`: IDs | `message_send`; send one sticker from the host's loaded sticker catalog. **Preview.** |
 | `forward_message` / `ForwardMessage` | `channel_id`, `message_id`: IDs; `target_channel_ids`: array of 1–5 distinct IDs; `note`: string | `message_send`; forward a loaded source message to the selected accessible destinations, optionally with a note. **Preview.** |
-| `open_attachment_picker` / `OpenAttachmentPicker` | `channel_id`: ID | `message_send`; open Serein's native attachment picker for the still-selected text conversation. The plugin receives no path or bytes and nothing is sent automatically. **Preview.** |
+| `open_attachment_picker` / `OpenAttachmentPicker` | `channel_id`: ID | `message_send`; open tesktop2's native attachment picker for the still-selected text conversation. The plugin receives no path or bytes and nothing is sent automatically. **Preview.** |
 | `edit_message` / `EditMessage` | `channel_id`, `message_id`, `content`: strings | `message_manage`; edit a loaded message authored by the current user. |
 | `delete_message` / `DeleteMessage` | `channel_id`, `message_id`: IDs | `message_manage`; delete an eligible loaded message. Requires ownership or native moderation permission. **Deletion cannot be undone.** |
 | `set_message_pinned` / `SetMessagePinned` | `channel_id`, `message_id`: IDs; `pinned`: boolean | `message_manage`; set the desired pin state using native permissions. |
@@ -283,13 +283,13 @@ permissions, loaded details and pending-operation checks apply again at Apply.
 The [Conversation Actions example](../examples/extensions/app-actions/src/lib.rs)
 provides a complete native form, handler and manifest for these operations.
 It checks that its form's conversation still matches the current snapshot;
-Serein independently validates the resulting proposal.
+tesktop2 independently validates the resulting proposal.
 
 #### Channels, conversations and servers
 
 > **Preview SDK — PR #411, not yet released.**
 
-These operations reuse Serein's native channel, group, DM and server admission
+These operations reuse tesktop2's native channel, group, DM and server admission
 paths. `channel_control` covers channel administration and conversation-local
 settings. `server_control` is separate because invites and leaving a server have
 different scope and consequences. Apply rechecks the loaded target, access,
@@ -355,7 +355,7 @@ Image/icon uploads are intentionally absent because Wasm receives no file paths
 or bytes.
 
 ```json
-{"effects":[{"type":"app_action","action":{"type":"update_server_settings","guild_id":"10","settings":{"name":"Serein Community","description":"Native client discussion","activity_feed":false}}}]}
+{"effects":[{"type":"app_action","action":{"type":"update_server_settings","guild_id":"10","settings":{"name":"tesktop2 Community","description":"Native client discussion","activity_feed":false}}}]}
 ```
 
 #### Roles and moderation
@@ -419,7 +419,7 @@ missing loaded data is an error, not permission to fetch or guess a target.
 ```
 
 These account writes are not plugin storage. Service errors and any required
-user-solved verification use Serein's ordinary native flow. A plugin receives no
+user-solved verification use tesktop2's ordinary native flow. A plugin receives no
 credentials or verification bypass.
 
 #### Own profile and presence
@@ -834,7 +834,7 @@ that install-time check.
 
 ## Panels and storage
 
-A panel is a list of native controls returned by your handler. Serein renders
+A panel is a list of native controls returned by your handler. tesktop2 renders
 those controls; the plugin does not run while they are drawn. Editing a field
 changes the panel's local form values. A **panel button** runs another declared
 action with those values. It does not automatically approve a host action that
@@ -880,7 +880,7 @@ serialized output budget. Byte limits count UTF-8 bytes, not visible letters.
 ### How a button receives form values
 
 1. A user opens a foreground action, and its output supplies a panel.
-2. Serein initializes each input from `value` or `checked` and keeps edits locally.
+2. tesktop2 initializes each input from `value` or `checked` and keeps edits locally.
    Typing, selecting, dragging and checking do not call your handler.
 3. Clicking a button creates a fresh invocation whose `action` is the button ID.
    Input IDs become keys in `values`; all values are strings. The button itself
@@ -915,7 +915,7 @@ invalid values explicitly; do not silently turn either into a saved preference.
 The `storage` capability gives this plugin one opaque UTF-8 string for the
 current account. Each non-null `output.storage` replaces the **whole** saved
 value. Omit it to leave storage alone. To store multiple settings, encode one
-JSON object yourself; Serein does not merge object fields for you.
+JSON object yourself; tesktop2 does not merge object fields for you.
 
 For example, this is a complete output that saves a JSON object inside the
 storage string:
@@ -946,7 +946,7 @@ is ordinary local data, not encrypted secret storage; never put credentials in i
 
 ### Complete settings panel and Save handler
 
-This example stores **plugin preferences**, not Serein's reading settings. It
+This example stores **plugin preferences**, not tesktop2's reading settings. It
 requests only `storage`; changing the app's reading preferences instead requires
 a `local_settings` host proposal and Apply.
 
@@ -1072,7 +1072,7 @@ and package this plugin from the same directory:
 
 ```powershell
 cargo build --locked --release --target wasm32-unknown-unknown -p panel-settings
-python pack.py panel-settings/manifest.json target/wasm32-unknown-unknown/release/panel_settings.wasm packages/panel-settings.serein-extension
+python pack.py panel-settings/manifest.json target/wasm32-unknown-unknown/release/panel_settings.wasm packages/panel-settings.tesktop2-extension
 ```
 
 For a larger working panel with app

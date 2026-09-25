@@ -146,7 +146,7 @@ impl LoginView {
 			.collect::<String>()
 			+ ":";
 		let script =
-			include_str!("login-handoff.js").replace("__SEREIN_LOGIN_CAPABILITY__", &capability);
+			include_str!("login-handoff.js").replace("__TESKTOP2_LOGIN_CAPABILITY__", &capability);
 		let builder = WebViewBuilder::new()
 			.with_url("https://discord.com/login")
 			.with_incognito(true)

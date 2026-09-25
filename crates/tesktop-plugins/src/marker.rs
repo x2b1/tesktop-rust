@@ -9,20 +9,60 @@ const KNOWN_HOSTS: &[&str] = &["rickroll.link", "rickrolled.fr"];
 
 /// The videos, by the id the host uses.
 const KNOWN_VIDEOS: &[&str] = &[
-	"dQw4w9WgXcQ", "oHg5SJYRHA0", "6_b7RDuLwcI", "G8iEMVr7GFg",
-	"AyOqGRjVtls", "6mhmcwmgWbA", "SpZ2FsEfwP4", "H01BwSD9eyQ",
-	"nrsnN23tmUA", "8mkofgRW1II", "rAx5LIul1N8", "sO4wVSA9UPs",
-	"rrs0B_LM898", "doEqUhFiQS4", "epyRUp0BhrA", "uK5WDo_3s7s",
-	"wzSVOcgKq04", "7B--1KArxow", "rbsPu1z3ugQ", "ptw2FLKXDQE",
-	"E50L-JYWm3w", "8leAAwMIigI", "ByqFY-Boq5Y", "E4ihJMQUmUQ",
-	"cjBHXvBYw5s", "xaazUgEKuVA", "TzXXHVhGXTQ", "Uj1ykZWtPYI",
-	"EE-xtCF3T94", "V-_O7nl0Ii0", "cqF6M25kqq4", "0SoNH07Slj0",
-	"xfr64zoBTAQ", "j5a0jTc9S10", "dPmZqsQNzGA", "nHRbZW097Uk",
-	"BjDebmqFRuc", "Gc2u6AFImn8", "8VFzHYtOARw", "cSAp9sBzPbc",
-	"Dx5i1t0mN78", "Oo0twK2ZbLU", "cvh0nX08nRw", "lXMskKTw3Bc",
-	"7z_1E8VGJOw", "VgojnNgmgVs", "5wOXc03RwVA", "2xx_2XNxxfA",
-	"lpiB2wMc49g", "H8ZH_mkfPUY", "Svj1bZz2mXw", "iik25wqIuFo",
-	"hvL1339luv0", "N9w1lCZfaWI",
+	"dQw4w9WgXcQ",
+	"oHg5SJYRHA0",
+	"6_b7RDuLwcI",
+	"G8iEMVr7GFg",
+	"AyOqGRjVtls",
+	"6mhmcwmgWbA",
+	"SpZ2FsEfwP4",
+	"H01BwSD9eyQ",
+	"nrsnN23tmUA",
+	"8mkofgRW1II",
+	"rAx5LIul1N8",
+	"sO4wVSA9UPs",
+	"rrs0B_LM898",
+	"doEqUhFiQS4",
+	"epyRUp0BhrA",
+	"uK5WDo_3s7s",
+	"wzSVOcgKq04",
+	"7B--1KArxow",
+	"rbsPu1z3ugQ",
+	"ptw2FLKXDQE",
+	"E50L-JYWm3w",
+	"8leAAwMIigI",
+	"ByqFY-Boq5Y",
+	"E4ihJMQUmUQ",
+	"cjBHXvBYw5s",
+	"xaazUgEKuVA",
+	"TzXXHVhGXTQ",
+	"Uj1ykZWtPYI",
+	"EE-xtCF3T94",
+	"V-_O7nl0Ii0",
+	"cqF6M25kqq4",
+	"0SoNH07Slj0",
+	"xfr64zoBTAQ",
+	"j5a0jTc9S10",
+	"dPmZqsQNzGA",
+	"nHRbZW097Uk",
+	"BjDebmqFRuc",
+	"Gc2u6AFImn8",
+	"8VFzHYtOARw",
+	"cSAp9sBzPbc",
+	"Dx5i1t0mN78",
+	"Oo0twK2ZbLU",
+	"cvh0nX08nRw",
+	"lXMskKTw3Bc",
+	"7z_1E8VGJOw",
+	"VgojnNgmgVs",
+	"5wOXc03RwVA",
+	"2xx_2XNxxfA",
+	"lpiB2wMc49g",
+	"H8ZH_mkfPUY",
+	"Svj1bZz2mXw",
+	"iik25wqIuFo",
+	"hvL1339luv0",
+	"N9w1lCZfaWI",
 ];
 
 const SETTINGS: &[Setting] = &[
@@ -162,7 +202,11 @@ impl crate::Plugin for AntiRickroll {
 	fn summary(&self) -> Option<String> {
 		let custom = self.custom_links.len() + self.custom_videos.len();
 		Some(if custom == 0 {
-			format!("{} videos and {} hosts", KNOWN_VIDEOS.len(), KNOWN_HOSTS.len())
+			format!(
+				"{} videos and {} hosts",
+				KNOWN_VIDEOS.len(),
+				KNOWN_HOSTS.len()
+			)
 		} else {
 			format!("{custom} of your own")
 		})
@@ -194,7 +238,9 @@ mod tests {
 	fn a_known_video_gets_a_line_under_the_message() {
 		let plugin = AntiRickroll::default();
 		assert_eq!(
-			plugin.message_marker(&message("look: https://youtu.be/dQw4w9WgXcQ")).as_deref(),
+			plugin
+				.message_marker(&message("look: https://youtu.be/dQw4w9WgXcQ"))
+				.as_deref(),
 			Some("This link is a known rickroll.")
 		);
 	}
@@ -202,7 +248,11 @@ mod tests {
 	#[test]
 	fn a_masked_link_is_still_caught() {
 		let plugin = AntiRickroll::default();
-		assert!(plugin.message_marker(&message("nice <https://youtu.be/dQw4w9WgXcQ>")).is_some());
+		assert!(
+			plugin
+				.message_marker(&message("nice <https://youtu.be/dQw4w9WgXcQ>"))
+				.is_some()
+		);
 	}
 
 	#[test]
@@ -258,7 +308,11 @@ mod tests {
 		first.id = model::Id(1);
 		let mut second = message("nothing here");
 		second.id = model::Id(2);
-		assert!(registry.message_markers([&first, &second].into_iter()).is_empty());
+		assert!(
+			registry
+				.message_markers([&first, &second].into_iter())
+				.is_empty()
+		);
 		registry.set_enabled("AntiRickroll", true);
 		let markers = registry.message_markers([&first, &second].into_iter());
 		assert_eq!(markers.len(), 1);

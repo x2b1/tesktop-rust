@@ -1,4 +1,4 @@
-//! Offline group-call check: cargo run --locked -p serein --example group_call
+//! Offline group-call check: cargo run --locked -p tesktop2 --example group_call
 use client_core::{Command, Envelope, Event, State, voice};
 use eframe::egui;
 use model::Id;

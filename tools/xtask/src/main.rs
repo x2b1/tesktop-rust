@@ -256,7 +256,7 @@ fn package() -> Result<(), String> {
 		"--release",
 		"--locked",
 		"-p",
-		"serein",
+		"tesktop2",
 		"--no-default-features",
 	];
 	run(&arguments)?;
@@ -403,7 +403,7 @@ fn package() -> Result<(), String> {
 		// macOS keychain grants ("Always Allow") never survive one. A locally configured
 		// Developer ID identity keeps that trust stable across rebuilds; releases are signed
 		// and notarized separately by packaging/macos/sign-release.sh, which overrides this.
-		let identity = std::env::var("SEREIN_SIGNING_IDENTITY").unwrap_or_default();
+		let identity = std::env::var("TESKTOP2_SIGNING_IDENTITY").unwrap_or_default();
 		let identity = if identity.trim().is_empty() {
 			"-".to_owned()
 		} else {
@@ -477,7 +477,15 @@ fn main() -> ExitCode {
 					])
 				})
 				.and_then(|_| run(&["test", "--workspace", "--locked"]))
-				.and_then(|_| run(&["check", "-p", "serein", "--no-default-features", "--locked"]))
+				.and_then(|_| {
+					run(&[
+						"check",
+						"-p",
+						"tesktop2",
+						"--no-default-features",
+						"--locked",
+					])
+				})
 				.and_then(|_| policy()),
 			"policy" => policy(),
 			"licenses" => licenses(),

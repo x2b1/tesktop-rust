@@ -1166,7 +1166,7 @@ mod tests {
 	async fn replies_reach_pending_game_reads_as_complete_frames() {
 		use tokio::net::windows::named_pipe::{ClientOptions, ServerOptions};
 		let name = format!(
-			r"\\.\pipe\serein-test-reply-{}-{}",
+			r"\\.\pipe\tesktop2-test-reply-{}-{}",
 			std::process::id(),
 			getrandom::u64().unwrap()
 		);

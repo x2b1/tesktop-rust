@@ -7,7 +7,7 @@ use std::{
 	path::{Path, PathBuf},
 };
 
-const LABEL: &str = "cz.viceverse.serein.startup";
+const LABEL: &str = "cz.viceverse.tesktop2.startup";
 const MAX_BYTES: u64 = 16 * 1024;
 const READ_ERROR: &str = "Could not read the macOS login setting.";
 const WRITE_ERROR: &str = "Could not update the macOS login setting.";

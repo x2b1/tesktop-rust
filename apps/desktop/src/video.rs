@@ -135,7 +135,7 @@ impl Video {
 			let runtime = runtime.clone();
 			let ctx = ctx.clone();
 			std::thread::Builder::new()
-				.name("serein-attachment-video".into())
+				.name("tesktop2-attachment-video".into())
 				.spawn(move || {
 					while runtime.block_on(receiver.changed()).is_ok() {
 						let Some(request) = receiver.borrow_and_update().clone() else {
@@ -442,9 +442,9 @@ mod tests {
 	use std::time::{Duration, Instant};
 	/// Synthetic local clip only; zero-volume output, no account or microphone access.
 	#[test]
-	#[ignore = "SEREIN_VIDEO_SAMPLE supplies an offline clip; opens muted local output"]
+	#[ignore = "TESKTOP2_VIDEO_SAMPLE supplies an offline clip; opens muted local output"]
 	fn local_video_keeps_up_with_realtime() {
-		let path = std::env::var("SEREIN_VIDEO_SAMPLE").expect("SEREIN_VIDEO_SAMPLE path");
+		let path = std::env::var("TESKTOP2_VIDEO_SAMPLE").expect("TESKTOP2_VIDEO_SAMPLE path");
 		assert!(std::fs::metadata(&path).unwrap().len() <= 100 * 1024 * 1024);
 		let bytes = std::fs::read(path).unwrap();
 		let session = Arc::new(Session::new(0.));

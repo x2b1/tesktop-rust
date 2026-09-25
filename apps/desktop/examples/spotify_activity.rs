@@ -1,4 +1,4 @@
-//! Offline debug check: cargo run --locked -p serein --features demo --example spotify_activity
+//! Offline debug check: cargo run --locked -p tesktop2 --features demo --example spotify_activity
 use eframe::egui;
 #[allow(dead_code)]
 #[path = "../src/avatars.rs"]

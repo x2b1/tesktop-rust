@@ -353,7 +353,8 @@ pub(super) fn debug_check() -> Result<(), String> {
 		] {
 		return Err("MD4 compatibility failed.".into());
 	}
-	let directory = std::env::temp_dir().join(format!("serein-delta-debug-{}", std::process::id()));
+	let directory =
+		std::env::temp_dir().join(format!("tesktop2-delta-debug-{}", std::process::id()));
 	std::fs::create_dir(&directory).map_err(|e| e.to_string())?;
 	let result = (|| {
 		let mut random = 42_u32;

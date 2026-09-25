@@ -30,7 +30,7 @@ fn plugin(wasm: &str) -> Package {
 			id: "test-plugin".into(),
 			name: "Test plugin".into(),
 			version: "1.0.0".into(),
-			author: "Serein".into(),
+			author: "tesktop2".into(),
 			license: "MIT".into(),
 			source: "https://github.com/example/plugin".into(),
 			kind: ExtensionKind::Plugin,
@@ -301,7 +301,7 @@ fn validates_themes_catalog_and_path_safe_identifiers() {
 #[test]
 fn shipped_rust_examples_execute_through_the_real_abi() {
 	let protector = parse_package(include_bytes!(
-		"../../../examples/extensions/packages/message-delete-protector.serein-extension"
+		"../../../examples/extensions/packages/message-delete-protector.tesktop2-extension"
 	))
 	.unwrap();
 	let input = Invocation {
@@ -362,7 +362,7 @@ fn catalog_preview_metadata_is_optional_and_bounded() {
 #[test]
 fn image_sharing_plugin_requires_activation_and_capability() {
 	let mut package = parse_package(include_bytes!(
-		"../../../examples/extensions/packages/emoji-sticker-images.serein-extension"
+		"../../../examples/extensions/packages/emoji-sticker-images.tesktop2-extension"
 	))
 	.unwrap();
 	let input = Invocation {

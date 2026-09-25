@@ -101,11 +101,11 @@ impl LoginView {
 			include_str!("login-handoff.js"),
 		]
 		.join("\n")
-		.replace("__SEREIN_LOGIN_CAPABILITY__", &capability);
+		.replace("__TESKTOP2_LOGIN_CAPABILITY__", &capability);
 		// evaluate_javascript runs in the main frame. Restrict its result before it
 		// crosses into Rust: arbitrary child-frame IPC never supplies a token body.
 		let take_script = format!(
-			"(() => {{ if (window !== window.top || location.origin !== 'https://discord.com') return null; const take = window['__serein_login_take_{}']; if (typeof take !== 'function') return null; const value = take(); return typeof value === 'string' && value.length <= 2113 && /^[\\x21-\\x7e]+$/.test(value) ? value : null; }})()",
+			"(() => {{ if (window !== window.top || location.origin !== 'https://discord.com') return null; const take = window['__tesktop2_login_take_{}']; if (typeof take !== 'function') return null; const value = take(); return typeof value === 'string' && value.length <= 2113 && /^[\\x21-\\x7e]+$/.test(value) ? value : null; }})()",
 			capability.trim_end_matches(':')
 		);
 		let opened = Instant::now();

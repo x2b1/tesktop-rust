@@ -1,10 +1,10 @@
 {
   "manifest": {
     "api_version": 1,
-    "id": "serein-latte",
+    "id": "tesktop2-latte",
     "name": "Latte",
     "version": "1.0.0",
-    "author": "Serein contributors",
+    "author": "tesktop2 contributors",
     "license": "MIT OR Apache-2.0",
     "source": "https://github.com/ViceVerse-cz/rustcord",
     "kind": "theme"

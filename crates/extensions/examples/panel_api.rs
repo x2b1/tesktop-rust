@@ -5,7 +5,7 @@ use serde_json::json;
 fn main() {
 	let manifest: Manifest = serde_json::from_value(json!({
 		"api_version": 1, "id": "panel-check", "name": "Offline panel check",
-		"version": "1.0.0", "author": "Serein contributors", "license": "MIT",
+		"version": "1.0.0", "author": "tesktop2 contributors", "license": "MIT",
 		"source": "https://example.com/source", "kind": "plugin",
 		"actions": [{"id": "apply", "label": "Apply", "surface": "panel"}]
 	}))

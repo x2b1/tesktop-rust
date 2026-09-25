@@ -17,7 +17,7 @@ Budgets: 64 KiB voice WebSocket frames/messages; 4 KiB UDP receive limit; 1,275-
 
 These tests do not establish Discord compatibility or microphone/speaker quality. Actual two-way audio with an official Discord client remains an owner-operated live gate. No hardware audio access is performed by default tests. Receive streams mix into one 20 ms playback frame with hard clipping to the valid sample range; this is not an automatic gain controller. This implementation has fixed jitter buffering, profile-controlled AEC3 echo cancellation, system-default fallback for selected devices absent when opening audio, and no globally captured push-to-talk. Use headphones for live validation. Windows/Linux audio and macOS microphone permission remain unverified until explicitly exercised on those systems.
 
-The HPKE dependency has a small [source security backport](../../vendor/hpke-rs/SEREIN-PATCH.md) replacing its affected SHAKE dependency with RustCrypto sha3. All modified MPL-2.0 component source ships in voice packages. Current dependency findings and remediation are recorded in [the audit](../../docs/dependency-audit.md).
+The HPKE dependency has a small [source security backport](../../vendor/hpke-rs/TESKTOP2-PATCH.md) replacing its affected SHAKE dependency with RustCrypto sha3. All modified MPL-2.0 component source ships in voice packages. Current dependency findings and remediation are recorded in [the audit](../../docs/dependency-audit.md).
 
 `Audio::set_gain(input_percent, output_percent)` adjusts software levels (persisted by the desktop) without
 opening/restarting devices. Values are clamped to 0..=200%, with 100% defaults. Two integer
@@ -109,8 +109,8 @@ call's ephemeral `Identity`, and enables outgoing media only after DAVE is ready
 `video` handles bounded Annex-B/FU-A RTP packetization after DAVE frame encryption.
 
 Optional system audio uses macOS ScreenCaptureKit, Windows process loopback excluding
-Serein's process tree (build 20348+), or Linux PulseAudio/PipeWire per-application monitors
-excluding Serein and unknown identities. Windows/Linux still include other applications
+tesktop2's process tree (build 20348+), or Linux PulseAudio/PipeWire per-application monitors
+excluding tesktop2 and unknown identities. Windows/Linux still include other applications
 when sharing one window. Linux has a separate bounded audio worker so video encoding
 cannot delay its sampling. Audio reaches the existing
 stereo Opus sender through four bounded chunks (up to 38,400 PCM bytes each), plus

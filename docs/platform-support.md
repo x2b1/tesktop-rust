@@ -16,7 +16,7 @@ disable the Windows hack. Native DPI and eframe's physical surface sizing remain
 macOS/Linux window creation is unchanged.
 The custom Windows frame requests DWM's rounded-corner treatment on Windows 11. Windows keeps
 maximized windows square, and older releases ignore the unsupported preference.
-For offline inspection, run `cargo run --locked -p serein --features demo -- --demo --demo-rendering`.
+For offline inspection, run `cargo run --locked -p tesktop2 --features demo -- --demo --demo-rendering`.
 The diagnostic shows the physical client size, logical viewport, native/egui scale and WGPU
 surface dimensions sampled by a render callback, plus alternating one-pixel stripes.
 The surface sample is from the previous paint: compare at rest after resizing, maximizing,
@@ -45,7 +45,7 @@ requests are honored; native X11/Wayland verification of this toggle remains pen
 |---|---|---|
 | macOS | Rust 1.98.1, Xcode command-line tools; Metal/wgpu, system WKWebView, Keychain | Local arm64 build and native synthetic window tested on macOS 27.0 beta, Apple M1 Pro / 16 GiB |
 | Windows | Rust MSVC toolchain, Visual Studio C++ build tools, system graphics drivers, WebView2 Runtime 101+ (current supported runtime recommended), Credential Manager | Local x64 checks and unsigned release packaging on Windows 11 build 26200; synthetic process/window startup passed. Visual interaction, InPrivate behavior, IME and accessibility unverified |
-| Linux | Rust, C compiler, pkg-config, GTK 3, WebKit2GTK 4.1, fontconfig, libxkbcommon, X11/Wayland development packages, Vulkan-compatible GPU/driver, Secret Service session bus/keyring | Local tesktop2 compatibility build; upstream Serein Linux packaging may use GTK4/WebKitGTK 6.0 |
+| Linux | Rust, C compiler, pkg-config, GTK 3, WebKit2GTK 4.1, fontconfig, libxkbcommon, X11/Wayland development packages, Vulkan-compatible GPU/driver, Secret Service session bus/keyring | Local tesktop2 compatibility build; upstream tesktop2 Linux packaging may use GTK4/WebKitGTK 6.0 |
 
 Debian/Ubuntu development packages typically include `build-essential pkg-config libgtk-3-dev libwebkit2gtk-4.1-dev libfontconfig1-dev libxkbcommon-dev libwayland-dev libx11-dev libxi-dev libxrandr-dev libxcursor-dev libvulkan-dev`. Package names vary by distribution. SQLite is bundled through rusqlite; it is an embedded client cache, with no database service.
 
@@ -63,9 +63,9 @@ requirements, pinned tooling and package inspection. Native AppImage startup and
 upgrading remain unverified in
 the initial fast local pass.
 
-`cargo xtask package` builds the locked default release configuration. macOS gets `dist/Serein.app`; Windows gets an executable plus license files; Debian/Ubuntu Linux additionally produces a `.deb` with desktop integration and dependency metadata. On macOS, packaging replaces the executable through a fresh sibling file and rename, then seals the completed bundle with `codesign --force --sign -` and runs `codesign --verify --strict`. This is a **local ad-hoc signature**, with no signing identity, Developer ID certificate, or notarization. It verifies the staged bundle's integrity and does not certify Gatekeeper acceptance or a trusted publisher. The distinction between signature validity and trust is described in [Apple's code-signing guidance](https://developer.apple.com/library/archive/technotes/tn2206/_index.html).
+`cargo xtask package` builds the locked default release configuration. macOS gets `dist/tesktop2.app`; Windows gets an executable plus license files; Debian/Ubuntu Linux additionally produces a `.deb` with desktop integration and dependency metadata. On macOS, packaging replaces the executable through a fresh sibling file and rename, then seals the completed bundle with `codesign --force --sign -` and runs `codesign --verify --strict`. This is a **local ad-hoc signature**, with no signing identity, Developer ID certificate, or notarization. It verifies the staged bundle's integrity and does not certify Gatekeeper acceptance or a trusted publisher. The distinction between signature validity and trust is described in [Apple's code-signing guidance](https://developer.apple.com/library/archive/technotes/tn2206/_index.html).
 
-Windows/Linux local staging artifacts remain unsigned. These are not certified installers. Use `ditto -c -k --keepParent dist/Serein.app dist/Serein-macos.zip` on macOS; normal archive tools may package Windows staging output. Do not modify bundle resources after sealing; rerun packaging when source documentation changes. Linux additionally supports `--format rpm`, `--format arch` and `--format dir`; release jobs target Ubuntu 26.04, Fedora 43/44, openSUSE Tumbleweed and Arch independently. Fedora 43 packaging was added in a local fast pass; its build and installation remain unverified until Linux CI and desktop validation. [Flatpak](../packaging/flatpak/README.md) builds offline against GNOME SDK 49 with the pinned Rust compiler and locked vendored sources. Its sandbox currently excludes direct V4L2 camera access, and host game IPC needs the documented socket link; desktop login/keyring/audio still need Linux runtime validation. [Signed repository preparation](../packaging/repositories/README.md) supports apt, dnf/zypper and pacman, but requires configured signing credentials and an HTTPS host; preparing artifacts does not publish repositories. Windows installer/signing and release reproducibility remain open work.
+Windows/Linux local staging artifacts remain unsigned. These are not certified installers. Use `ditto -c -k --keepParent dist/tesktop2.app dist/tesktop2-macos.zip` on macOS; normal archive tools may package Windows staging output. Do not modify bundle resources after sealing; rerun packaging when source documentation changes. Linux additionally supports `--format rpm`, `--format arch` and `--format dir`; release jobs target Ubuntu 26.04, Fedora 43/44, openSUSE Tumbleweed and Arch independently. Fedora 43 packaging was added in a local fast pass; its build and installation remain unverified until Linux CI and desktop validation. [Flatpak](../packaging/flatpak/README.md) builds offline against GNOME SDK 49 with the pinned Rust compiler and locked vendored sources. Its sandbox currently excludes direct V4L2 camera access, and host game IPC needs the documented socket link; desktop login/keyring/audio still need Linux runtime validation. [Signed repository preparation](../packaging/repositories/README.md) supports apt, dnf/zypper and pacman, but requires configured signing credentials and an HTTPS host; preparing artifacts does not publish repositories. Windows installer/signing and release reproducibility remain open work.
 
 The webview lives only during login: WKWebView on macOS, WebView2 on Windows, GTK/WebKitGTK on Linux. Linux uses a separate GTK authentication window and pumps it only while login is active. Voice is built in. Audio devices open only for explicit playback, device testing, or a call reaching required encrypted readiness. Popup-dependent authentication and third-party embedded challenges may not work; do not claim all Discord login methods without live tests.
 
@@ -94,7 +94,7 @@ verification on the affected system.
 
 `cargo run --locked` includes native DM and guild audio. Source builds require CMake and a C/C++ toolchain for statically bundled libopus; Linux also needs ALSA development headers (`libasound2-dev` on Debian/Ubuntu). CPAL uses native system audio. See [the voice adapter](../crates/discord-voice/README.md) for codec/protocol dependencies and limitations.
 
-`cargo xtask package` stages the standard release including voice under `dist` (`dist/Serein.app` on macOS). The macOS bundle includes its microphone-use description; actual microphone permission, capture/playback, device switching and sleep/resume have not been exercised. Windows x64 voice release packaging and synthetic protocol/audio tests pass; physical audio and live calls remain unverified on Windows. Linux x64 text/voice release builds and Debian package smoke passed on Ubuntu 26.04 under WSL2; native Linux desktop/audio runtime remains unverified. CMake is a source-build dependency, not a runtime voice service.
+`cargo xtask package` stages the standard release including voice under `dist` (`dist/tesktop2.app` on macOS). The macOS bundle includes its microphone-use description; actual microphone permission, capture/playback, device switching and sleep/resume have not been exercised. Windows x64 voice release packaging and synthetic protocol/audio tests pass; physical audio and live calls remain unverified on Windows. Linux x64 text/voice release builds and Debian package smoke passed on Ubuntu 26.04 under WSL2; native Linux desktop/audio runtime remains unverified. CMake is a source-build dependency, not a runtime voice service.
 
 Device choices, voice keybinds and the owner's mute/deafen intent are device-local. Mute and deafen can be changed while idle, survive restart and apply to the first voice-state packet when the next call is joined. Voice bindings use native global registration on supported Windows/macOS/Linux X11 setups and the desktop GlobalShortcuts portal on Wayland when they include a modifier. Unmodified focused Push to Talk (V by default) observes key state without consuming typed text and is never registered as an OS-global shortcut. Missing/denied portal access and unavailable/conflicting registrations fall back to focused input. Use headphones because there is no acoustic echo cancellation. No signing, desktop integration, physical audio or live-compatibility claim follows from compilation alone.
 
@@ -126,8 +126,8 @@ Invite verification uses a temporary WebView2 child on Windows, WKWebView child 
 macOS, and a separate GTK3/WebKit2GTK 4.1 window on Linux. It
 loads a local verification page and hCaptcha's official widget after the user
 chooses Verify. The local custom-protocol origin is
-`https://serein-captcha.verification.invalid/` on Windows/Linux and
-`serein-captcha://verification.invalid/` on macOS; it is not a Discord page, public
+`https://tesktop2-captcha.verification.invalid/` on Windows/Linux and
+`tesktop2-captcha://verification.invalid/` on macOS; it is not a Discord page, public
 server or account-login surface. No account token enters it. Domain restrictions,
 provider rejection and missing native webview runtimes fail visibly. macOS/Linux
 live CAPTCHA acceptance remains unverified. Widget
@@ -138,28 +138,28 @@ loading and synthetic checks do not establish live Discord challenge acceptance.
 Windows General settings offer Show tesktop2 in System Tray, on by default; turning it off
 falls back to ordinary window minimize/close. Minimizing
 keeps the window in the taskbar, including taskbar clicks and automatic startup. The icon supports
-keyboard/mouse restore and a Show Serein / Quit menu. Quit uses the normal unsaved
+keyboard/mouse restore and a Show tesktop2 / Quit menu. Quit uses the normal unsaved
 work/download exit checks; while the icon is live, the window Close button hides the
-window instead of exiting, and Serein keeps running with its logic ticking so
+window instead of exiting, and tesktop2 keeps running with its logic ticking so
 notifications and calls continue. Show restores the window. Disabling the setting,
 or a tray that reports itself unavailable, restores a hidden window immediately, so
 Close can never strand the application without a way back.
 The adapter uses existing user32/Shell APIs and dependencies, with no background
 polling. A synthetic native Windows test verifies registration,
-minimize/restore, own-window taskbar recovery, Quit event and cleanup. macOS uses a native menu bar icon with Show Serein / Quit actions; it draws Serein's own
-mark (`assets/brand/serein-tray.png`, rendered from the brand SVG) as an 18-point template
+minimize/restore, own-window taskbar recovery, Quit event and cleanup. macOS uses a native menu bar icon with Show tesktop2 / Quit actions; it draws tesktop2's own
+mark (`assets/brand/tesktop2-tray.png`, rendered from the brand SVG) as an 18-point template
 image, so the system tints it for light, dark and highlighted menu bars. Minimized windows
 remain in the Dock.
 
-Linux now uses ksni's StatusNotifierItem on the session bus with Show Serein,
-Minimize Serein and Quit actions. Enable a StatusNotifier host (for example a panel's
+Linux now uses ksni's StatusNotifierItem on the session bus with Show tesktop2,
+Minimize tesktop2 and Quit actions. Enable a StatusNotifier host (for example a panel's
 tray module). Until registration succeeds, or after host loss, Close retains normal
 exit behavior. Start/restart the host and toggle the tray off/on to retry registration.
 The existing on-by-default tray preference is reused; demo changes are session-only.
 
 **Hyprland / native Wayland:** winit cannot hide, unhide, focus or unminimize a native
-Wayland window. On Hyprland, Close and tray Minimize instead park Serein on
-`special:serein-tray` through the compositor socket; Show moves it to the active
+Wayland window. On Hyprland, Close and tray Minimize instead park tesktop2 on
+`special:tesktop2-tray` through the compositor socket; Show moves it to the active
 workspace. This uses `hl.dsp.window.move` with `follow = false`, accepting the new
 workspace `address` or legacy numeric `id`. Older dispatchers fall back to
 `movetoworkspacesilent`. Workspace names are bounded and escaped before Lua dispatch.
@@ -178,14 +178,14 @@ prepared on macOS; NixOS/Hyprland and Flatpak desktop validation remain pending.
 ## Opt-in automatic startup
 
 General settings offer automatic launch at Windows sign-in and a dependent Start
-Serein minimized preference. Both default off. Registration uses the current user's
+tesktop2 minimized preference. Both default off. Registration uses the current user's
 Run key; no administrator access, service, scheduled task or new dependency is needed.
 Windows Startup Apps can override this registration. Disable startup before deleting
 a portable installation, or re-enable it after moving the executable.
 Minimized launches stay in the taskbar even when the saved tray preference is enabled;
 the tray can attach safely after a minimized launch. Tray failures leave the window
 recoverable. Without a tray icon the Close button still exits, and the tray Quit action retains unsaved
-work checks. macOS registers a per-user `~/Library/LaunchAgents/cz.viceverse.serein.startup.plist`
+work checks. macOS registers a per-user `~/Library/LaunchAgents/cz.viceverse.tesktop2.startup.plist`
 for the next graphical login, with the same launch flags. Turning it off removes only
 that file. It does not launch a second client when enabled or restart after Quit.
 Re-enable startup after moving the executable; disable it before uninstalling. macOS
@@ -238,11 +238,11 @@ macOS checks
 strict code-signature validity, the existing publisher's TeamIdentifier and bundle
 identifier, and Gatekeeper acceptance. Windows currently relies on the repository's
 HTTPS/checksum trust boundary because its published packages are unsigned. When
-installed via the per-user installer (`%LOCALAPPDATA%\Programs\Serein`), write
+installed via the per-user installer (`%LOCALAPPDATA%\Programs\tesktop2`), write
 permissions are maintained without administrator elevation, and the update helper
 automatically updates the Windows uninstall `DisplayVersion` registry key upon
 successful upgrade. Native helpers wait for the old process to exit, retain a rollback
-copy during replacement, and relaunch Serein. A failed recovery leaves its backup
+copy during replacement, and relaunch tesktop2. A failed recovery leaves its backup
 available with a visible recovery path on the next update attempt.
 
 ## Linux screen sharing
@@ -259,7 +259,7 @@ permission or host socket access is added. Native Linux validation remains pendi
 Screen sharing also tries the legacy `vaapih264enc` element when modern VA encoding
 fails. This optional system plugin uses CPU scaling and hardware H.264 encoding;
 it does not require `vaapipostproc`. Check availability with
-`gst-inspect-1.0 vaapih264enc` in the same runtime as Serein. Installing the modern
+`gst-inspect-1.0 vaapih264enc` in the same runtime as tesktop2. Installing the modern
 `va` plugin alone does not provide this legacy element. Driver compatibility still
 requires an actual encode test; `vainfo` only advertises capabilities.
 
@@ -274,7 +274,7 @@ package (`libpulse-dev`, `pulseaudio-libs-devel`, `libpulse-devel` or Arch's `li
 The existing Flatpak PulseAudio socket permission covers this access; the ScreenCast
 portal's PipeWire remote grants video only. Windows uses native process loopback on
 build 20348+ (Windows 11 / Server 2022), with a visible audio error on older systems.
-Both exclude Serein's playback and capture other applications even when sharing one
+Both exclude tesktop2's playback and capture other applications even when sharing one
 window. There is no whole-output fallback. Hardware exclusion and receiving sound in
 an official client remain unverified.
 

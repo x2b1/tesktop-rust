@@ -1,26 +1,26 @@
-# Serein brand assets
+# tesktop2 brand assets
 
-Serein's own application mark: a speech bubble carrying an S-shaped wave, in the icy
-blue-to-indigo brand gradient. These files are Serein design assets, not Apple, Discord or any
+tesktop2's own application mark: a speech bubble carrying an S-shaped wave, in the icy
+blue-to-indigo brand gradient. These files are tesktop2 design assets, not Apple, Discord or any
 other vendor's branding, and no third-party font is embedded in them.
 
-- `serein.svg` — full-colour gradient mark on its rounded plate; the master vector source.
-- `serein-flat.svg` — flat (non-gradient) variant for small or low-colour contexts.
-- `serein-mark.svg` — solid white silhouette, view box trimmed to the mark's bounding box.
-  `tools/generate-icons.py` rasterizes this one into the shared icon atlas as `serein-mark`,
+- `tesktop2.svg` — full-colour gradient mark on its rounded plate; the master vector source.
+- `tesktop2-flat.svg` — flat (non-gradient) variant for small or low-colour contexts.
+- `tesktop2-mark.svg` — solid white silhouette, view box trimmed to the mark's bounding box.
+  `tools/generate-icons.py` rasterizes this one into the shared icon atlas as `tesktop2-mark`,
   which the interface tints at draw time.
-- `serein-1024.png` — 1024×1024 sRGB RGBA preview render of the full-colour mark.
-- `serein-tray.png` — 72×72 black-on-transparent render of `serein-mark.svg`, embedded by
+- `tesktop2-1024.png` — 1024×1024 sRGB RGBA preview render of the full-colour mark.
+- `tesktop2-tray.png` — 72×72 black-on-transparent render of `tesktop2-mark.svg`, embedded by
   `crates/platform` as the macOS menu bar template image; macOS tints it per appearance, so only
   its alpha is used. Regenerate with:
 
   ```sh
-  sed 's/fill="#fff"/fill="#000"/g' assets/brand/serein-mark.svg |
-    rsvg-convert -w 72 -h 72 -o assets/brand/serein-tray.png
+  sed 's/fill="#fff"/fill="#000"/g' assets/brand/tesktop2-mark.svg |
+    rsvg-convert -w 72 -h 72 -o assets/brand/tesktop2-tray.png
   ```
 
-The packaged platform icons built from the same artwork live in `packaging/` (`macos/Serein.icns`
-and `Serein.icon`, `windows/Serein.ico`, `linux/hicolor/*`).
+The packaged platform icons built from the same artwork live in `packaging/` (`macos/tesktop2.icns`
+and `tesktop2.icon`, `windows/tesktop2.ico`, `linux/hicolor/*`).
 
 Brand palette: `#8BBEFF` → `#506DDC` → `#2D247C` plate gradient, `#F5FAFF` and `#D1E0FF` waves.
 The interface accent (`design::DEFAULT_PRIMARY_RGB`, `#5865f2`) is blurple, calibrated against a

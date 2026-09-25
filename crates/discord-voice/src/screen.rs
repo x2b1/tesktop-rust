@@ -191,7 +191,8 @@ impl Worker {
 				finished_ready.store(false, Ordering::Release);
 				// The desktop only shows the latest status, which a later stop overwrites.
 				// Name the cause once so a share that ends by itself is never a mystery.
-				if std::env::var_os("SEREIN_VOICE_DIAGNOSTICS").is_some_and(|value| value == "1") {
+				if std::env::var_os("TESKTOP2_VOICE_DIAGNOSTICS").is_some_and(|value| value == "1")
+				{
 					match &result {
 						Ok(()) => eprintln!("[tesktop2 voice Screen] capture_stopped=ok"),
 						Err(reason) => {

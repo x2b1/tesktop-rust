@@ -23,7 +23,7 @@ pub fn extension_source(
 	let dialog = rfd::AsyncFileDialog::new()
 		.set_parent(parent.as_ref())
 		.set_title("Import tesktop2 extension")
-		.add_filter("tesktop2 extensions", &["serein-extension", "json"])
+		.add_filter("tesktop2 extensions", &["tesktop2-extension", "json"])
 		.pick_file();
 	async move {
 		let file = dialog.await?;
@@ -102,7 +102,7 @@ pub fn theme_destination(
 		.set_parent(parent.as_ref())
 		.set_title("Export tesktop2 theme")
 		.set_file_name(safe_filename(filename))
-		.add_filter("tesktop2 theme", &["serein-extension"])
+		.add_filter("tesktop2 theme", &["tesktop2-extension"])
 		.save_file();
 	async move {
 		let file = dialog.await?;
@@ -266,7 +266,7 @@ mod tests {
 	fn completed_files_publish_without_clobbering() {
 		let mut random = [0_u8; 16];
 		getrandom::fill(&mut random).unwrap();
-		let root = std::env::temp_dir().join(format!("serein-save-{random:02x?}"));
+		let root = std::env::temp_dir().join(format!("tesktop2-save-{random:02x?}"));
 		std::fs::create_dir(&root).unwrap();
 		let source = root.join("partial");
 		let destination = root.join("attachment");

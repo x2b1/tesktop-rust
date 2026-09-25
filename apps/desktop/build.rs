@@ -33,7 +33,7 @@ fn windows_icon() {
 			.map(|path| path.join("rc.exe"))
 			.find(|path| path.is_file())
 			.expect("Windows SDK rc.exe");
-		let resource = out.join("serein.res");
+		let resource = out.join("tesktop2.res");
 		let mut compiler = Command::new(rc);
 		compiler
 			.arg("/nologo")
@@ -42,7 +42,7 @@ fn windows_icon() {
 			.arg("tesktop2-native.rc");
 		(compiler, resource)
 	} else {
-		let resource = out.join("serein-icon.o");
+		let resource = out.join("tesktop2-icon.o");
 		let mut compiler = Command::new("windres");
 		compiler
 			.args(["-i", "tesktop2-native.rc", "-o"])

@@ -48,7 +48,7 @@ def main():
     validate_links({"Page.md": '# Page\n<a id="old-anchor"></a>\n[old](#old-anchor)'})
 
     sources = {
-        SOURCES[0]: "# Build your first Serein plugin\n\n## Build and package\nBuild.\n## Test and develop locally\nTest.\n## ABI version 1\nABI.\n",
+        SOURCES[0]: "# Build your first tesktop2 plugin\n\n## Build and package\nBuild.\n## Test and develop locally\nTest.\n## ABI version 1\nABI.\n",
         SOURCES[1]: "# Extensions\n## Creator workflow\nShare.\n## Shop previews\nPreview.\n## Install and remove\nInstall.\n## Host contract\n### Capability reference\nConsent.\n## Resource and privacy limits\nLimits.\n",
         SOURCES[2]: "# Theme API\nThemes.\n",
         SOURCES[3]: "# SDK inputs\n## Invocation and events\n### Events\nEvents.\n## App data\nRead [messages](#timelinesnapshot-and-messagesnapshot-fixture).\n### IDs, absence and partial data\nIDs.\n### AppSnapshot: choose the group you need\nGroups.\n",

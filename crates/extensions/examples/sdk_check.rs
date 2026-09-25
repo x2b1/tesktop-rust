@@ -499,7 +499,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 		(
 			"message-delete-protector",
 			include_bytes!(
-				"../../../examples/extensions/packages/message-delete-protector.serein-extension"
+				"../../../examples/extensions/packages/message-delete-protector.tesktop2-extension"
 			)
 			.as_slice(),
 			include_str!("../../../examples/extensions/message-delete-protector/manifest.json"),
@@ -512,7 +512,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 		(
 			"emoji-sticker-images",
 			include_bytes!(
-				"../../../examples/extensions/packages/emoji-sticker-images.serein-extension"
+				"../../../examples/extensions/packages/emoji-sticker-images.tesktop2-extension"
 			)
 			.as_slice(),
 			include_str!("../../../examples/extensions/emoji-sticker-images/manifest.json"),
@@ -540,7 +540,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 	check_message_counter(
 		"message-counter/committed",
 		&parse_package(include_bytes!(
-			"../../../examples/extensions/packages/message-counter.serein-extension"
+			"../../../examples/extensions/packages/message-counter.tesktop2-extension"
 		))?,
 	);
 	check_message_counter(
@@ -553,7 +553,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 	check_app_toolbox(
 		"app-toolbox/committed",
 		&parse_package(include_bytes!(
-			"../../../examples/extensions/packages/app-toolbox.serein-extension"
+			"../../../examples/extensions/packages/app-toolbox.tesktop2-extension"
 		))?,
 	);
 	check_app_toolbox(
@@ -566,7 +566,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 	check_guild_inspector(
 		"guild-inspector/committed",
 		&parse_package(include_bytes!(
-			"../../../examples/extensions/packages/guild-inspector.serein-extension"
+			"../../../examples/extensions/packages/guild-inspector.tesktop2-extension"
 		))?,
 	);
 	check_guild_inspector(
@@ -579,7 +579,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 	check_conversation_inspector(
 		"conversation-inspector/committed",
 		&parse_package(include_bytes!(
-			"../../../examples/extensions/packages/conversation-inspector.serein-extension"
+			"../../../examples/extensions/packages/conversation-inspector.tesktop2-extension"
 		))?,
 	);
 	check_conversation_inspector(

@@ -13,7 +13,7 @@ use std::{
 const MAX_FILES: usize = 8192;
 const MAX_UNPACKED: u64 = 1024 * 1024 * 1024;
 const WINDOWS_FILES: &[&str] = &[
-	"serein.exe",
+	"tesktop2.exe",
 	"README.md",
 	"LICENSE-MIT",
 	"LICENSE-APACHE",
@@ -62,7 +62,7 @@ pub(super) fn linux_package_manager_update_command() -> Option<&'static str> {
 			|| id_like.contains("fedora")
 			|| id_like.contains("rhel")
 		{
-			return Some("sudo dnf upgrade serein");
+			return Some("sudo dnf upgrade tesktop2");
 		}
 		if id == "ubuntu"
 			|| id == "debian"
@@ -71,23 +71,23 @@ pub(super) fn linux_package_manager_update_command() -> Option<&'static str> {
 			|| id_like.contains("debian")
 			|| id_like.contains("ubuntu")
 		{
-			return Some("sudo apt update && sudo apt install --only-upgrade serein");
+			return Some("sudo apt update && sudo apt install --only-upgrade tesktop2");
 		}
 		if id == "arch" || id == "manjaro" || id == "endeavouros" || id_like.contains("arch") {
-			return Some("sudo pacman -Syu serein");
+			return Some("sudo pacman -Syu tesktop2");
 		}
 		if id.contains("suse") || id_like.contains("suse") {
-			return Some("sudo zypper update serein");
+			return Some("sudo zypper update tesktop2");
 		}
 	}
 	if Path::new("/usr/bin/dnf").is_file() {
-		Some("sudo dnf upgrade serein")
+		Some("sudo dnf upgrade tesktop2")
 	} else if Path::new("/usr/bin/apt").is_file() {
-		Some("sudo apt update && sudo apt install --only-upgrade serein")
+		Some("sudo apt update && sudo apt install --only-upgrade tesktop2")
 	} else if Path::new("/usr/bin/pacman").is_file() {
-		Some("sudo pacman -Syu serein")
+		Some("sudo pacman -Syu tesktop2")
 	} else if Path::new("/usr/bin/zypper").is_file() {
-		Some("sudo zypper update serein")
+		Some("sudo zypper update tesktop2")
 	} else {
 		None
 	}
@@ -134,7 +134,7 @@ fn installation() -> Result<PathBuf, String> {
 			);
 		}
 		let appdir = PathBuf::from(std::env::var_os("APPDIR").ok_or("Missing AppImage mount.")?);
-		if fs::canonicalize(appdir.join("usr/bin/serein"))
+		if fs::canonicalize(appdir.join("usr/bin/tesktop2"))
 			.ok()
 			.as_ref() != Some(&exe)
 		{
@@ -165,7 +165,7 @@ fn installation() -> Result<PathBuf, String> {
 			.and_then(Path::parent)
 			.and_then(Path::parent)
 			.ok_or("Run the installed tesktop2.app to install updates.")?;
-		if exe.file_name().is_none_or(|name| name != "serein")
+		if exe.file_name().is_none_or(|name| name != "tesktop2")
 			|| exe
 				.parent()
 				.and_then(Path::file_name)
@@ -184,7 +184,7 @@ fn installation() -> Result<PathBuf, String> {
 		let root = exe
 			.parent()
 			.ok_or("Cannot locate the installed application folder.")?;
-		if exe.file_name().is_none_or(|name| name != "serein.exe")
+		if exe.file_name().is_none_or(|name| name != "tesktop2.exe")
 			|| !root.join("THIRD_PARTY_NOTICES.md").is_file()
 			|| !root.join("licenses").is_dir()
 		{
@@ -205,7 +205,7 @@ pub(super) fn create_stage() -> Result<Staged, String> {
 	} else {
 		installation.as_path()
 	};
-	let lock_path = parent.join(".serein-update.lock");
+	let lock_path = parent.join(".tesktop2-update.lock");
 	if fs::symlink_metadata(&lock_path).is_ok_and(|metadata| !metadata.is_file()) {
 		return Err("Unexpected update lock file.".into());
 	}
@@ -231,7 +231,7 @@ pub(super) fn create_stage() -> Result<Staged, String> {
 		let name = entry.file_name();
 		let name = name.to_string_lossy();
 		let Some(pid) = name
-			.strip_prefix(".serein-update-")
+			.strip_prefix(".tesktop2-update-")
 			.and_then(|pid| pid.parse::<u32>().ok())
 			.filter(|pid| *pid > 0)
 		else {
@@ -254,7 +254,7 @@ pub(super) fn create_stage() -> Result<Staged, String> {
 				"Another tesktop2 instance is preparing an update. Close it and try again.".into(),
 			);
 		}
-		if fs::read(entry.path().join("owner")).ok().as_deref() != Some(b"serein-updater-v1") {
+		if fs::read(entry.path().join("owner")).ok().as_deref() != Some(b"tesktop2-updater-v1") {
 			return Err(
 				"An unrecognized directory occupies update storage; move it before trying again."
 					.into(),
@@ -277,7 +277,7 @@ pub(super) fn create_stage() -> Result<Staged, String> {
 			);
 		}
 	}
-	let directory = parent.join(format!(".serein-update-{}", std::process::id()));
+	let directory = parent.join(format!(".tesktop2-update-{}", std::process::id()));
 	let builder = fs::DirBuilder::new();
 	#[cfg(unix)]
 	let mut builder = builder;
@@ -287,7 +287,7 @@ pub(super) fn create_stage() -> Result<Staged, String> {
 		builder.mode(0o700);
 	}
 	builder.create(&directory).map_err(|_| "The installation folder is not writable. Move tesktop2 to a writable folder and try again.".to_owned())?;
-	fs::write(directory.join("owner"), b"serein-updater-v1")
+	fs::write(directory.join("owner"), b"tesktop2-updater-v1")
 		.map_err(|_| "Cannot mark update storage ownership.".to_owned())?;
 	Ok(Staged {
 		directory,
@@ -642,13 +642,13 @@ pub(super) fn unpack(
 	}
 	if cfg!(target_os = "macos") {
 		if !destination
-			.join("tesktop2.app/Contents/MacOS/serein")
+			.join("tesktop2.app/Contents/MacOS/tesktop2")
 			.is_file()
 		{
 			return Err("The update does not contain tesktop2.app.".into());
 		}
 		verify_mac(&destination.join("tesktop2.app"), installed)?;
-	} else if !destination.join("serein.exe").is_file()
+	} else if !destination.join("tesktop2.exe").is_file()
 		|| !destination.join("licenses").is_dir()
 		|| !destination.join("THIRD_PARTY_NOTICES.md").is_file()
 	{
@@ -695,7 +695,7 @@ fn verify_mac(candidate: &Path, installed: &Path) -> Result<(), String> {
 	}
 	let old = identity(installed)?;
 	let new = identity(candidate)?;
-	if old != new || new.1 != "cz.viceverse.serein" {
+	if old != new || new.1 != "cz.viceverse.tesktop2" {
 		return Err("The update was not signed by this tesktop2 publisher.".into());
 	}
 	let status = Command::new("/usr/sbin/spctl")
@@ -922,7 +922,7 @@ try {
   if ($plan.version -and (Test-Path -LiteralPath $uninstallKey)) {
     Set-ItemProperty -LiteralPath $uninstallKey -Name 'DisplayVersion' -Value ([string]$plan.version) -ErrorAction SilentlyContinue
   }
-  Start-Process -FilePath (Join-Path $installation 'serein.exe') -WorkingDirectory $installation
+  Start-Process -FilePath (Join-Path $installation 'tesktop2.exe') -WorkingDirectory $installation
 } catch {
   foreach ($name in $replaced) {
     $target = Join-Path $installation $name
@@ -931,7 +931,7 @@ try {
   foreach ($name in $moved) {
     Move-Item -LiteralPath (Join-Path $backup $name) -Destination (Join-Path $installation $name) -ErrorAction SilentlyContinue
   }
-  Start-Process -FilePath (Join-Path $installation 'serein.exe') -WorkingDirectory $installation -ErrorAction SilentlyContinue
+  Start-Process -FilePath (Join-Path $installation 'tesktop2.exe') -WorkingDirectory $installation -ErrorAction SilentlyContinue
   exit 1
 }
 Remove-Item -LiteralPath $stage -Recurse -Force -ErrorAction SilentlyContinue
@@ -966,13 +966,13 @@ pub(super) fn debug_check() -> Result<(), String> {
 			return Err(format!("Archive path validation accepted {path}"));
 		}
 	}
-	if safe_path("tesktop2.app/Contents/MacOS/serein").is_err() {
+	if safe_path("tesktop2.app/Contents/MacOS/tesktop2").is_err() {
 		return Err("Valid archive path rejected.".into());
 	}
 	let mut writer = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
 	writer
 		.start_file(
-			"tesktop2.app/Contents/MacOS/serein",
+			"tesktop2.app/Contents/MacOS/tesktop2",
 			zip::write::SimpleFileOptions::default(),
 		)
 		.map_err(|_| "Cannot create synthetic ZIP.")?;

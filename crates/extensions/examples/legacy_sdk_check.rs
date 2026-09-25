@@ -3,7 +3,7 @@ use extensions::{Element, Error, Invocation, Output, invoke, parse_package};
 use serde_json::json;
 
 fn main() {
-	let bytes = include_bytes!("../tests/fixtures/sdk-legacy/app-toolbox.serein-extension");
+	let bytes = include_bytes!("../tests/fixtures/sdk-legacy/app-toolbox.tesktop2-extension");
 	assert_eq!(bytes.len(), 574_992);
 	let package = parse_package(bytes).expect("immutable legacy package validates");
 	assert_eq!(package.wasm.len(), 198_370);

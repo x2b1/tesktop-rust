@@ -1047,12 +1047,12 @@ mod tests {
 		);
 		assert!(rgba_frame(&input[..4], 1, 2, 4, 0, 2, (0, 0)).is_err());
 	}
-	/// Developer check: `$env:SEREIN_VIDEO_SAMPLE='C:\path\clip.webm'; cargo test -p platform
+	/// Developer check: `$env:TESKTOP2_VIDEO_SAMPLE='C:\path\clip.webm'; cargo test -p platform
 	/// decodes_local_sample -- --ignored --nocapture`.
 	#[test]
 	#[ignore = "decodes a developer-supplied local clip"]
 	fn decodes_local_sample() {
-		let path = std::env::var("SEREIN_VIDEO_SAMPLE").expect("SEREIN_VIDEO_SAMPLE path");
+		let path = std::env::var("TESKTOP2_VIDEO_SAMPLE").expect("TESKTOP2_VIDEO_SAMPLE path");
 		let bytes = std::fs::read(path).unwrap();
 		let mut decoder = Decoder::open(Box::new(std::io::Cursor::new(bytes))).unwrap();
 		let info = decoder.info();

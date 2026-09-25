@@ -858,13 +858,13 @@ fn participant(state: &VoiceStateDto) -> Participant {
 
 /// Maps Discord's STREAM_DELETE `reason` to a user-facing message. Unknown values still
 /// tell the user Discord ended it, so a silent stop is never mistaken for a local one. With
-/// `SEREIN_VOICE_DIAGNOSTICS=1` the bounded raw value also reaches stderr for reports.
+/// `TESKTOP2_VOICE_DIAGNOSTICS=1` the bounded raw value also reaches stderr for reports.
 fn deletion_reason(raw: Option<&str>) -> Option<&'static str> {
 	let raw = raw?;
 	if raw.len() > 64 {
 		return Some("Discord ended the stream");
 	}
-	if std::env::var_os("SEREIN_VOICE_DIAGNOSTICS").is_some_and(|v| v == "1") {
+	if std::env::var_os("TESKTOP2_VOICE_DIAGNOSTICS").is_some_and(|v| v == "1") {
 		eprintln!("[tesktop2 voice Stream] discord_delete_reason={raw}");
 	}
 	Some(match raw {

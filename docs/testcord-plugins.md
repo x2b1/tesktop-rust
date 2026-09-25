@@ -176,6 +176,6 @@ not faked until the app can honour it:
 
 `cargo test -p tesktop-plugins` covers the registry, the bounds, settings persistence and
 TestCord import, and each port's matching rules. `cargo test -p ui --lib` renders the settings
-page. The host wiring in `apps/desktop/src/main.rs` is covered by `cargo check -p serein`; the
+page. The host wiring in `apps/desktop/src/main.rs` is covered by `cargo check -p tesktop2`; the
 desktop unit tests do not currently build because of an unrelated upstream fixture error in
 `apps/desktop/src/extension_member_details.rs`.

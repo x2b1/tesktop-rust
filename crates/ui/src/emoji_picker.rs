@@ -2358,7 +2358,7 @@ mod tests {
 			for _ in 0..3 {
 				assert!(frame(&mut picker, &mut state, &mut avatars, vec![]).is_empty());
 			}
-			let query = if custom { "serein_wave" } else { "rocket" };
+			let query = if custom { "tesktop2_wave" } else { "rocket" };
 			frame(
 				&mut picker,
 				&mut state,
@@ -2390,7 +2390,7 @@ mod tests {
 						matches!(&commands[0], Command::Reactions(client_core::reactions::Command::Set {
 						message: target, emoji, ..
 					}) if *target == message && emoji.id == custom.then_some(Id(9001))
-						&& emoji.name.as_deref() == Some(if custom { "serein_wave" } else { "🚀" }))
+						&& emoji.name.as_deref() == Some(if custom { "tesktop2_wave" } else { "🚀" }))
 					);
 					selected = true;
 					break;

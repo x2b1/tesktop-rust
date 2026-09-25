@@ -1,9 +1,9 @@
-// Runs only in Serein's newly-created ephemeral authentication webview.
+// Runs only in tesktop2's newly-created ephemeral authentication webview.
 // Observe its own same-origin API Authorization header after the owner logs in.
 // Discord still performs the entire authentication/challenge/QR flow.
 (() => {
   if (window !== window.top || location.origin !== "https://discord.com") return;
-  const capability = "__SEREIN_LOGIN_CAPABILITY__";
+  const capability = "__TESKTOP2_LOGIN_CAPABILITY__";
   let delivered = false;
   const opened = Date.now();
   const allowed = value => {

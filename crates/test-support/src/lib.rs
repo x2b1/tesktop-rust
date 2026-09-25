@@ -270,7 +270,7 @@ fn forum_tags() -> model::forum::Tags {
 			tag(2605, "Discussion", None, false),
 			model::forum::Tag {
 				emoji_id: Some(Id(9002)),
-				..tag(2606, "Bug", Some("serein_spark"), false)
+				..tag(2606, "Bug", Some("tesktop2_spark"), false)
 			},
 			tag(2607, "Accessibility", None, false),
 		],
@@ -305,7 +305,7 @@ pub fn demo_state() -> State {
 				emojis: Some(vec![
 					model::CustomEmoji {
 						id: Id(9001),
-						name: "serein_wave".into(),
+						name: "tesktop2_wave".into(),
 						animated: false,
 						available: true,
 						managed: false,
@@ -313,7 +313,7 @@ pub fn demo_state() -> State {
 					},
 					model::CustomEmoji {
 						id: Id(9002),
-						name: "serein_party".into(),
+						name: "tesktop2_party".into(),
 						animated: true,
 						available: true,
 						managed: false,
@@ -925,7 +925,7 @@ pub fn demo_accounts(current: &model::User) -> Vec<model::SavedAccount> {
 		},
 		model::SavedAccount {
 			id: Id(4243),
-			name: "serein.testing".into(),
+			name: "tesktop2.testing".into(),
 			display: None,
 			avatar: None,
 			discriminator: 0,
@@ -1294,7 +1294,7 @@ pub fn code_demo_state() -> State {
 	state.timeline.clear();
 	let texts = [
 		"One-liner: ```cargo xtask check``` and an unknown tag:\n```elixir\nIO.puts \"synthetic\"\n```",
-		"```json\n{\"name\": \"serein\", \"version\": 1, \"voice\": true, \"tags\": [\"native\", null]}\n```",
+		"```json\n{\"name\": \"tesktop2\", \"version\": 1, \"voice\": true, \"tags\": [\"native\", null]}\n```",
 		"Here is the reducer entry point:\n```rust\n/// Apply one gateway event.\npub fn apply(&mut self, event: Event) -> Result<(), Error> {\n    let Some(channel) = self.channels.get_mut(&event.channel) else {\n        return Err(Error::Unknown(event.channel));\n    };\n    channel.push(event.message, MAX_MESSAGES)?; // bounded\n    Ok(())\n}\n```\nThe cache stays bounded by bytes and items.",
 		"```js\nconst rows = await db.query(\"select id from users where active = $1\", [true]);\nconsole.log(`${rows.length} active`); // synthetic\n```",
 	];

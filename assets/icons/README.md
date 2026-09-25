@@ -51,5 +51,5 @@ The media-viewer caret and download glyphs are unmodified Phosphor `caret-left-b
 
 The `tesktop-mark` name is retained in the shared atlas index for cell 58. The native tesktop2
 brand texture is bundled separately at `assets/brand/tesktop2.png` and is painted in full color
-by `Icon::Tesktop`; the old Serein artwork remains in the repository only for upstream attribution
+by `Icon::Tesktop`; the old tesktop2 artwork remains in the repository only for upstream attribution
 and is not used by the tesktop2 product.

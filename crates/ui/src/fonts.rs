@@ -4,11 +4,11 @@ use std::sync::{Arc, Mutex, Weak};
 
 pub const MAX_CUSTOM_FONT_BYTES: usize = 8 * 1024 * 1024;
 const CUSTOM: [&str; 3] = [
-	"Serein Custom",
-	"Serein Custom Medium",
-	"Serein Custom SemiBold",
+	"tesktop2 Custom",
+	"tesktop2 Custom Medium",
+	"tesktop2 Custom SemiBold",
 ];
-const DEFINITIONS_KEY: &str = "serein-font-definitions";
+const DEFINITIONS_KEY: &str = "tesktop2-font-definitions";
 
 #[derive(Clone)]
 pub struct CustomFont {

@@ -276,7 +276,7 @@ pub async fn run_with_identity(
 	identity: Arc<Identity>,
 ) -> Result<(), &'static str> {
 	let url = endpoint(&credentials.endpoint)?;
-	crate::timer::isolated("serein-voice", move || {
+	crate::timer::isolated("tesktop2-voice", move || {
 		run_inner(
 			credentials,
 			capture,
@@ -951,7 +951,7 @@ pub async fn run_stream(
 	emit: impl Fn(Status) -> Result<(), ()> + Send + 'static,
 ) -> Result<(), &'static str> {
 	let url = endpoint(&credentials.endpoint)?;
-	crate::timer::isolated("serein-stream", move || {
+	crate::timer::isolated("tesktop2-stream", move || {
 		run_stream_inner(
 			credentials,
 			identity,
@@ -975,7 +975,7 @@ pub async fn watch_stream(
 	emit: impl Fn(Status) -> Result<(), ()> + Send + 'static,
 ) -> Result<(), &'static str> {
 	let url = endpoint(&credentials.endpoint)?;
-	crate::timer::isolated("serein-watch", move || {
+	crate::timer::isolated("tesktop2-watch", move || {
 		run_stream_inner(
 			credentials,
 			identity,

@@ -16,7 +16,7 @@ use webkit6::{
 
 const LIFETIME: Duration = Duration::from_secs(300);
 const QUERY_INTERVAL: Duration = Duration::from_millis(100);
-const PAGE: &str = "https://serein-captcha.verification.invalid/";
+const PAGE: &str = "https://tesktop2-captcha.verification.invalid/";
 
 struct Handoff {
 	opened: Instant,
@@ -74,11 +74,11 @@ impl CaptchaView {
 		crate::ensure_gtk_application_id();
 		let (capability, captcha_script, html) = page(challenge, dark)?;
 		let script = include_str!("captcha-linux-bridge.js")
-			.replace("__SEREIN_CAPTCHA_CAPABILITY__", &capability)
+			.replace("__TESKTOP2_CAPTCHA_CAPABILITY__", &capability)
 			+ "\n" + &captcha_script;
 		// WebKit evaluates in the main frame; bound the string before copying into Rust.
 		let take_script = format!(
-			"(() => {{ if (window !== window.top || location.href !== '{PAGE}') return null; const take = window['__serein_captcha_take_{}']; if (typeof take !== 'function') return null; const value = take(); return typeof value === 'string' && value.length <= 8270 && /^[\\x21-\\x7e]+$/.test(value) ? value : null; }})()",
+			"(() => {{ if (window !== window.top || location.href !== '{PAGE}') return null; const take = window['__tesktop2_captcha_take_{}']; if (typeof take !== 'function') return null; const value = take(); return typeof value === 'string' && value.length <= 8270 && /^[\\x21-\\x7e]+$/.test(value) ? value : null; }})()",
 			capability.trim_end_matches(':')
 		);
 		let opened = Instant::now();
@@ -121,7 +121,7 @@ impl CaptchaView {
 			&script,
 			webkit6::UserContentInjectedFrames::TopFrame,
 			webkit6::UserScriptInjectionTime::Start,
-			&["https://serein-captcha.verification.invalid/*"],
+			&["https://tesktop2-captcha.verification.invalid/*"],
 			&[],
 		));
 		let view = webkit6::WebView::builder()

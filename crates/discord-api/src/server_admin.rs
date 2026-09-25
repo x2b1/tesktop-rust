@@ -383,7 +383,7 @@ fn sticker_multipart(
 ) -> Result<(String, Vec<u8>), Failure> {
 	let mut suffix = 0u32;
 	let boundary = loop {
-		let candidate = format!("----------------serein-sticker-{suffix:x}");
+		let candidate = format!("----------------tesktop2-sticker-{suffix:x}");
 		if !file
 			.windows(candidate.len())
 			.any(|window| window == candidate.as_bytes())
@@ -433,7 +433,7 @@ mod sticker_tests {
 
 	#[test]
 	fn sticker_multipart_keeps_fields_file_and_collision_free_boundary() {
-		let file = b"----------------serein-sticker-0 image";
+		let file = b"----------------tesktop2-sticker-0 image";
 		let (content_type, body) = sticker_multipart(
 			"Wave",
 			"A friendly wave",
@@ -443,7 +443,7 @@ mod sticker_tests {
 			file,
 		)
 		.unwrap();
-		assert!(content_type.ends_with("serein-sticker-1"));
+		assert!(content_type.ends_with("tesktop2-sticker-1"));
 		let body = String::from_utf8_lossy(&body);
 		for expected in [
 			"name=\"name\"\r\n\r\nWave",
