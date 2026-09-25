@@ -1604,6 +1604,12 @@ fn contrast(a: Color32, b: Color32) -> f32 {
 #[cfg(test)]
 mod tests {
 	#[test]
+	fn the_settings_slider_takes_pointer_and_keyboard_input() {
+		// Also reachable from the demo binary as `--demo-check-settings-sliders`.
+		debug_slider_check();
+	}
+
+	#[test]
 	fn over_flattens_a_tint_onto_a_surface() {
 		use super::*;
 		// A fully transparent tint must leave the surface untouched, and a fully opaque one
@@ -2842,9 +2848,10 @@ pub fn slider<T: egui::emath::Numeric>(
 	response | editor
 }
 
-/// Offline pointer/keyboard check for the shared settings control.
+/// Offline pointer/keyboard check for the shared settings control. The demo binary runs
+/// this directly through `--demo-check-settings-sliders`, and the unit test below runs it
+/// too, so it is a plain function rather than a `#[test]` item.
 #[cfg(debug_assertions)]
-#[test]
 pub fn debug_slider_check() {
 	let ctx = egui::Context::default();
 	apply(&ctx);

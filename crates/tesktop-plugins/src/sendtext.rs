@@ -681,6 +681,8 @@ mod tests {
 		let mut text = body.to_string();
 		let mut outgoing = Outgoing {
 			channel: model::Id(7),
+			previous: None,
+			route: crate::Route::Send,
 			me: model::Id(1),
 			body: &mut text,
 			reply: None,
@@ -817,6 +819,8 @@ mod tests {
 		let mut body = "dont".to_string();
 		let mut outgoing = Outgoing {
 			channel: message,
+			previous: None,
+			route: crate::Route::Send,
 			me: model::Id(1),
 			body: &mut body,
 			reply: None,

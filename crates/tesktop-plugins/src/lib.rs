@@ -11,6 +11,7 @@
 pub mod autoreply;
 pub mod blockkeywords;
 pub mod body;
+pub mod burst;
 pub mod clearurls;
 pub mod copy;
 pub mod display;
@@ -209,6 +210,23 @@ pub struct Outgoing<'a> {
 	pub body: &'a mut String,
 	/// `None` unless the owner is replying to a message.
 	pub reply: Option<Reply<'a>>,
+	/// The last message the owner sent here, and how fresh it is.
+	pub previous: Option<&'a Previous>,
+	pub route: Route,
+}
+
+/// The message before this one, which is what `EditPrevious` folds into.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Previous {
+	pub id: Id,
+	pub author: Id,
+	pub content: String,
+	pub attachments: usize,
+	/// Milliseconds since it was sent, from a monotonic clock.
+	pub age_ms: u64,
+	pub is_group: bool,
+	/// The owner is composing a reply, so a burst must not swallow it.
+	pub replying: bool,
 }
 
 /// A message edit as the host saw it: the timeline body before and after the patch.
@@ -219,6 +237,15 @@ pub struct Edit<'a> {
 	pub author: &'a model::User,
 	pub before: &'a str,
 	pub after: &'a str,
+}
+
+/// What to do with a body the composer produced.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Route {
+	/// Send it, as typed.
+	Send,
+	/// Fold it into the previous message instead of sending a new one.
+	EditPrevious,
 }
 
 /// A message a plugin asked the host to send once its delay elapsed.
@@ -304,6 +331,10 @@ pub trait Plugin {
 	fn split(&self, _context: &SendContext, _body: &str) -> Vec<String> {
 		Vec::new()
 	}
+	/// How a burst may fold into the previous message. Only one plugin may claim a send.
+	fn route(&mut self, _outgoing: &mut Outgoing<'_>) -> bool {
+		false
+	}
 	/// How long the app should wait between the parts of one message.
 	fn chunk_delay_ms(&self) -> Option<u64> {
 		None
@@ -378,6 +409,7 @@ impl Registry {
 			Box::new(notify::PingNotifications::default()),
 			Box::new(notify::OnePingPerDm::default()),
 			Box::new(notify::MessageNotifier::default()),
+			Box::new(burst::MessageBurst::default()),
 			Box::new(blockkeywords::BlockKeywords::default()),
 			Box::new(silenceusers::SilenceUsers::default()),
 			Box::new(splitlarge::SplitLargeMessages::default()),
@@ -561,6 +593,20 @@ impl Registry {
 				.body_transform()
 				.map(|transform| (self.plugins[index].meta().id, transform))
 		})
+	}
+
+	/// Let a plugin claim this send, so it can fold into the previous message.
+	pub fn route(&mut self, outgoing: &mut Outgoing<'_>) -> bool {
+		if !self.any_enabled() {
+			return false;
+		}
+		let active = self.active();
+		for index in active {
+			if self.plugins[index].route(outgoing) {
+				return outgoing.route == Route::EditPrevious;
+			}
+		}
+		false
 	}
 
 	/// Fold every active port's opinion about announcing a message.
@@ -960,6 +1006,8 @@ mod tests {
 		let mut body = "https://example.com/?utm_source=x".to_string();
 		let mut outgoing = Outgoing {
 			channel: Id(7),
+			previous: None,
+			route: crate::Route::Send,
 			me: Id(1),
 			body: &mut body,
 			reply: None,

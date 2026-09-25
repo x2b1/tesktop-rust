@@ -27,6 +27,7 @@ remembered state.
 | `ignore` | The same message, after `mutate_incoming` | Hide it, so it never enters the timeline |
 | `on_created` / `on_edited` / `on_deleted` | The same events, after `ignore` | Record them, queue a reply |
 | `before_send` / `before_edit` | Every outgoing body and its reply mention | Rewrite either, or refuse it with a reason |
+| `route` | The same body, before it is split | Claim the send so the host edits the previous message instead |
 | `split` | The same body, after the rewrite | Return several bodies, sent in order with `chunk_delay_ms` between them |
 | `notice` | An accepted message, before the state owner queues an alert | Silence the sound, or add a toast in the window |
 | `message_actions` / `run_action` | A message's own menu, then the entry the owner picked | Offer a clipboard or notice action on that message |
@@ -82,6 +83,7 @@ MessageLogger record is session memory and is never written to disk; copy it out
 | ProfanityFilter | Removes filtered whole words from what you send, tidies the spaces and punctuation it leaves, and either sends a duck or refuses the message | The keyboard shortcut that toggles it |
 | JsTextReplace | Applies your own find and replace rules, in order, each with an optional condition | The repeating rule editor widget: rules live in one multiline field, one per line, `find => replace` with an optional `\| if: text` |
 | Signature | Appends your signature under every message you send | The composer button and composer menu entry that toggle it |
+| MessageBurst | A second message inside the window edits the one before it, with attachment, reply and group-message rules | Its keyboard shortcut |
 | PingNotifications | In servers, only ping on a direct mention, with friends and direct messages able to opt back in | The mention formatting it also rewrites, which this client renders itself |
 | OnePingPerDM | A run of unread direct messages pings once, at the oldest, with scope, mention and ignore-list rules | The desktop-type check, which this client answers from the channel's guild instead |
 | MessageNotifier | A toast for the listed people even where the app's own alert stays quiet | Nothing; the port is complete |

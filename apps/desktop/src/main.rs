@@ -1145,6 +1145,7 @@ fn demo_members(guild: Option<model::Id>, channel: model::Id, request: u64) -> m
 			status: Some("idle".into()),
 			custom_status: None,
 			activities: vec![],
+			clients: model::ClientPlatforms::default(),
 		},
 		model::Member {
 			user: test_support::message(1, channel).author,
@@ -1169,6 +1170,7 @@ fn demo_members(guild: Option<model::Id>, channel: model::Id, request: u64) -> m
 				ends_at: None,
 				started_at: None,
 			}],
+			clients: model::ClientPlatforms::default(),
 		},
 	];
 	if guild.is_some() {
@@ -1356,6 +1358,7 @@ impl Desktop {
 						status: member.status,
 						custom_status: member.custom_status,
 						activities: member.activities,
+						clients: member.clients,
 					})
 					.collect();
 			}
@@ -4086,17 +4089,25 @@ impl Desktop {
 			roles: &roles,
 			mention: &mut mention,
 		});
-		let mut outgoing = tesktop_plugins::Outgoing {
-			channel,
-			me,
-			body: &mut body,
-			reply,
-		};
+		let previous = self.tesktop_previous(channel, me);
 		let context = tesktop_plugins::SendContext::new(channel, me);
-		let outcome = if sending {
-			self.tesktop.before_send(&mut outgoing)
-		} else {
-			self.tesktop.before_edit(&mut outgoing)
+		// The ports borrow the body, the mention and the role list, so everything the host
+		// needs afterwards is read out before they are let go.
+		let (outcome, route) = {
+			let mut outgoing = tesktop_plugins::Outgoing {
+				channel,
+				me,
+				body: &mut body,
+				reply,
+				previous: previous.as_ref(),
+				route: tesktop_plugins::Route::Send,
+			};
+			let outcome = if sending {
+				self.tesktop.before_send(&mut outgoing)
+			} else {
+				self.tesktop.before_edit(&mut outgoing)
+			};
+			(outcome, outgoing.route)
 		};
 		let outcome = match outcome {
 			Ok(()) => {
@@ -4132,6 +4143,17 @@ impl Desktop {
 		{
 			reply.mention = mention;
 		}
+		// A port folded this body into the previous message instead of sending a new one.
+		if outcome && sending && route == tesktop_plugins::Route::EditPrevious {
+			// The body is finished with; the host writes it into the previous message instead.
+			let merged = std::mem::take(&mut body);
+			if let Some(previous) = &previous
+				&& let Some(edit) = self.state.prepare_edit(channel, previous.id, merged)
+			{
+				self.command(edit);
+			}
+			return false;
+		}
 		// An oversized body becomes several messages, the first one riding this command.
 		if outcome && sending {
 			let parts = self.tesktop.split(&context, &body);
@@ -4159,6 +4181,37 @@ impl Desktop {
 			*content = body;
 		}
 		outcome
+	}
+
+	/// The owner's last message in this channel, which a burst may fold into.
+	fn tesktop_previous(
+		&self,
+		channel: model::Id,
+		me: model::Id,
+	) -> Option<tesktop_plugins::Previous> {
+		let last = self.state.timeline.iter().next_back()?;
+		if last.author.id != me || last.channel != channel {
+			return None;
+		}
+		// The age comes from the snowflake itself, so it is real elapsed time rather than
+		// anything the frame loop happened to measure.
+		let now = std::time::SystemTime::now()
+			.duration_since(std::time::UNIX_EPOCH)
+			.map(|age| age.as_secs() as i64)
+			.unwrap_or_default();
+		let sent = ((last.id.0 >> 22) / 1000 + 1_420_070_400) as i64;
+		Some(tesktop_plugins::Previous {
+			id: last.id,
+			author: last.author.id,
+			content: last.content.clone(),
+			attachments: last.attachments.len(),
+			age_ms: (now - sent).max(0) as u64 * 1000,
+			is_group: self
+				.state
+				.channel(channel)
+				.is_some_and(|found| found.guild.is_none()),
+			replying: self.state.reply.is_some(),
+		})
 	}
 
 	/// Hold one part of a split message until its turn comes.

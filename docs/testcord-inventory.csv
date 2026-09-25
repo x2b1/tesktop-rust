@@ -266,7 +266,7 @@ equicordplugins,limitlessScreenshare,LimitlessScreenshare,Adds a slider for scre
 equicordplugins,loginWithQR,LoginWithQR,Scan a QR code,EquicordDevs.nexpid,1,False,False,False,False,False,,portable-logic,
 equicordplugins,markdownTables,MarkdownTables,Hide the Table/Raw toggle and always show rendered tables.,EquicordDevs.yafyx,1,True,False,False,False,False,,rewrite,
 equicordplugins,mediaPlaybackSpeed,MediaPlaybackSpeed,Voice messages,Devs.D3SOX,3,False,False,False,False,False,,portable-logic,
-equicordplugins,messageBurst,MessageBurst,The duration of bursts (in seconds).,EquicordDevs.port22exposed,3,False,False,False,False,False,,portable-logic,
+equicordplugins,messageBurst,MessageBurst,The duration of bursts (in seconds).,EquicordDevs.port22exposed,3,False,False,False,False,False,,portable-logic,burst
 equicordplugins,messageColors,MessageColors,Displays color codes like #FF0042 inside of messages,EquicordDevs.Hen,0,False,False,False,False,False,,portable-logic,
 equicordplugins,messageFetchTimer,MessageFetchTimer,Show fetch time icon in message bar,EquicordDevs.GroupXyz,4,False,False,False,False,False,,portable-logic,
 equicordplugins,messageLinkTooltip,MessageLinkTooltip,Show tooltip when hovering over message links,Devs.Kyuuhachi,4,True,False,False,False,False,,rewrite,

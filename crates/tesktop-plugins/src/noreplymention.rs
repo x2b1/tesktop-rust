@@ -142,6 +142,8 @@ mod tests {
 		let mut chosen = mention;
 		let mut outgoing = Outgoing {
 			channel: Id(7),
+			previous: None,
+			route: crate::Route::Send,
 			me: Id(1),
 			body: &mut body,
 			reply: Some(crate::Reply {
@@ -181,6 +183,8 @@ mod tests {
 		let mut body = "hello".to_string();
 		let mut outgoing = Outgoing {
 			channel: Id(7),
+			previous: None,
+			route: crate::Route::Send,
 			me: Id(1),
 			body: &mut body,
 			reply: None,

@@ -27,6 +27,10 @@ mod portal_linux;
 #[cfg(target_os = "linux")]
 #[path = "../src/video.rs"]
 mod video;
+// `screen::linux` calls `super::software_rate_change`, which lives in `screen.rs` in the
+// real crate. Here `screen` is a sibling module rather than the parent, so re-export it.
+#[cfg(target_os = "linux")]
+use screen::software_rate_change;
 // The shared screen module reaches the platform encoders' keyframe check through this path.
 #[cfg(target_os = "linux")]
 #[path = "../src/video_encode.rs"]
