@@ -93,6 +93,7 @@ MessageLogger record is session memory and is never written to disk; copy it out
 | SpaceOut | `/spaceout` separates every character, spaces included, so the gap between two words becomes three | Nothing; the port is complete |
 | AntiNameChange | A mention of someone you track keeps the alias you gave them, and an alias can never smuggle a mention of its own | Nothing; the port is complete |
 | WordCount | A count under every message of more than five words, counting characters as a reader sees them | Nothing; the port is complete |
+| GoodPerson | The blocked words arrive as another word, from the original's own five categories and both replacement tables, with a category each switchable, matching whole words and the obfuscated spellings a slur also arrives as | `Math.random`; the replacement is chosen from the word instead, so a message always reads the same way |
 | Ingtoninator | One word of every message grows the Ington suffix, never a word inside a link and never one that cannot take it, chosen from the body itself so the same text always gets the same word | The composer button, which is yours |
 | ClientSideBlock | Nobody on your list reaches your screen | Hiding a voice channel, and hiding your own messages from yourself, because the filter sees the author and not you |
 | ReplaceGoogleSearch | A Google link in a message opens in the engine you read, with the query copied exactly as it was, and a custom engine only when it is a real web address | Nothing; the port is complete |

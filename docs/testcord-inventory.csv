@@ -858,7 +858,7 @@ Devs.AutumnVN
 ",8,True,False,False,False,False,,rewrite,
 testcordplugins,vc-blockKrisp,BlockKrisp,Prevent Krisp from loading,TestcordDevs.x2b,0,False,False,False,False,False,native.ts,native-feature,
 testcordplugins,vc-followUser,FollowUser,Make sure to be in the same VC when following a user,"Devs.D3SOX,TestcordDevs.x2b",15,True,False,False,True,False,,rewrite,
-testcordplugins,vc-goodperson,GoodPerson,Makes you (or others) a good person,"Devs.nin0dev,Devs.mantikafasi",1,False,True,False,True,False,,portable-hook,
+testcordplugins,vc-goodperson,GoodPerson,Makes you (or others) a good person,"Devs.nin0dev,Devs.mantikafasi",1,False,True,False,True,False,,portable-hook,polite
 testcordplugins,vc-ignoreTerms,IgnoreTerms,Ignore Discord's new terms of service,TestcordDevs.x2b,0,False,False,False,False,False,,portable-logic,
 testcordplugins,vc-junkCleanup-main,JunkCleanup,Enable all patches (intended for testing),Devs.Sqaaakoi,0,False,False,False,False,False,,portable-logic,
 testcordplugins,vc-notifyUserChanges,NotifyUserChanges,Notify on status changes,TestcordDevs.x2b,9,False,False,False,True,False,,portable-hook,

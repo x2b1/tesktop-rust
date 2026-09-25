@@ -22,6 +22,7 @@ pub mod inspect;
 pub mod messagelogger;
 pub mod noreplymention;
 pub mod notify;
+pub mod polite;
 pub mod react;
 pub mod schedule;
 pub mod sendtext;
@@ -488,6 +489,7 @@ impl Registry {
 			Box::new(inspect::ClientSideBlock::default()),
 			Box::new(inspect::ReplaceGoogleSearch::default()),
 			Box::new(inspect::BaseDecoder::default()),
+			Box::new(polite::GoodPerson::default()),
 			Box::new(blockkeywords::BlockKeywords::default()),
 			Box::new(silenceusers::SilenceUsers::default()),
 			Box::new(splitlarge::SplitLargeMessages::default()),
