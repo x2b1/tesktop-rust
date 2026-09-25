@@ -4070,6 +4070,7 @@ impl Desktop {
 		}
 		self.tesktop_send_replies();
 		self.tesktop_run_action(ctx);
+		self.tesktop.tick(self.tesktop_epoch.elapsed().as_millis() as u64);
 		self.tesktop_toast();
 		self.tesktop_compose();
 		self.tesktop_intent();

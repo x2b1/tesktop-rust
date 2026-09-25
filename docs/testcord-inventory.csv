@@ -537,7 +537,7 @@ testcordplugins,autoDeleteDms,AutoDeleteDMs,Delete messages after (value),Testco
 testcordplugins,autoDeleter,AutoDeleter,Enable automatic message deletion,"
 {
 name:""Bash"",
-id:1327483363518582784n,",40,False,False,False,False,False,,portable-logic,
+id:1327483363518582784n,",40,False,False,False,False,False,,portable-logic,forget
 testcordplugins,autoMute,AutoMute,Whether the plugin will automatically mute you after being silent for too long or not,TestcordDevs.x2b,5,False,False,False,True,False,,portable-hook,
 testcordplugins,autoRedeem,AutoRedeem,Blazing fast mode: parallel redemption with no delays. Forces prevalidation on. May increase captcha risk.,TestcordDevs.x2b,9,False,False,False,True,False,native.ts,native-feature,
 testcordplugins,autoReply,AutoReply,Where to show the button,"{name:""User"",id:0n}",14,False,False,False,True,False,,portable-hook,

@@ -20,6 +20,7 @@ pub mod commands;
 pub mod copy;
 pub mod display;
 pub mod files;
+pub mod forget;
 pub mod inspect;
 pub mod marker;
 pub mod messagelogger;
@@ -484,6 +485,10 @@ pub trait Plugin {
 	fn take_intent(&mut self, _context: &IntentContext<'_>) -> Option<Intent> {
 		None
 	}
+	/// Called once a frame with the monotonic milliseconds, for work that has to happen
+	/// later than the message that asked for it. A port that schedules with this owns the
+	/// bound on how many things it is waiting for.
+	fn tick(&mut self, _now_ms: u64) {}
 	/// What became of a message the owner just sent.
 	fn delivered(&mut self, _event: &Delivery<'_>) {}
 	/// Text to put in the composer, handed over once. The composer owns the caret, so a
@@ -619,6 +624,7 @@ impl Registry {
 			Box::new(aftermath::AutoChannelReact::default()),
 			Box::new(reacts::CustomReactionButtons::default()),
 			Box::new(reacts::Abbreviation::default()),
+			Box::new(forget::AutoDeleter::default()),
 			Box::new(blockkeywords::BlockKeywords::default()),
 			Box::new(silenceusers::SilenceUsers::default()),
 			Box::new(splitlarge::SplitLargeMessages::default()),
@@ -933,6 +939,16 @@ impl Registry {
 			}
 		}
 		None
+	}
+
+	/// Let the active ports do their later work. The host calls this once a frame.
+	pub fn tick(&mut self, now_ms: u64) {
+		if !self.any_enabled() {
+			return;
+		}
+		for index in self.active() {
+			self.plugins[index].tick(now_ms);
+		}
 	}
 
 	/// Tell the active ports what became of a send.
