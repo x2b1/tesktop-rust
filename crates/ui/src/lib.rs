@@ -7336,6 +7336,92 @@ mod composer_tests {
 	}
 
 	#[test]
+	fn a_ports_button_is_drawn_in_the_composer_and_a_press_asks_the_app() {
+		let ctx = egui::Context::default();
+		let mut state = test_support::demo_state();
+		state.demo = false;
+		let channel = state.selected.unwrap();
+		state.drafts.remove(&channel);
+		let mut messaging = MessagingUi::default();
+		messaging.testcord.composer_buttons =
+			std::sync::Arc::new(vec![crate::testcord::ComposerButton {
+				id: "ingtoninator".to_string(),
+				label: "Ington".to_string(),
+				tooltip: "Add the Ington suffix".to_string(),
+				active: Some(true),
+			}]);
+		let mut painted = Vec::new();
+		let mut editor = egui::Id::NULL;
+		let mut commands = Vec::new();
+		let output = ctx.run_ui(Default::default(), |ui| {
+			editor = ui.make_persistent_id("message-input");
+			messaging.composer(ui, &mut state, channel, &ctx, &mut commands);
+		});
+		fn texts(shape: &egui::Shape, out: &mut Vec<String>) {
+			match shape {
+				egui::Shape::Text(text) => out.push(text.galley.job.text.clone()),
+				egui::Shape::Vec(shapes) => {
+					for shape in shapes {
+						texts(shape, out);
+					}
+				}
+				_ => {}
+			}
+		}
+		for shape in &output.shapes {
+			texts(&shape.shape, &mut painted);
+		}
+		output.drop_without_applying_deltas();
+		assert!(
+			painted.iter().any(|line| line == "Ington"),
+			"the port's button is not in the composer: {painted:?}"
+		);
+		assert!(
+			commands.is_empty(),
+			"drawing a button must not send anything"
+		);
+		// A press is the app's business: the composer asks and the registry answers.
+		assert!(
+			messaging.testcord.requests.is_empty(),
+			"nothing is asked for until the button is pressed"
+		);
+		let _ = editor;
+	}
+
+	#[test]
+	fn a_composer_with_no_port_buttons_looks_the_same() {
+		let ctx = egui::Context::default();
+		let mut state = test_support::demo_state();
+		state.demo = false;
+		let channel = state.selected.unwrap();
+		let mut messaging = MessagingUi::default();
+		let mut commands = Vec::new();
+		let output = ctx.run_ui(Default::default(), |ui| {
+			messaging.composer(ui, &mut state, channel, &ctx, &mut commands);
+		});
+		let mut painted = Vec::new();
+		fn texts(shape: &egui::Shape, out: &mut Vec<String>) {
+			match shape {
+				egui::Shape::Text(text) => out.push(text.galley.job.text.clone()),
+				egui::Shape::Vec(shapes) => {
+					for shape in shapes {
+						texts(shape, out);
+					}
+				}
+				_ => {}
+			}
+		}
+		for shape in &output.shapes {
+			texts(&shape.shape, &mut painted);
+		}
+		output.drop_without_applying_deltas();
+		assert!(
+			!painted.iter().any(|line| line == "Ington"),
+			"a port that offers nothing draws nothing"
+		);
+	}
+
+	#[test]
 	fn attachment_only_enter_sends_once_and_busy_upload_blocks_resending() {
 		for (busy, allowed, modifiers, repeat) in [
 			(true, true, egui::Modifiers::NONE, false),

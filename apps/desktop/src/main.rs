@@ -1176,7 +1176,6 @@ fn demo_members(guild: Option<model::Id>, channel: model::Id, request: u64) -> m
 			custom_status: None,
 			clients: model::ClientPlatforms::default(),
 			activities: vec![],
-			clients: model::ClientPlatforms::default(),
 		},
 		model::Member {
 			user: test_support::message(1, channel).author,
@@ -1202,7 +1201,6 @@ fn demo_members(guild: Option<model::Id>, channel: model::Id, request: u64) -> m
 				ends_at: None,
 				started_at: None,
 			}],
-			clients: model::ClientPlatforms::default(),
 		},
 	];
 	if guild.is_some() {
@@ -1391,7 +1389,6 @@ impl Desktop {
 						custom_status: member.custom_status,
 						clients: member.clients,
 						activities: member.activities,
-						clients: member.clients,
 					})
 					.collect();
 			}
@@ -4070,7 +4067,8 @@ impl Desktop {
 		}
 		self.tesktop_send_replies();
 		self.tesktop_run_action(ctx);
-		self.tesktop.tick(self.tesktop_epoch.elapsed().as_millis() as u64);
+		self.tesktop
+			.tick(self.tesktop_epoch.elapsed().as_millis() as u64);
 		self.tesktop_toast();
 		self.tesktop_compose();
 		self.tesktop_intent();

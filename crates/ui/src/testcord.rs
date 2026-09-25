@@ -509,10 +509,31 @@ mod tests {
 	use super::*;
 
 	fn drawn(page: &mut TestCord) {
+		painted(page);
+	}
+
+	/// Draw the page and return every string it painted, which is what the tests below read.
+	fn painted(page: &mut TestCord) -> Vec<String> {
 		let ctx = egui::Context::default();
 		crate::design::apply(&ctx);
+		let mut out = Vec::new();
+		fn texts(shape: &egui::Shape, out: &mut Vec<String>) {
+			match shape {
+				egui::Shape::Text(text) => out.push(text.galley.job.text.clone()),
+				egui::Shape::Vec(shapes) => {
+					for shape in shapes {
+						texts(shape, out);
+					}
+				}
+				_ => {}
+			}
+		}
 		let output = ctx.run_ui(egui::RawInput::default(), |ui| page.show(ui));
+		for shape in &output.shapes {
+			texts(&shape.shape, &mut out);
+		}
 		output.drop_without_applying_deltas();
+		out
 	}
 
 	fn entry() -> Entry {
@@ -688,6 +709,51 @@ mod tests {
 			..TestCord::default()
 		};
 		drawn(&mut page);
+	}
+
+	#[test]
+	fn the_search_field_and_the_order_are_on_the_page() {
+		let mut page = TestCord {
+			entries: three(),
+			..TestCord::default()
+		};
+		let painted = painted(&mut page);
+		assert!(
+			painted.iter().any(|line| line.contains("Search plugins")),
+			"the search field is missing: {painted:?}"
+		);
+		assert!(
+			painted.iter().any(|line| line == "Build order"),
+			"the order picker is missing: {painted:?}"
+		);
+		assert!(
+			painted
+				.iter()
+				.any(|line| line.contains("1 of 3 on") && line.contains("showing 3")),
+			"the count is missing: {painted:?}"
+		);
+	}
+
+	#[test]
+	fn the_log_a_port_handed_over_is_shown_on_the_page() {
+		let mut logger = entry();
+		logger.log = true;
+		logger.log_tail =
+			"[message] someone in 7: hello\n[edit] someone in 7: hello there".to_string();
+		let mut page = TestCord {
+			entries: vec![logger],
+			expanded: Some("MessageLogger".to_string()),
+			..TestCord::default()
+		};
+		let painted = painted(&mut page);
+		assert!(
+			painted.iter().any(|line| line.contains("[edit] someone")),
+			"the record is not on the page: {painted:?}"
+		);
+		assert!(
+			painted.iter().any(|line| line == "Copy log"),
+			"the copy button is missing: {painted:?}"
+		);
 	}
 
 	#[test]

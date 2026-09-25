@@ -633,7 +633,7 @@ impl Registry {
 			Box::new(messagelogger::MessageLogger::default()),
 		];
 		debug_assert!(plugins.len() <= MAX_PLUGINS);
-		let entries = plugins
+		let entries: BTreeMap<String, Entry> = plugins
 			.iter()
 			.map(|plugin| {
 				let meta = plugin.meta();
@@ -646,11 +646,15 @@ impl Registry {
 				)
 			})
 			.collect();
+		// Count what the entries actually enable. Seeding `enabled_count` to zero here made
+		// `any_enabled` false on a fresh install, so no port's buttons or entries appeared
+		// until the owner toggled something in settings.
+		let enabled_count = entries.values().filter(|entry| entry.enabled).count();
 		let mut registry = Self {
 			plugins,
 			entries,
 			pending: Vec::new(),
-			enabled_count: 0,
+			enabled_count,
 		};
 		// Every port starts from the defaults it declares, as TestCord does on a fresh install.
 		registry.reconfigure();
@@ -1286,6 +1290,11 @@ mod tests {
 				values: BTreeMap::new(),
 			},
 		);
+		registry.enabled_count = registry
+			.entries
+			.values()
+			.filter(|entry| entry.enabled)
+			.count();
 		registry
 	}
 

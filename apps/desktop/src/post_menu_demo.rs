@@ -181,7 +181,6 @@ pub fn check() {
 			custom_status: None,
 			clients: model::ClientPlatforms::default(),
 			activities: Vec::new(),
-			clients: model::ClientPlatforms::default(),
 		}]),
 	};
 	state.apply(Envelope {

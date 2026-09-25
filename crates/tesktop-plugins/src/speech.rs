@@ -615,6 +615,20 @@ mod button_tests {
 	use crate::Registry;
 
 	#[test]
+	fn a_fresh_registry_reports_what_its_defaults_enable() {
+		// The count has to agree with the seeded entries, or the host treats an untouched
+		// install as "nothing enabled" and no buttons or entries are ever offered.
+		let registry = Registry::new();
+		let expected = registry
+			.metas()
+			.iter()
+			.filter(|meta| meta.default_enabled)
+			.count();
+		assert_eq!(registry.enabled_count(), expected);
+		assert_eq!(registry.any_enabled(), expected > 0);
+	}
+
+	#[test]
 	fn a_port_with_a_button_offers_it_only_while_it_is_on() {
 		let mut registry = Registry::new();
 		assert!(registry.composer_buttons().is_empty());
