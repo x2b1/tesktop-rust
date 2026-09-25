@@ -93,6 +93,8 @@ MessageLogger record is session memory and is never written to disk; copy it out
 | SpaceOut | `/spaceout` separates every character, spaces included, so the gap between two words becomes three | Nothing; the port is complete |
 | AntiNameChange | A mention of someone you track keeps the alias you gave them, and an alias can never smuggle a mention of its own | Nothing; the port is complete |
 | WordCount | A count under every message of more than five words, counting characters as a reader sees them | Nothing; the port is complete |
+| FixFileExtensions | A file goes out under a name the service accepts, using the original's own mapping, with an exemption list; a name the upload path refuses is left as it was | Reading a file's bytes, so the plugins that compress or rewrite content still need an upload path |
+| DownloadAllAttachments | Every file on a message at once, with images optional, numbered when they share a name | Nothing; the app owns where the files land |
 | GoodPerson | The blocked words arrive as another word, from the original's own five categories and both replacement tables, with a category each switchable, matching whole words and the obfuscated spellings a slur also arrives as | `Math.random`; the replacement is chosen from the word instead, so a message always reads the same way |
 | Ingtoninator | One word of every message grows the Ington suffix, never a word inside a link and never one that cannot take it, chosen from the body itself so the same text always gets the same word | The composer button, which is yours |
 | ClientSideBlock | Nobody on your list reaches your screen | Hiding a voice channel, and hiding your own messages from yourself, because the filter sees the author and not you |
@@ -156,9 +158,10 @@ its own against the state owner rather than a translation.
 Four hooks would unlock most of what is left in the portable tiers, and each is deliberately
 not faked until the app can honour it:
 
-- **A plugin-driven attachment action.** `LongMsgTxt`, `AutoZipper` and `FixFileExtensions`
-  change a file before it is sent. Nothing should rewrite an upload until the app hands a port
-  the file it is about to send.
+- **A file's bytes, not just its name.** `stage_files` hands a port the name and the size of
+  what is about to be sent, which is what `FixFileExtensions` needs. `LongMsgTxt` and
+  `AutoZipper` rewrite content, and the composer's upload path still carries names and sizes
+  rather than files, so there is nothing honest to hand them yet.
 - **Text into the composer.** `QuickMention`, `QuickReply` and the canned-reply plugins all end
   in a cursor insertion. The registry can hand the host a line today, but the host has no way to
   put it where the caret is, and a port must not write into the field itself.

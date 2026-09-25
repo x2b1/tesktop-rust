@@ -35,15 +35,7 @@ impl Source {
 			.file_name()
 			.and_then(|n| n.to_str())
 			.ok_or("Unsupported filename")?;
-		if filename.trim().is_empty()
-			|| matches!(filename, "." | "..")
-			|| filename.len() > 256
-			|| filename
-				.chars()
-				.any(|c| c.is_control() || matches!(c, '/' | '\\' | ':'))
-		{
-			return Err("Unsupported filename");
-		}
+		check_filename(filename)?;
 		let metadata = tokio::fs::symlink_metadata(&path)
 			.await
 			.map_err(|_| CHANGED)?;
@@ -100,6 +92,18 @@ impl Source {
 	}
 	pub fn filename(&self) -> &str {
 		&self.filename
+	}
+	/// Send this file under a different name than the one it has on disk.
+	///
+	/// The path and the bytes are untouched, so this changes what the service is told and
+	/// nothing else. The name is checked by the same rule a picked file is, which is what
+	/// keeps a path or a control character out of an upload.
+	pub fn renamed(&self, filename: &str) -> Result<Self, &'static str> {
+		check_filename(filename)?;
+		Ok(Self {
+			filename: filename.into(),
+			..self.clone()
+		})
 	}
 	pub fn size(&self) -> u64 {
 		self.size
@@ -927,5 +931,45 @@ mod tests {
                 server.await.unwrap();
             }
         }).await.unwrap();
+	}
+}
+
+/// The rule a filename has to pass whether it came from a path or from a port.
+fn check_filename(filename: &str) -> Result<(), &'static str> {
+	if filename.trim().is_empty()
+		|| matches!(filename, "." | "..")
+		|| filename.len() > 256
+		|| filename
+			.chars()
+			.any(|c| c.is_control() || matches!(c, '/' | '\\' | ':'))
+	{
+		return Err("Unsupported filename");
+	}
+	Ok(())
+}
+
+#[cfg(test)]
+mod rename_tests {
+	use super::check_filename;
+
+	#[test]
+	fn a_path_or_a_control_character_is_refused() {
+		assert!(
+			check_filename("../escape").is_err(),
+			"a separator is not a name"
+		);
+		assert!(
+			check_filename("notes.draft.2.txt").is_ok(),
+			"dots in a name are fine"
+		);
+		assert!(check_filename("").is_err());
+		assert!(check_filename("  ").is_err());
+		assert!(check_filename("..").is_err());
+		assert!(check_filename("a/b").is_err());
+		assert!(check_filename("a\\b").is_err());
+		assert!(check_filename("a:b").is_err());
+		assert!(check_filename("a\nb").is_err());
+		assert!(check_filename(&"a".repeat(257)).is_err());
+		assert!(check_filename(&"a".repeat(256)).is_ok());
 	}
 }

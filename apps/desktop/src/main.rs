@@ -4006,6 +4006,23 @@ impl Desktop {
 			Some(tesktop_plugins::ActionResult::Notice(text)) => {
 				self.messaging.toasts.push(ui::design::Level::Info, text);
 			}
+			Some(tesktop_plugins::ActionResult::Download(files)) => {
+				// The app owns where a file lands and what it asks the owner; a port only
+				// says which files it means, and the download path bounds each of them.
+				for file in files {
+					if self.state.demo || self.fixture_only {
+						break;
+					}
+					if let Err(error) = self.downloads.start(
+						file.clone(),
+						self.runtime.handle(),
+						&ctx,
+						self.window.clone(),
+					) {
+						self.state.status = error;
+					}
+				}
+			}
 			None => self
 				.messaging
 				.testcord
@@ -4227,7 +4244,31 @@ impl Desktop {
 		if let Command::Send { content, .. } | Command::Edit { content, .. } = command {
 			*content = body;
 		}
+		if outcome && sending {
+			self.tesktop_stage();
+		}
 		outcome
+	}
+
+	/// Let the ports rename the files this send is carrying, before the upload reads them.
+	/// A name the upload path refuses leaves the file as it was.
+	fn tesktop_stage(&mut self) {
+		let mut staged: Vec<tesktop_plugins::Staged> =
+			self.uploads.files().into_iter().map(Into::into).collect();
+		if staged.is_empty() {
+			return;
+		}
+		let before: Vec<String> = staged.iter().map(|file| file.name.clone()).collect();
+		self.tesktop.stage_files(&mut staged);
+		for (index, file) in staged.iter().enumerate() {
+			if file.name != before[index]
+				&& let Err(error) = self.uploads.rename_at(index, &file.name)
+			{
+				self.messaging
+					.toasts
+					.push(ui::design::Level::Warning, error);
+			}
+		}
 	}
 
 	/// The owner's last message in this channel, which a burst may fold into.

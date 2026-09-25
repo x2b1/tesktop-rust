@@ -18,6 +18,7 @@ pub mod clearurls;
 pub mod commands;
 pub mod copy;
 pub mod display;
+pub mod files;
 pub mod inspect;
 pub mod messagelogger;
 pub mod noreplymention;
@@ -247,6 +248,20 @@ pub struct Previous {
 	pub replying: bool,
 }
 
+/// A file the owner picked for the next message: its name and its size, which is all the
+/// composer knows about it before the app reads it.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Staged {
+	pub name: String,
+	pub bytes: u64,
+}
+
+impl From<(String, u64)> for Staged {
+	fn from((name, bytes): (String, u64)) -> Self {
+		Self { name, bytes }
+	}
+}
+
 /// A message edit as the host saw it: the timeline body before and after the patch.
 #[derive(Clone, Copy)]
 pub struct Edit<'a> {
@@ -318,6 +333,9 @@ pub enum ActionResult {
 	Clipboard(String),
 	/// A line for the window, written by the port rather than the host.
 	Notice(String),
+	/// Files the app should save, in the order the port listed them. The app owns where they
+	/// land and what it asks the owner; a port only says which files it means.
+	Download(Vec<model::Attachment>),
 }
 
 pub trait Plugin {
@@ -376,6 +394,9 @@ pub trait Plugin {
 	}
 	/// Rewrite an accepted inbound message before it enters the timeline.
 	fn mutate_incoming(&mut self, _message: &mut Message) {}
+	/// Rewrite the files about to be sent, by name. A port that cannot read a file's bytes
+	/// still gets here: renaming is the part the pipeline can honestly offer.
+	fn stage_files(&mut self, _files: &mut Vec<Staged>) {}
 	/// A line to show in the window, handed over once. The host owns the toast area.
 	fn take_toast(&mut self) -> Option<String> {
 		None
@@ -490,6 +511,8 @@ impl Registry {
 			Box::new(inspect::ReplaceGoogleSearch::default()),
 			Box::new(inspect::BaseDecoder::default()),
 			Box::new(polite::GoodPerson::default()),
+			Box::new(files::FixFileExtensions::default()),
+			Box::new(files::DownloadAllAttachments::default()),
 			Box::new(blockkeywords::BlockKeywords::default()),
 			Box::new(silenceusers::SilenceUsers::default()),
 			Box::new(splitlarge::SplitLargeMessages::default()),
@@ -673,6 +696,16 @@ impl Registry {
 				.body_transform()
 				.map(|transform| (self.plugins[index].meta().id, transform))
 		})
+	}
+
+	/// Let the active ports rewrite the names of the files the next send is carrying.
+	pub fn stage_files(&mut self, files: &mut Vec<Staged>) {
+		if !self.any_enabled() {
+			return;
+		}
+		for index in self.active() {
+			self.plugins[index].stage_files(files);
+		}
 	}
 
 	/// Expand a typed `/command` line with the first active port that answers it.

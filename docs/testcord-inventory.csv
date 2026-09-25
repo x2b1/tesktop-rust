@@ -211,7 +211,7 @@ equicordplugins,customTimestamps,CustomTimestamps,Customize the timestamp format
 equicordplugins,customUserColors,CustomUserColors,Users with custom colors defined will have their name in the dm list colored,EquicordDevs.mochienya,3,True,False,False,False,False,,rewrite,
 equicordplugins,declutter,Declutter,Remove avatar decorations. This is/will be disabled if Decor is enabled.,"EquicordDevs.Leon135,Devs.prism,Devs.Kyu",21,True,False,False,False,False,,rewrite,
 equicordplugins,disableCameras,DisableCameras,Disables cameras in a call by default,Devs.Joona,0,True,False,False,False,False,,rewrite,
-equicordplugins,downloadAllAttachments,DownloadAllAttachments,Adds a popover button to download all attachments in a message at once.,EquicordDevs.dhopcs,1,False,False,False,False,False,,portable-logic,
+equicordplugins,downloadAllAttachments,DownloadAllAttachments,Adds a popover button to download all attachments in a message at once.,EquicordDevs.dhopcs,1,False,False,False,False,False,,portable-logic,files
 equicordplugins,dragFavoriteEmotes,DragFavoriteEmotes,Adds the ability to change the order of your favourite emotes,EquicordDevs.PWall,0,True,False,False,False,False,,rewrite,
 equicordplugins,dragify,Dragify,User drop output.,EquicordDevs.justjxke,7,False,False,False,False,False,,portable-ui,
 equicordplugins,elementHighlighter.dev,ElementHighlighter,Toggle Highlighter,Devs.prism,9,False,False,False,False,False,,portable-logic,
@@ -227,7 +227,7 @@ equicordplugins,fastDeleteChannels,FastDeleteChannels,The key to toggle trash wh
 equicordplugins,favouriteAnything,FavouriteAnything,Generate file thumbnails locally instead of using an external service (placeholder.nin0.dev). Not compatible w,"Devs.Davri,Devs.nin0dev",1,False,False,False,False,False,native.ts,native-feature,
 equicordplugins,fileUpload,FileUpload,"Upload files to hosting services like Zipline, Nest, S3, and WebDAV","EquicordDevs.creations,EquicordDevs.keir",1,True,False,False,False,False,native.ts,native-feature,
 equicordplugins,findReply,FindReply,Will also search for messages that @ the author directly,Devs.newwares,4,False,False,False,False,False,,portable-logic,
-equicordplugins,fixFileExtensions,FixFileExtensions,Fixes file extensions by renaming them to a compatible supported format if possible,Devs.thororen,0,False,False,False,False,False,,portable-logic,
+equicordplugins,fixFileExtensions,FixFileExtensions,Fixes file extensions by renaming them to a compatible supported format if possible,Devs.thororen,0,False,False,False,False,False,,portable-logic,files
 equicordplugins,followVoiceUser,FollowVoiceUser,Only follow the user when you are in a voice channel,EquicordDevs.TheArmagan,4,False,False,False,True,False,,portable-hook,
 equicordplugins,fontLoader,FontLoader,Currently selected font,EquicordDevs.vmohammad,3,False,False,False,False,False,,portable-logic,
 equicordplugins,frequentQuickSwitcher,FrequentQuickSwitcher,Rewrites and filters the quick switcher results to be your most frequent channels,Devs.Samwich,0,True,False,False,False,False,,rewrite,

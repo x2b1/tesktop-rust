@@ -667,6 +667,17 @@ impl Uploads {
 			.map(|c| (c.source.filename().to_owned(), c.source.size()))
 			.collect()
 	}
+	/// Send one of the selected files under a different name. A name the upload path will
+	/// not accept is refused here, so a port cannot put a path or a control character into
+	/// an upload.
+	pub fn rename_at(&mut self, index: usize, filename: &str) -> Result<(), &'static str> {
+		if self.busy() || self.selected.get(index).is_none() {
+			return Err("Wait for the current upload to finish");
+		}
+		// The preview is keyed by a sequence number, not by the name, so a rename keeps it.
+		self.selected[index].source = self.selected[index].source.renamed(filename)?;
+		Ok(())
+	}
 	pub fn remove_at(&mut self, index: usize) {
 		if !self.busy() && index < self.selected.len() {
 			let removed = self.selected.remove(index);
