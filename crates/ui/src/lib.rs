@@ -428,6 +428,9 @@ pub struct MessagingUi {
 	pub font_scale: u8,
 	pub animate_emoji: bool,
 	pub legacy_chat_input: bool,
+	/// A line each message should carry under it, rebuilt by the app every tick. Empty
+	/// when no port is drawing anything, which is the common case.
+	pub message_markers: std::sync::Arc<std::collections::BTreeMap<model::Id, String>>,
 	pub show_shortcuts_list: bool,
 	pub tts_messages: bool,
 	pub locale: String,
@@ -3858,6 +3861,7 @@ impl MessagingUi {
 						self.timeline.extension_actions = self.extensions.message_actions();
 						self.timeline.plugin_actions = self.testcord_message_actions.clone();
 						self.timeline.display = self.testcord_display;
+						self.timeline.message_markers = self.message_markers.clone();
 						self.timeline
 							.formatted
 							.set_transform(self.tesktop_body, self.testcord_body);

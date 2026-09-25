@@ -740,6 +740,9 @@ struct Desktop {
 	tesktop_epoch: Instant,
 	/// Parts of a split message waiting for their delay, and the channel they belong to.
 	tesktop_chunks: std::collections::VecDeque<(u64, model::Id, String)>,
+	/// The channel the lines under its messages were last built for, so they are rebuilt
+	/// when the enabled set changes or the conversation does, and not every frame.
+	tesktop_markers_channel: Option<model::Id>,
 	login: Option<platform::LoginView>,
 	captcha: captcha::Captcha,
 	connection: Option<connection::Connection>,
@@ -1937,6 +1940,7 @@ impl Desktop {
 			tesktop_dirty: false,
 			tesktop_epoch: Instant::now(),
 			tesktop_chunks: Default::default(),
+			tesktop_markers_channel: None,
 			login: None,
 			captcha: captcha::Captcha::default(),
 			connection: None,
@@ -3834,6 +3838,15 @@ impl Desktop {
 					})
 					.collect(),
 			);
+		}
+		// The line under a message is rebuilt whenever the enabled set changes or the channel
+		// does, and is empty whenever no port draws anything.
+		if self.tesktop_dirty || self.tesktop_markers_channel != self.state.selected {
+			self.tesktop_markers_channel = self.state.selected;
+			let markers = self
+				.tesktop
+				.message_markers(self.state.timeline.iter());
+			self.messaging.message_markers = std::sync::Arc::new(markers);
 		}
 		// Rebuilding the rows is only worth its allocations while the page is open or a change
 		// has not been written back yet.

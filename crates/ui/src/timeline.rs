@@ -42,6 +42,9 @@ pub struct TimelineView {
 	pub(super) plugin_actions: std::sync::Arc<Vec<crate::extensions_ui::MenuAction>>,
 	/// What the bundled ports changed about clocks and markers.
 	pub(super) display: crate::local_time::Display,
+	/// A line to draw under a message, rebuilt by the app every tick; empty when no port is
+	/// drawing anything.
+	pub(super) message_markers: std::sync::Arc<std::collections::BTreeMap<model::Id, String>>,
 	pub(super) extension_request: Option<(crate::extensions_ui::MenuAction, String)>,
 	pub(super) plugin_request: Option<crate::testcord::Picked>,
 	pub(super) user_action: Option<crate::user_menu::Action>,
@@ -2437,6 +2440,16 @@ impl TimelineView {
 													RichText::new("(edited)")
 														.small()
 														.color(colors.muted),
+												);
+											}
+											if let Some(marker) =
+												self.message_markers.get(&message.id)
+											{
+												ui.label(
+													RichText::new(marker.as_str())
+														.small()
+														.strong()
+														.color(colors.danger),
 												);
 											}
 											if self.display.word_count {

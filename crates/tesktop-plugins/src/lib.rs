@@ -20,6 +20,7 @@ pub mod copy;
 pub mod display;
 pub mod files;
 pub mod inspect;
+pub mod marker;
 pub mod messagelogger;
 pub mod noreplymention;
 pub mod notify;
@@ -248,6 +249,10 @@ pub struct Previous {
 	pub replying: bool,
 }
 
+/// How many messages may carry a line at once. A conversation is longer than this, and the
+/// map is rebuilt every tick, so a message outside it simply goes unmarked.
+pub const MAX_MARKERS: usize = 256;
+
 /// A file the owner picked for the next message: its name and its size, which is all the
 /// composer knows about it before the app reads it.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -394,6 +399,11 @@ pub trait Plugin {
 	}
 	/// Rewrite an accepted inbound message before it enters the timeline.
 	fn mutate_incoming(&mut self, _message: &mut Message) {}
+	/// A line to draw under a message, which is what the original's message accessories are.
+	/// The app owns the position and the colour; a port owns only the words.
+	fn message_marker(&self, _message: &model::Message) -> Option<String> {
+		None
+	}
 	/// Rewrite the files about to be sent, by name. A port that cannot read a file's bytes
 	/// still gets here: renaming is the part the pipeline can honestly offer.
 	fn stage_files(&mut self, _files: &mut Vec<Staged>) {}
@@ -513,6 +523,7 @@ impl Registry {
 			Box::new(polite::GoodPerson::default()),
 			Box::new(files::FixFileExtensions::default()),
 			Box::new(files::DownloadAllAttachments::default()),
+			Box::new(marker::AntiRickroll::default()),
 			Box::new(blockkeywords::BlockKeywords::default()),
 			Box::new(silenceusers::SilenceUsers::default()),
 			Box::new(splitlarge::SplitLargeMessages::default()),
@@ -696,6 +707,31 @@ impl Registry {
 				.body_transform()
 				.map(|transform| (self.plugins[index].meta().id, transform))
 		})
+	}
+
+	/// The line each visible message should carry under it, bounded so a long conversation
+	/// cannot make the map grow without end. An empty result means nothing is drawn.
+	pub fn message_markers<'a>(
+		&self,
+		messages: impl Iterator<Item = &'a model::Message>,
+	) -> std::collections::BTreeMap<model::Id, String> {
+		if !self.any_enabled() {
+			return std::collections::BTreeMap::new();
+		}
+		let active = self.active();
+		let mut markers = std::collections::BTreeMap::new();
+		for message in messages {
+			if markers.len() >= MAX_MARKERS {
+				break;
+			}
+			for index in &active {
+				if let Some(line) = self.plugins[*index].message_marker(message) {
+					markers.insert(message.id, line);
+					break;
+				}
+			}
+		}
+		markers
 	}
 
 	/// Let the active ports rewrite the names of the files the next send is carrying.
