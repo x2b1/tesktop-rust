@@ -253,7 +253,7 @@ equicordplugins,iconViewer,IconViewer,Adds a new tab to settings to preview all 
 equicordplugins,idleAutoRestart,IdleAutoRestart,Enable automatic restart after idle,EquicordDevs.SteelTech,2,False,False,False,False,False,,portable-logic,
 equicordplugins,ignoreCalls,IgnoreCalls,User IDs (comma + space) who should be permanetly ignored,"EquicordDevs.TheArmagan,Devs.thororen",3,True,False,False,True,False,,rewrite,
 equicordplugins,inRole,InRole,Know who is in a role with the role context menu or /inrole command (read plugin info!),Devs.nin0dev,1,False,False,False,False,False,,portable-ui,
-equicordplugins,ingtoninator,Ingtoninator,Show a button to toggle the Ingtoninator plugin,"EquicordDevs.zyqunix,EquicordDevs.BioTom",3,False,False,False,False,False,,portable-logic,
+equicordplugins,ingtoninator,Ingtoninator,Show a button to toggle the Ingtoninator plugin,"EquicordDevs.zyqunix,EquicordDevs.BioTom",3,False,False,False,False,False,,portable-logic,speech
 equicordplugins,instantScreenshare,InstantScreenshare,"Instantly screenshare when joining a voice channel with support for desktop sources, windows, and video input ","Devs.HAHALOSAH,Devs.thororen,EquicordDev",2,True,False,False,True,False,,rewrite,
 equicordplugins,invisibleChat.desktop,InvisibleChat,"Saved Passwords (Seperated with a , )",Devs.SammCheese,3,True,False,False,False,False,,rewrite,
 equicordplugins,inviteDefaults,InviteDefaults,Invite Duration,EquicordDevs.VillainsRule,3,True,False,False,False,False,,rewrite,
