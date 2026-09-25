@@ -133,6 +133,7 @@ pub struct TimelineView {
 	pub(super) opening: Option<String>,
 	pub(super) browser_opening: Option<String>,
 	text_size: f32,
+	font_revision: (usize, usize),
 	scale: f32,
 	pub(super) load_older: bool,
 	pub(super) latest: bool,
@@ -1393,9 +1394,11 @@ impl TimelineView {
 			self.revision = u64::MAX;
 		}
 		let text_size = egui::TextStyle::Body.resolve(ui.style()).size;
+		let font_revision = crate::fonts::revision(ui.ctx());
 		let scale = ui.ctx().pixels_per_point();
 		let width_changed = (self.width - width).abs() > 1.0;
 		let content_dimensions_changed = self.text_size != text_size
+			|| self.font_revision != font_revision
 			|| self.scale != scale
 			|| self.hide_media_links != self.applied_hide_media_links;
 		let dimensions_changed = width_changed || content_dimensions_changed;
@@ -1446,6 +1449,7 @@ impl TimelineView {
 			// remeasured below; resetting everything makes the scroll extent jump.
 			self.width = width;
 			self.text_size = text_size;
+			self.font_revision = font_revision;
 			self.scale = scale;
 			let row_ids: Vec<_> = starter_id
 				.into_iter()

@@ -42,6 +42,10 @@ pub mod emoji;
 mod emoji_details;
 mod emoji_picker;
 pub mod fonts;
+#[cfg(all(debug_assertions, feature = "demo"))]
+pub fn debug_channel_creation(state: client_core::State) {
+	channel_menu::debug_creation(state);
+}
 mod formatting;
 mod forum;
 mod forum_settings;
@@ -256,6 +260,8 @@ pub struct MessagingUi {
 	pub reading_preferences: model::ReadingPreferences,
 	pub show_hidden_channels: bool,
 	pub hide_title_bar: bool,
+	pub hide_window_decorations: bool,
+	pub custom_font: fonts::Settings,
 	/// Which GPU renders the window; the running adapter only changes on restart.
 	pub gpu_preference: model::GpuPreference,
 	/// Adapter currently in use, shown next to the preference for bug reports.
@@ -711,6 +717,10 @@ impl MessagingUi {
 	#[cfg(feature = "demo")]
 	pub fn preview_channel_settings(&mut self, channel: Id, generation: u64) {
 		self.channel_menu.preview_settings(channel, generation);
+	}
+	#[cfg(feature = "demo")]
+	pub fn preview_channel_creation(&mut self, channel: Id, generation: u64) {
+		self.channel_menu.preview_creation(channel, generation);
 	}
 	/// Fixture-only: filter the forum list by `tags`, optionally with the post composer open.
 	#[cfg(feature = "demo")]

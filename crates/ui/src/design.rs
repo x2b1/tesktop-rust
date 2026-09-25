@@ -3039,9 +3039,10 @@ pub fn slider<T: egui::emath::Numeric>(
 }
 
 /// Offline pointer/keyboard check for the shared settings control. The demo binary runs
-/// this directly through `--demo-check-settings-sliders`, and the unit test below runs it
-/// too, so it is a plain function rather than a `#[test]` item.
+/// this directly through `--demo-check-settings-sliders`, so it cannot be a `#[test]`
+/// item; `cfg_attr` keeps it registered as one for the test run.
 #[cfg(debug_assertions)]
+#[cfg_attr(test, test)]
 pub fn debug_slider_check() {
 	let ctx = egui::Context::default();
 	apply(&ctx);

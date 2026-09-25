@@ -25,6 +25,7 @@ mod extension_forum_data;
 mod extension_member_details;
 mod extension_message_content;
 mod extensions;
+mod font_import;
 mod game_activity;
 mod gpu;
 mod group_icon;
@@ -72,6 +73,20 @@ const SIGN_IN_HEADER_HEIGHT: f32 = if cfg!(target_os = "windows") {
 };
 
 fn main() -> eframe::Result {
+	#[cfg(all(debug_assertions, feature = "demo"))]
+	if std::env::args().any(|arg| arg == "--demo")
+		&& std::env::args().any(|arg| arg == "--demo-check-customization")
+	{
+		font_import::debug_check();
+		let mut state = test_support::chat_demo_state();
+		let mut permissions = test_support::permission_snapshot(&state);
+		for guild in &mut permissions.guilds {
+			guild.owner = state.user.as_ref().map(|user| user.id);
+		}
+		state.permissions.replace(permissions).unwrap();
+		ui::debug_channel_creation(state);
+		return Ok(());
+	}
 	#[cfg(all(debug_assertions, feature = "demo"))]
 	if std::env::args().any(|arg| arg == "--demo")
 		&& std::env::args().any(|arg| arg == "--demo-check-spotify")
@@ -290,12 +305,18 @@ fn main() -> eframe::Result {
 		return Ok(());
 	}
 	// Native GPU/window capabilities are selected before the first window exists.
-	let (gpu_preference, transparency_available) = if demo {
-		(model::GpuPreference::default(), false)
+	let (gpu_preference, transparency_available, hide_window_decorations) = if demo {
+		(model::GpuPreference::default(), false, false)
 	} else {
 		local_store::LocalStore::open_default()
 			.and_then(|store| store.app_preferences())
-			.map(|preferences| (preferences.gpu_preference, preferences.transparency_blur))
+			.map(|preferences| {
+				(
+					preferences.gpu_preference,
+					preferences.transparency_blur,
+					preferences.hide_window_decorations,
+				)
+			})
 			.unwrap_or_default()
 	};
 	#[cfg(feature = "demo")]
@@ -325,6 +346,8 @@ fn main() -> eframe::Result {
 			} else if cfg!(target_os = "windows") {
 				// The app paints its own caption strip and buttons; see `ui::design::window_controls`.
 				builder.with_decorations(false)
+			} else if cfg!(target_os = "linux") {
+				builder.with_decorations(!hide_window_decorations)
 			} else {
 				builder
 			}
@@ -795,6 +818,7 @@ struct Desktop {
 	window_transparent: bool,
 	reading: reading_settings::ReadingSettings,
 	app_settings: app_settings::Settings,
+	font_picker: Option<std::sync::mpsc::Receiver<font_import::Selected>>,
 	updater: updater::Updater,
 	game_activity: toggle_setting::Settings,
 	tray_setting: toggle_setting::Settings,
@@ -1147,6 +1171,7 @@ fn demo_members(guild: Option<model::Id>, channel: model::Id, request: u64) -> m
 			},
 			status: Some("idle".into()),
 			custom_status: None,
+			clients: model::ClientPlatforms::default(),
 			activities: vec![],
 			clients: model::ClientPlatforms::default(),
 		},
@@ -1160,6 +1185,7 @@ fn demo_members(guild: Option<model::Id>, channel: model::Id, request: u64) -> m
 			},
 			status: Some("online".into()),
 			custom_status: Some("🌙 semifluent in synthetic data".into()),
+			clients: model::ClientPlatforms::default(),
 			activities: vec![model::RichActivity {
 				kind: 0,
 				name: "Stardew Valley".into(),
@@ -1360,6 +1386,7 @@ impl Desktop {
 						user: member.user.id,
 						status: member.status,
 						custom_status: member.custom_status,
+						clients: member.clients,
 						activities: member.activities,
 						clients: member.clients,
 					})
@@ -1471,6 +1498,22 @@ impl Desktop {
 			.last()
 			.map_or(10_000, |m| m.id.0.max(10_000));
 		let mut messaging = ui::MessagingUi::default();
+		if !demo {
+			messaging.custom_font.busy = cache.as_ref().is_some_and(|cache| {
+				cache.queue(
+					state.generation,
+					model::Id(0),
+					cache::Operation::LoadCustomFont,
+				)
+			});
+			cache_pending += usize::from(messaging.custom_font.busy);
+			messaging.custom_font.status = if messaging.custom_font.busy {
+				"Loading saved font…"
+			} else {
+				"Could not load the saved font."
+			};
+		}
+		messaging.minimize_to_tray = tray_setting.enabled;
 		let preference_defaults = local_store::AppPreferences::default();
 		messaging.notifications_enabled = preference_defaults.notifications_enabled;
 		messaging.transparency = preference_defaults.transparency;
@@ -1926,8 +1969,14 @@ impl Desktop {
 			.winit_window()
 			.ok_or("Native window unavailable")?
 			.clone();
+		messaging.hide_window_decorations = cfg!(target_os = "linux") && !window.is_decorated();
+		app_settings.current.hide_window_decorations = messaging.hide_window_decorations;
 		#[cfg(target_os = "windows")]
-		align_undecorated_surface(&window);
+		{
+			use winit::platform::windows::{CornerPreference, WindowExtWindows as _};
+			window.set_corner_preference(CornerPreference::Round);
+			align_undecorated_surface(&window);
+		}
 		// The GPU surface and X11 visual are selected at startup. Opaque launches
 		// keep the same native/compositor path as builds without window effects.
 		let tray_window = tray_window::State::default();
@@ -2005,6 +2054,7 @@ impl Desktop {
 			window_transparent: transparency_available,
 			reading,
 			app_settings,
+			font_picker: None,
 			updater: updater::Updater::new(demo),
 			game_activity,
 			tray_setting,
@@ -2383,6 +2433,65 @@ impl Desktop {
 			self.app_settings
 				.save(self.cache.as_ref(), self.state.generation),
 		);
+	}
+	fn accept_font(&mut self, ctx: &egui::Context, result: &font_import::Selected) {
+		self.messaging.custom_font.busy = false;
+		match result {
+			Ok(font) => {
+				ui::fonts::apply_custom(ctx, font.as_ref());
+				self.messaging.custom_font.name = font.as_ref().map(|font| font.name.clone());
+				self.messaging.custom_font.status = "";
+			}
+			Err(error) => self.messaging.custom_font.status = error,
+		}
+	}
+	fn save_font(&mut self, ctx: &egui::Context, font: Option<ui::fonts::CustomFont>) {
+		if self.fixture_only || self.state.demo {
+			self.accept_font(ctx, &Ok(font));
+			self.messaging.custom_font.status = "Preview only; this font is not saved.";
+		} else {
+			self.messaging.custom_font.busy =
+				self.queue_cache_for(model::Id(0), cache::Operation::SaveCustomFont(font));
+			self.messaging.custom_font.status = if self.messaging.custom_font.busy {
+				"Saving font…"
+			} else {
+				"Could not save the font. Try again."
+			};
+		}
+	}
+	fn sync_fonts(&mut self, ctx: &egui::Context) {
+		if let Some(picker) = &self.font_picker {
+			let result = match picker.try_recv() {
+				Ok(result) => Some(result),
+				Err(std::sync::mpsc::TryRecvError::Empty) => None,
+				Err(std::sync::mpsc::TryRecvError::Disconnected) => {
+					Some(Err("Font import interrupted. Try again."))
+				}
+			};
+			if let Some(result) = result {
+				self.font_picker = None;
+				self.messaging.custom_font.busy = false;
+				self.messaging.custom_font.status = "";
+				match result {
+					Ok(Some(font)) => self.save_font(ctx, Some(font)),
+					Ok(None) => {}
+					Err(error) => self.messaging.custom_font.status = error,
+				}
+			}
+		}
+		if let Some(action) = self.messaging.custom_font.request.take()
+			&& !self.messaging.custom_font.busy
+		{
+			match action {
+				ui::fonts::Action::Import => {
+					self.font_picker =
+						Some(font_import::choose(&self.runtime, ctx, self.window.clone()));
+					self.messaging.custom_font.busy = true;
+					self.messaging.custom_font.status = "Choosing font…";
+				}
+				ui::fonts::Action::Reset => self.save_font(ctx, None),
+			}
+		}
 	}
 	fn save_reading_preferences(&mut self, ctx: &egui::Context) {
 		if self.fixture_only {
@@ -5251,6 +5360,11 @@ impl Desktop {
 				match cache.receive.try_recv() {
 					Ok(value) => cached.push(value),
 					Err(std::sync::mpsc::TryRecvError::Disconnected) => {
+						if self.messaging.custom_font.busy && self.font_picker.is_none() {
+							self.messaging.custom_font.busy = false;
+							self.messaging.custom_font.status =
+								"Local storage worker stopped. Restart Serein to save fonts.";
+						}
 						if self.messaging.channel_preferences_reload
 							|| self.messaging.channel_preferences_load_pending
 						{
@@ -5273,6 +5387,10 @@ impl Desktop {
 			self.cache_pending = self.cache_pending.saturating_sub(1);
 			// Settings are global; account removal/write failures still matter after logout.
 			match &outcome {
+				cache::Outcome::CustomFont(result) => {
+					self.accept_font(ctx, result);
+					continue;
+				}
 				cache::Outcome::AppPreferences(result) => {
 					self.app_settings.loaded = result.is_ok();
 					if !self.app_settings.state.touched {
@@ -5476,6 +5594,7 @@ impl Desktop {
 					}
 				}
 				cache::Outcome::Appearance(..)
+				| cache::Outcome::CustomFont(_)
 				| cache::Outcome::AppPreferences(_)
 				| cache::Outcome::AppPreferencesSaved(_)
 				| cache::Outcome::MinimizeToTray(_)
@@ -6050,6 +6169,7 @@ impl eframe::App for Desktop {
 		);
 		self.messaging.sync_reading_zoom(ctx);
 		self.poll(ctx);
+		self.sync_fonts(ctx);
 		self.hotkeys.sync(&self.messaging.keybinds, &self.runtime);
 		self.messaging.global_keybind_status = self.hotkeys.status();
 		self.hotkeys.poll();
@@ -6972,6 +7092,11 @@ impl eframe::App for Desktop {
 			diagnostic.show(&ctx, &self.window);
 		}
 		let appearance = ctx.options(|options| options.theme_preference);
+		#[cfg(target_os = "linux")]
+		if self.window.is_decorated() == self.messaging.hide_window_decorations {
+			self.window
+				.set_decorations(!self.messaging.hide_window_decorations);
+		}
 		#[cfg(target_os = "windows")]
 		if self.window.is_decorated() != self.messaging.hide_title_bar {
 			self.window.set_decorations(self.messaging.hide_title_bar);

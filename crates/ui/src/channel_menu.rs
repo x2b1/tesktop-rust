@@ -71,6 +71,14 @@ impl ChannelMenu {
 		self.requested = Some((channel, Intent::Dialog(Kind::Edit)));
 	}
 
+	/// Fixture-only: open the same creation dialog used by the channel menu.
+	#[cfg(feature = "demo")]
+	pub fn preview_creation(&mut self, channel: Id, generation: u64) {
+		debug_assert_eq!(CreateKind::Announcement.wire_kind(), 5);
+		self.generation = generation;
+		self.requested = Some((channel, Intent::Dialog(Kind::Create)));
+	}
+
 	/// Shows the shared "full" feedback so DM, group and guild pins report capacity alike.
 	pub fn report_capacity(&mut self, generation: u64) {
 		self.preference_error = true;
@@ -457,10 +465,7 @@ impl ChannelMenu {
 				},
 				"Copies settings and permissions. Messages are not copied.",
 			),
-			Kind::Create => (
-				"Create Channel",
-				"Choose a space for messages, voice, or posts.",
-			),
+			Kind::Create => ("Create Channel", "Choose a channel type and name."),
 			Kind::CreateCategory => ("Create Category", "Categories organize related channels."),
 			Kind::Delete => (
 				if category {
@@ -479,6 +484,8 @@ impl ChannelMenu {
 			.subtitle(subtitle)
 			.width(if dialog.kind == Kind::Edit {
 				1080.0
+			} else if dialog.kind == Kind::Create {
+				480.0
 			} else {
 				420.0
 			});
@@ -538,6 +545,23 @@ impl ChannelMenu {
 					});
 				} else if let Some(channel) = state.channel(dialog.channel) {
 					ui.add_enabled_ui(allowed && !pending_now, |ui| dialog.overview(ui, channel));
+					if dialog.kind == Kind::Create {
+						let parent = if channel.kind == 4 {
+							Some(channel)
+						} else {
+							channel.parent_id.and_then(|id| state.channel(id))
+						};
+						if let Some(parent) = parent {
+							dialog::hint(
+								ui,
+								&format!("In {} · inherits category permissions", parent.name),
+							);
+						} else if channel.parent_id.is_some() {
+							dialog::hint(ui, "In this channel’s category · inherits category permissions");
+						} else {
+							dialog::hint(ui, "At the top of this server · uses server permissions");
+						}
+					}
 				}
 				if let Some(status) = state.channel_action_status(dialog.channel) {
 					dialog::notice(ui, dialog::Level::Error, status);
@@ -726,30 +750,34 @@ impl Dialog {
 	fn overview(&mut self, ui: &mut egui::Ui, channel: &Channel) {
 		if self.kind == Kind::Create {
 			dialog::label(ui, "Channel type");
-			for (kind, label, description) in [
-				(
-					CreateKind::Text,
-					"Text",
-					"Send messages, images, and files.",
-				),
-				(
-					CreateKind::Voice,
-					"Voice",
-					"Talk together with voice, video, and screen sharing.",
-				),
-				(
-					CreateKind::Forum,
-					"Forum",
-					"Organize discussions into separate posts.",
-				),
-			] {
-				if design::radio_row(ui, self.create_kind == kind, label, Some(description))
-					.clicked()
-				{
-					self.create_kind = kind;
+			design::card(ui, |ui| {
+				ui.spacing_mut().item_spacing.y = 2.0;
+				for (kind, label, description) in [
+					(
+						CreateKind::Text,
+						"Text",
+						"Send messages, images, and files.",
+					),
+					(CreateKind::Voice, "Voice", "Hang out and talk together."),
+					(
+						CreateKind::Announcement,
+						"Announcement",
+						"Share updates. Requires a Community server.",
+					),
+					(
+						CreateKind::Forum,
+						"Forum",
+						"Organize discussions into separate posts.",
+					),
+				] {
+					if design::radio_row(ui, self.create_kind == kind, label, Some(description))
+						.clicked()
+					{
+						self.create_kind = kind;
+					}
 				}
-			}
-			ui.add_space(10.0);
+			});
+			ui.add_space(6.0);
 		}
 		let label = dialog::label(
 			ui,
@@ -959,6 +987,133 @@ pub(super) fn row(ui: &mut egui::Ui, label: &str, enabled: bool, danger: bool) -
 			.frame_when_inactive(false)
 			.corner_radius(4),
 	)
+}
+
+/// Offline debug command: exercise the real selector, submit button and permission gate.
+#[cfg(all(debug_assertions, feature = "demo"))]
+pub(super) fn debug_creation(mut state: State) {
+	fn locate(shape: &egui::Shape, label: &str) -> Option<egui::Pos2> {
+		match shape {
+			egui::Shape::Text(text) if text.galley.job.text == label => {
+				Some(text.galley.rect.translate(text.pos.to_vec2()).center())
+			}
+			egui::Shape::Vec(shapes) => shapes.iter().rev().find_map(|s| locate(s, label)),
+			_ => None,
+		}
+	}
+	let ctx = egui::Context::default();
+	design::apply(&ctx);
+	assert!(state.demo);
+	let channel = state
+		.channels
+		.iter()
+		.find(|c| state.can_manage_channel(c.id))
+		.unwrap()
+		.id;
+	let guild = state.channel(channel).unwrap().guild;
+	let mut menu = ChannelMenu::default();
+	menu.preview_creation(channel, state.generation);
+	let mut commands = Vec::new();
+	let mut frame = |menu: &mut ChannelMenu, state: &mut State, events, label| {
+		let output = ctx.run_ui(
+			egui::RawInput {
+				screen_rect: Some(egui::Rect::from_min_size(
+					egui::Pos2::ZERO,
+					egui::vec2(760.0, 760.0),
+				)),
+				events,
+				..Default::default()
+			},
+			|ui| {
+				menu.show(
+					ui.ctx(),
+					state,
+					guild,
+					&mut crate::avatars::Avatars::default(),
+					&mut commands,
+				);
+			},
+		);
+		let position = output
+			.shapes
+			.iter()
+			.rev()
+			.find_map(|s| locate(&s.shape, label));
+		output.drop_without_applying_deltas();
+		position
+	};
+	let pointer = |pos, pressed| {
+		vec![
+			egui::Event::PointerMoved(pos),
+			egui::Event::PointerButton {
+				pos,
+				button: egui::PointerButton::Primary,
+				pressed,
+				modifiers: egui::Modifiers::NONE,
+			},
+		]
+	};
+	frame(&mut menu, &mut state, vec![], "Announcement");
+	let choice = frame(&mut menu, &mut state, vec![], "Announcement").unwrap();
+	for pressed in [true, false] {
+		frame(
+			&mut menu,
+			&mut state,
+			pointer(choice, pressed),
+			"Announcement",
+		);
+	}
+	assert_eq!(
+		menu.dialog.as_ref().unwrap().create_kind,
+		CreateKind::Announcement
+	);
+	menu.dialog.as_mut().unwrap().draft.name = "announcements".into();
+	let permissions = state.permissions.clone();
+	let metadata = state.permissions.guilds.get_mut(&guild.unwrap()).unwrap();
+	metadata.owner = Some(Id(u64::MAX));
+	for role in metadata.roles.as_mut().unwrap() {
+		role.bits &= !(model::permissions::MANAGE_CHANNELS | model::permissions::ADMINISTRATOR);
+	}
+	state.permissions.clear_cache();
+	assert!(state.can_view(channel) && !state.can_manage_channel(channel));
+	assert!(
+		state
+			.request_channel_action(
+				channel,
+				Action::Create {
+					name: "announcements".into(),
+					kind: CreateKind::Announcement,
+				}
+			)
+			.is_none()
+	);
+	frame(&mut menu, &mut state, vec![], "Create Channel");
+	let submit = frame(&mut menu, &mut state, vec![], "Create Channel").unwrap();
+	for pressed in [true, false] {
+		frame(
+			&mut menu,
+			&mut state,
+			pointer(submit, pressed),
+			"Create Channel",
+		);
+	}
+	assert!(!menu.dialog.as_ref().unwrap().submitted);
+	state.permissions = permissions;
+	state.clear_channel_action_result(channel);
+	frame(&mut menu, &mut state, vec![], "Create Channel");
+	let submit = frame(&mut menu, &mut state, vec![], "Create Channel").unwrap();
+	for pressed in [true, false] {
+		frame(
+			&mut menu,
+			&mut state,
+			pointer(submit, pressed),
+			"Create Channel",
+		);
+	}
+	assert!(menu.dialog.as_ref().unwrap().submitted);
+	assert!(matches!(commands.as_slice(), [Command::ChannelAction {
+		action: Action::Create { name, kind: CreateKind::Announcement }, ..
+	}] if name == "announcements"));
 }
 
 #[cfg(test)]

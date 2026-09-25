@@ -134,6 +134,7 @@ pub enum CreateKind {
 	#[default]
 	Text,
 	Voice,
+	Announcement,
 	Forum,
 }
 impl CreateKind {
@@ -141,6 +142,7 @@ impl CreateKind {
 		match self {
 			Self::Text => 0,
 			Self::Voice => 2,
+			Self::Announcement => 5,
 			Self::Forum => 15,
 		}
 	}

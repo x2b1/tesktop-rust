@@ -456,7 +456,8 @@ In-app preview edits are not saved; a write already requested outside preview st
 The standalone --demo does not start the SQLite worker. Narrow People overlays and outer window geometry remain session-local.
 Notification opt-in, hidden-channel visibility, primary RGB color, audio devices (up to 1,024 bytes each),
 input profile/custom processing, push-to-talk and gain are saved in the device-wide `app_preferences`
-SQLite singleton (16 KiB maximum), using the existing background worker. These survive
+SQLite singleton (16 KiB maximum), using the existing background worker. The Linux
+hide-window-decorations boolean is stored in this same record and defaults to false. These survive
 restart/logout; demo controls never read or write them. Save failures remain visible.
 The optional voice profile preserves older records: an absent profile migrates the legacy
 suppression boolean to Custom with RNNoise/Off, AEC on, and no AGC/sensitivity gate.
@@ -846,10 +847,19 @@ use the existing SHA-256 disk filenames. No new cache, schema or dependency is i
 
 Eframe `system_fonts` enumerates installed fonts on a background thread and uses
 read-only memory-mapped OS font files for missing glyphs, including native color
-emoji. No font download or font-file copy is added. Upstream fallback can wait
+emoji. System fallback does not download or copy font files. Upstream fallback can wait
 for enumeration on its first missing glyph; its font/cache memory is framework
 overhead, separate from Serein message/image budgets. OS font availability and
 emoji coverage vary by platform. Bundled text faces and Twemoji remain in use.
+
+Explicit Appearance → Typography import accepts one local TTF/OTF up to 8 MiB. A native
+picker feeds one bounded background read and validation; no file path is saved. The existing
+SQLite worker atomically replaces one `custom_font` row (name ≤128 UTF-8 bytes, font ≤8 MiB),
+within the database's existing total size ceiling. Reset deletes that row; logout retains it.
+The prior font stays active if importing or saving fails. The three proportional weight
+definitions share the imported bytes; the active font and one pending replacement can each
+retain up to 8 MiB, in addition to renderer/font-atlas overhead. Cache queue reservations
+include font payload bytes. Demo imports stay in memory and do not read or write this row.
 
 
 ### Inline MP3/WAV preview (September 11, 2026)
