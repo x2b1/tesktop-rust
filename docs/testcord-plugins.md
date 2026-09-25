@@ -183,6 +183,28 @@ not faked until the app can honour it:
   `GuildPickerDumper` act on things other than a message body. The app owns the file picker and
   the confirmation dialogs, so a port should report intent the way `AskMeToMute` does.
 
+## What is left, and why
+
+The 265 plugins still marked portable in the inventory are not one thing, and it is worth
+being exact about which is which:
+
+- **Roughly 60 restyle a web client.** They inject a stylesheet, patch a class name or set a
+  `style` rule. An egui window has no stylesheet to restyle and no class names to patch, so a
+  faithful port would be a different product rather than a different implementation. They need
+  a design against the native theme tokens, which is the owner's call.
+- **Roughly 85 are a surface rather than a behaviour**: a modal, a context-menu entry, a
+  member-list badge, a status indicator. The state and the action are usually portable; where
+  they are drawn is a design decision. The composer row, the message menu, the per-message line
+  and the settings page now exist, which is what a good part of this tier needs.
+- **The rest split into three honest groups.** About thirty are DOM patches over a client this
+  one never loads. About twenty are integrations with other applications (AdGuard, OBS, a music
+  player, a downloader, an installer) that are not plugins in this client at all. And a handful
+  ask for something the product boundaries rule out: posting to a webhook, scanning people,
+  auto-redeeming, rewriting your own identity.
+
+None of those are waiting on a seam. They are waiting on a decision about what this client is,
+which is not mine to make quietly.
+
 ## Tests
 
 `cargo test -p tesktop-plugins` covers the registry, the bounds, settings persistence and
