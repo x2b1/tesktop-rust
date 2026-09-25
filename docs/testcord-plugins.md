@@ -27,6 +27,7 @@ remembered state.
 | `ignore` | The same message, after `mutate_incoming` | Hide it, so it never enters the timeline |
 | `on_created` / `on_edited` / `on_deleted` | The same events, after `ignore` | Record them, queue a reply |
 | `before_send` / `before_edit` | Every outgoing body and its reply mention | Rewrite either, or refuse it with a reason |
+| `command` / `command_names` | A typed line that starts with `/` | Expand a slash command into the body to send, and name the commands for the composer's list |
 | `route` | The same body, before it is split | Claim the send so the host edits the previous message instead |
 | `split` | The same body, after the rewrite | Return several bodies, sent in order with `chunk_delay_ms` between them |
 | `notice` | An accepted message, before the state owner queues an alert | Silence the sound, or add a toast in the window |
@@ -85,6 +86,10 @@ MessageLogger record is session memory and is never written to disk; copy it out
 | Signature | Appends your signature under every message you send | The composer button and composer menu entry that toggle it |
 | EmbeddedURLs | Rewrites a recognised link to the form that embeds inline, leaving everything else alone | TestCord's per-origin map, which this port keeps short to the hosts it recognises |
 | SentFromMyUname | Stamps a "Sent from my" line under what you send, with a per-channel whitelist and a `nouname ` one-message opt-out | Reading your uname: the text is yours to set |
+| BoldText | `/bold` turns your message into unicode bold, with TestCord's own code point maths | Nothing; the port is complete |
+| LeetText | `/leet` converts your message with TestCord's swap table | Nothing; the port is complete |
+| SmallCaps | `/smallcaps` turns your message into small caps | Nothing; the port is complete |
+| VaporwaveText | `/vaporwave` turns your message into fullwidth characters | Nothing; the port is complete |
 | WriteUpperCase | A capital at the start of every sentence you send, with an exception list, and closing punctuation that still ends a sentence | Nothing; the port is complete |
 | FixCodeblockGap | A closing code fence always ends its line, so text below it is not glued on | Nothing; the port is complete |
 | NormalizeMessageLinks | A canary or ptb link reads the way everyone else sees it | Nothing; the port is complete |

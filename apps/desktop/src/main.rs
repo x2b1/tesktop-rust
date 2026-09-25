@@ -4089,6 +4089,14 @@ impl Desktop {
 			roles: &roles,
 			mention: &mut mention,
 		});
+		// A typed `/command` is expanded by the first port that answers it, exactly as the
+		// service would have handled the slash command.
+		if sending
+			&& body.starts_with('/')
+			&& let Some(claim) = self.tesktop.command(&body)
+		{
+			body = claim.body;
+		}
 		let previous = self.tesktop_previous(channel, me);
 		let context = tesktop_plugins::SendContext::new(channel, me);
 		// The ports borrow the body, the mention and the role list, so everything the host

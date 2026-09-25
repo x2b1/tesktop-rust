@@ -14,6 +14,7 @@ pub mod body;
 pub mod burst;
 pub mod casing;
 pub mod clearurls;
+pub mod commands;
 pub mod copy;
 pub mod display;
 pub mod messagelogger;
@@ -333,6 +334,18 @@ pub trait Plugin {
 	fn split(&self, _context: &SendContext, _body: &str) -> Vec<String> {
 		Vec::new()
 	}
+	/// The command names this port answers, without the leading slash.
+	fn command_names(&self) -> &'static [&'static str] {
+		&[]
+	}
+	/// What the port does for that command, shown in the command list.
+	fn command_about(&self) -> &'static str {
+		""
+	}
+	/// Expand a typed command's argument into the body to send instead.
+	fn command(&self, _argument: &str) -> Option<commands::Claim> {
+		None
+	}
 	/// How a burst may fold into the previous message. Only one plugin may claim a send.
 	fn route(&mut self, _outgoing: &mut Outgoing<'_>) -> bool {
 		false
@@ -417,6 +430,10 @@ impl Registry {
 			Box::new(casing::WriteUpperCase::default()),
 			Box::new(casing::FixCodeblockGap),
 			Box::new(casing::NormalizeMessageLinks),
+			Box::new(commands::BoldText::default()),
+			Box::new(commands::LeetText::default()),
+			Box::new(commands::SmallCaps::default()),
+			Box::new(commands::VaporwaveText::default()),
 			Box::new(blockkeywords::BlockKeywords::default()),
 			Box::new(silenceusers::SilenceUsers::default()),
 			Box::new(splitlarge::SplitLargeMessages::default()),
@@ -600,6 +617,33 @@ impl Registry {
 				.body_transform()
 				.map(|transform| (self.plugins[index].meta().id, transform))
 		})
+	}
+
+	/// Expand a typed `/command` line with the first active port that answers it.
+	pub fn command(&self, line: &str) -> Option<commands::Claim> {
+		if !self.any_enabled() {
+			return None;
+		}
+		self.active()
+			.into_iter()
+			.find_map(|index| commands::expand(self.plugins[index].as_ref(), line))
+	}
+
+	/// The command names every active port answers, for the composer's list.
+	pub fn command_names(&self) -> Vec<(&'static str, &'static str)> {
+		if !self.any_enabled() {
+			return Vec::new();
+		}
+		self.active()
+			.into_iter()
+			.flat_map(|index| {
+				self.plugins[index]
+					.command_names()
+					.iter()
+					.map(move |name| (*name, self.plugins[index].command_about()))
+					.collect::<Vec<_>>()
+			})
+			.collect()
 	}
 
 	/// Let a plugin claim this send, so it can fold into the previous message.
