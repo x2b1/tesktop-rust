@@ -3890,10 +3890,11 @@ impl Desktop {
 					);
 					entry.summary = self.tesktop.summary(meta.id).unwrap_or_default();
 					entry.log = self.tesktop.export(meta.id).is_some();
-					entry.log_tail = entry
-						.log
-						.then(|| self.tesktop.tail(meta.id, 40))
-						.unwrap_or_default();
+					entry.log_tail = if entry.log {
+						self.tesktop.tail(meta.id, 40)
+					} else {
+						String::new()
+					};
 					entry.fields = self
 						.tesktop
 						.settings_of(meta.id)
@@ -3962,6 +3963,7 @@ impl Desktop {
 		self.tesktop_run_action(ctx);
 		self.tesktop_toast();
 		self.tesktop_compose();
+		self.tesktop_intent();
 		self.tesktop_open_url();
 	}
 
@@ -4003,10 +4005,68 @@ impl Desktop {
 					channel: pending.0,
 					me,
 					content: &pending.1,
-					failure: &reason,
+					failure: reason,
 				});
 			}
 			_ => {}
+		}
+	}
+
+	/// Carry out the service action a port named, through the state's own prepared command.
+	///
+	/// The state checks permission, the pending action and the request id, so a port cannot
+	/// reach an action the owner could not take by hand, and a refusal is said rather than
+	/// swallowed.
+	fn tesktop_intent(&mut self) {
+		let Some(channel) = self.state.selected else {
+			return;
+		};
+		let me = self
+			.state
+			.user
+			.as_ref()
+			.map_or(model::Id(0), |user| user.id);
+		let previous = self.tesktop_previous(channel, me);
+		let context = tesktop_plugins::IntentContext {
+			channel,
+			me,
+			previous: previous.as_ref(),
+		};
+		let Some(intent) = self.tesktop.take_intent(&context) else {
+			return;
+		};
+		match intent {
+			tesktop_plugins::Intent::Delete { channel, message } => {
+				if let Some(command) = self.state.prepare_delete(channel, message) {
+					self.command(command);
+				}
+			}
+			tesktop_plugins::Intent::Pin {
+				channel,
+				message,
+				pinned,
+			} => {
+				if let Some(command) = self.state.prepare_pin(channel, message, pinned) {
+					self.command(command);
+				}
+			}
+			tesktop_plugins::Intent::React {
+				channel,
+				message,
+				emoji,
+				add,
+			} => {
+				let _ = channel;
+				let emoji = model::ReactionEmoji {
+					id: None,
+					name: Some(emoji),
+				};
+				match self.state.prepare_set_reaction(message, emoji, add) {
+					Ok(Some(command)) => self.command(command),
+					Ok(None) => {}
+					Err(reason) => self.state.status = reason,
+				}
+			}
 		}
 	}
 
@@ -4108,7 +4168,7 @@ impl Desktop {
 					if let Err(error) = self.downloads.start(
 						file.clone(),
 						self.runtime.handle(),
-						&ctx,
+						ctx,
 						self.window.clone(),
 					) {
 						self.state.status = error;
@@ -7552,5 +7612,5 @@ mod tests {
 fn local_hour() -> u8 {
 	use time::OffsetDateTime;
 	let now = OffsetDateTime::now_local().unwrap_or_else(|_| OffsetDateTime::now_utc());
-	u8::try_from(now.hour()).unwrap_or(0)
+	now.hour()
 }

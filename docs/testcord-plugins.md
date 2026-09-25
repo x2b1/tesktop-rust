@@ -77,6 +77,10 @@ MessageLogger record is session memory and is never written to disk; copy it out
 | ClearURLs | Removes tracking parameters from links in outgoing bodies and edits | TestCord downloads the full rule database at startup; this port ships a bundled provider table for the widely used services, so uncommon providers are not covered |
 | BlockKeywords | Ignores messages matching your words, in the body and in embed titles and descriptions | The second mode, which shows a matched message greyed out instead of dropping it |
 | AutoReplyContent | Answers a trigger with one of your responses, with TestCord's channel, mention, cooldown and rate-limit rules | Responses are picked by a hash of the message id instead of `Math.random`, so a given message always gets the same answer |
+| GhostPingAlert | A message that pinged you and is then taken back is named, with the quote cut to the length you set, and a plain mention is a ping while @everyone is its own switch | Nothing; the port is complete |
+| DetectBlock | A direct message that will not go out is named once, and only for a refusal: a network failure or a rate limit says nothing about the other person and is not reported | Nothing; the port is complete |
+| QuickDelete | A button in the composer's row deletes your own last message here, and only your own | The keybind the original uses |
+| SelfHeartbeat | Your own messages get a reaction once they are sent, with the emoji yours to choose | Nothing; the port is complete |
 | MessageLogger | Records created, edited and deleted messages, and copies the record out | The searchable history window, edit diffs and the deleted-message styling |
 | SilenceUsers | Takes `@everyone`, role and user pings out of messages by the listed people | Dropping the desktop notification for those messages, which the state owner raises |
 | SplitLargeMessages | Splits an oversized body on newlines, spaces or an exact length and sends the parts in order with your delay | Reading the account's Nitro tier for the 4000-character limit, and slowmode awareness |

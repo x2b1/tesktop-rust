@@ -1,12 +1,27 @@
-//! Ports that act on a conversation rather than on its text: what to tidy up, and what
-//! arrived after a ping.
+//! Ports that act on a conversation rather than on its text: what to tidy up, what
+//! arrived after a ping, and what the service said about a send.
 
-use crate::{Delivery, Fallback, Intent, IntentContext, Meta, PendingReply, Setting, SettingKind, Values, flag_or, text_or};
+use crate::{
+	Delivery, Fallback, Inbound, Intent, IntentContext, Meta, PendingReply, Setting, SettingKind,
+	Values, flag_or, number_or, text_or,
+};
 use model::Id;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// How many pings are remembered for the delete that follows them.
 pub const MAX_PINGS: usize = 512;
+/// How many conversations a port remembers a name for.
+pub const MAX_PEERS: usize = 512;
+/// Ids remembered as already recorded, so a message that arrives twice is handled once.
+pub const MAX_SEEN: usize = 4096;
+
+/// Whether a message pings the owner, by mention or by everyone.
+fn pings_owner(message: &model::Message, me: Id) -> bool {
+	message.mention_everyone
+		|| message.mentions.iter().any(|user| user.id == me)
+		|| message.content.contains(&format!("<@{me}>"))
+		|| message.content.contains(&format!("<@!{me}>"))
+}
 
 const GHOST_SETTINGS: &[Setting] = &[
 	Setting {
@@ -31,7 +46,6 @@ pub struct Ping {
 }
 
 /// GhostPingAlert: a ping that arrives and is then taken back.
-#[derive(Default)]
 pub struct GhostPingAlert {
 	everyone: bool,
 	preview: usize,
@@ -39,7 +53,19 @@ pub struct GhostPingAlert {
 	pending: Option<String>,
 }
 
+impl Default for GhostPingAlert {
+	fn default() -> Self {
+		Self {
+			everyone: true,
+			preview: 80,
+			pings: BTreeMap::new(),
+			pending: None,
+		}
+	}
+}
+
 impl GhostPingAlert {
+	/// How many pings are waiting for a delete that may never come.
 	pub fn remembered(&self) -> usize {
 		self.pings.len()
 	}
@@ -64,7 +90,7 @@ impl crate::Plugin for GhostPingAlert {
 
 	fn configure(&mut self, values: &Values) {
 		self.everyone = flag_or(values, GHOST_SETTINGS, "alertOnEveryone");
-		self.preview = crate::number_or(values, GHOST_SETTINGS, "preview").clamp(20, 200) as usize;
+		self.preview = number_or(values, GHOST_SETTINGS, "preview").clamp(20, 200) as usize;
 	}
 
 	fn reset(&mut self) {
@@ -74,11 +100,12 @@ impl crate::Plugin for GhostPingAlert {
 
 	fn on_created(
 		&mut self,
-		inbound: &crate::Inbound,
+		inbound: &Inbound,
 		message: &model::Message,
 		_replies: &mut Vec<PendingReply>,
 	) {
-		let pinged = inbound.mentions_me || (self.everyone && message.mention_everyone);
+		let pinged =
+			pings_owner(message, inbound.me) && (self.everyone || !message.mention_everyone);
 		if !pinged {
 			return;
 		}
@@ -93,23 +120,28 @@ impl crate::Plugin for GhostPingAlert {
 		self.pings.insert(
 			message.id,
 			Ping {
-				author: message.author.global_name.clone().unwrap_or_else(|| message.author.username.clone()),
-				content: message.content.clone(),
+				author: message.author.name.chars().take(64).collect(),
+				content: message.content.chars().take(MAX_BODY).collect(),
 			},
 		);
 	}
 
-	fn on_deleted(&mut self, message: &model::Message) {
-		let Some(ping) = self.pings.remove(&message.id) else {
+	fn on_deleted(
+		&mut self,
+		_inbound: &Inbound,
+		_channel: Id,
+		id: Id,
+		_last: Option<&model::Message>,
+	) {
+		let Some(ping) = self.pings.remove(&id) else {
 			return;
 		};
-		let mut quoted = ping.content;
-		quoted.truncate(self.preview);
+		let mut quoted: String = ping.content.chars().take(self.preview).collect();
 		if ping.content.chars().count() > self.preview {
 			quoted.push('…');
 		}
 		if quoted.trim().is_empty() {
-			quoted.push_str("(no text)");
+			quoted = "(no text)".to_string();
 		}
 		self.pending = Some(format!("👻 Ghost ping from {}: \"{quoted}\"", ping.author));
 	}
@@ -123,12 +155,8 @@ impl crate::Plugin for GhostPingAlert {
 	}
 }
 
-/// The name a person goes by, preferring what they set.
-fn display_name(user: &model::User) -> String {
-	user.global_name
-		.clone()
-		.unwrap_or_else(|| user.username.clone())
-}
+/// A message body kept for a failure that will be described, which is a service ceiling.
+const MAX_BODY: usize = 2000;
 
 const BLOCK_SETTINGS: &[Setting] = &[Setting {
 	key: "alert",
@@ -137,11 +165,42 @@ const BLOCK_SETTINGS: &[Setting] = &[Setting {
 	default: Fallback::Flag(true),
 }];
 
-/// DetectBlock: a direct message that will not go out is the service saying no.
-#[derive(Default)]
+/// DetectBlock: a direct message that will not go out is often a block.
+///
+/// The port only reports a refusal. It never decides that someone blocked you, and it never
+/// reports anything for a network failure or a rate limit, which say nothing about the other
+/// person.
 pub struct DetectBlock {
 	alert: bool,
 	pending: Option<String>,
+	/// The name of the person each conversation is with, as the app already knows it.
+	peers: BTreeMap<Id, String>,
+	seen: BTreeSet<Id>,
+}
+
+impl Default for DetectBlock {
+	fn default() -> Self {
+		Self {
+			alert: true,
+			pending: None,
+			peers: BTreeMap::new(),
+			seen: BTreeSet::new(),
+		}
+	}
+}
+
+impl DetectBlock {
+	/// Note who a conversation is with, so a refusal can be about a person.
+	pub fn remember(&mut self, channel: Id, name: String) {
+		while self.peers.len() >= MAX_PEERS {
+			if let Some(oldest) = self.peers.keys().next().copied() {
+				self.peers.remove(&oldest);
+			} else {
+				break;
+			}
+		}
+		self.peers.insert(channel, name.chars().take(64).collect());
+	}
 }
 
 impl crate::Plugin for DetectBlock {
@@ -167,6 +226,7 @@ impl crate::Plugin for DetectBlock {
 
 	fn reset(&mut self) {
 		self.pending = None;
+		self.seen.clear();
 	}
 
 	fn delivered(&mut self, event: &Delivery<'_>) {
@@ -175,55 +235,45 @@ impl crate::Plugin for DetectBlock {
 		}
 		let Delivery::Failed {
 			channel,
-			me,
 			content,
 			failure,
+			..
 		} = event
 		else {
 			return;
 		};
-		// Only a refusal is a signal. A network failure or a rate limit says nothing about
-		// the other person, and saying so would be a guess dressed as a fact.
 		if !failure.contains("Permission denied") {
 			return;
 		}
-		let direct = self
-			.direct_peers
-			.borrow()
-			.get(&channel)
-			.cloned()
-			.unwrap_or_default();
-		let who = if direct.is_empty() {
-			"that person".to_string()
-		} else {
-			direct
-		};
-		let preview: String = content.chars().take(40).collect();
-		self.pending = Some(format!(
-			"{who} would not take that message ({failure}): \"{preview}\""
-		));
-		let _ = me;
-	}
-}
-
-/// The peers a port has seen in a conversation, so a failure can name a person. The host
-/// fills it from the conversation it already has; a port never reads the member list.
-impl DetectBlock {
-	fn remember(&self, channel: Id, name: String) {
-		let mut peers = self.direct_peers.borrow_mut();
-		while peers.len() >= MAX_PINGS {
-			if let Some(oldest) = peers.keys().next().copied() {
-				peers.remove(&oldest);
+		// The same refusal twice is one thing that happened once.
+		if !self.seen.insert(*channel) {
+			return;
+		}
+		while self.seen.len() > MAX_SEEN {
+			if let Some(oldest) = self.seen.iter().next().copied() {
+				self.seen.remove(&oldest);
 			} else {
 				break;
 			}
 		}
-		peers.insert(channel, name);
+		let who = self
+			.peers
+			.get(channel)
+			.cloned()
+			.unwrap_or_else(|| "Someone you were writing to".to_string());
+		let preview: String = content.chars().take(40).collect();
+		self.pending = Some(format!(
+			"{who} would not take that message ({failure}): \"{preview}\""
+		));
+	}
+
+	fn take_toast(&mut self) -> Option<String> {
+		self.pending.take()
 	}
 }
 
 const DELETE_SETTINGS: &[Setting] = &[Setting {
-	key: "confirm",
+	key: "armed",
 	label: "Delete your last message in this conversation",
 	kind: SettingKind::Toggle,
 	default: Fallback::Flag(true),
@@ -231,14 +281,14 @@ const DELETE_SETTINGS: &[Setting] = &[Setting {
 
 /// QuickDelete: a tidy-up without reaching for the menu.
 pub struct QuickDelete {
-	confirm: bool,
+	armed: bool,
 	pending: bool,
 }
 
 impl Default for QuickDelete {
 	fn default() -> Self {
 		Self {
-			confirm: true,
+			armed: true,
 			pending: false,
 		}
 	}
@@ -262,29 +312,25 @@ impl crate::Plugin for QuickDelete {
 	}
 
 	fn configure(&mut self, values: &Values) {
-		self.confirm = flag_or(values, DELETE_SETTINGS, "confirm");
+		self.armed = flag_or(values, DELETE_SETTINGS, "armed");
 	}
 
-	fn command(&self, _argument: &str) -> Option<crate::commands::Claim> {
-		self.confirm
-			.then(|| crate::commands::Claim { body: String::new() })
-	}
-
-	fn command_names(&self) -> &'static [&'static str] {
-		&["delete", "quickdelete"]
-	}
-
-	fn command_about(&self) -> &'static str {
-		"Deletes your last message here."
+	fn on_created(
+		&mut self,
+		inbound: &Inbound,
+		message: &model::Message,
+		_replies: &mut Vec<PendingReply>,
+	) {
+		// Only a message of your own arms the delete, and only the newest one: a delete
+		// that guessed at a message would be a delete nobody could undo.
+		self.pending = message.author.id == inbound.me;
 	}
 
 	fn take_intent(&mut self, context: &IntentContext<'_>) -> Option<Intent> {
-		if !self.pending {
+		if !self.armed || !self.pending {
 			return None;
 		}
 		self.pending = false;
-		// Only the owner's own message, and only a message that is still in view: a delete
-		// that guesses at a message is a delete nobody can undo.
 		let previous = context.previous?;
 		(previous.author == context.me).then_some(Intent::Delete {
 			channel: context.channel,
@@ -292,44 +338,129 @@ impl crate::Plugin for QuickDelete {
 		})
 	}
 
-	fn on_created(
-		&mut self,
-		_inbound: &crate::Inbound,
-		_message: &model::Message,
-		_replies: &mut Vec<PendingReply>,
-	) {
-		self.pending = false;
+	fn composer_button(&self) -> Option<crate::ComposerButton> {
+		Some(crate::ComposerButton {
+			id: "quick-delete",
+			label: "Delete",
+			tooltip: "Delete your last message in this conversation.",
+			active: Some(self.armed),
+		})
+	}
+
+	fn press_composer(&mut self, id: &str) {
+		if id == "quick-delete" {
+			self.armed = !self.armed;
+		}
+	}
+}
+
+const REACTION_SETTINGS: &[Setting] = &[Setting {
+	key: "emoji",
+	label: "The reaction to put on your own messages",
+	kind: SettingKind::Text { multiline: false },
+	default: Fallback::Text("👀"),
+}];
+
+/// SelfHeartbeat: a reaction on what you just sent, from the original's own set.
+pub struct SelfHeartbeat {
+	emoji: String,
+	pending: Option<Intent>,
+}
+
+impl Default for SelfHeartbeat {
+	fn default() -> Self {
+		Self {
+			emoji: "👀".to_string(),
+			pending: None,
+		}
+	}
+}
+
+impl crate::Plugin for SelfHeartbeat {
+	fn meta(&self) -> Meta {
+		Meta {
+			id: "SelfHeartbeat",
+			name: "SelfHeartbeat",
+			description: "Reacts to your own messages so they stand out in a busy channel.",
+			authors: "Testcord",
+			tags: &["Chat", "Fun"],
+			aliases: &["selfHeartbeat"],
+			default_enabled: false,
+		}
+	}
+
+	fn settings(&self) -> &'static [Setting] {
+		REACTION_SETTINGS
+	}
+
+	fn configure(&mut self, values: &Values) {
+		// A reaction is one emoji: no whitespace, no control characters, and short enough
+		// that the service will accept it as one.
+		self.emoji = text_or(values, REACTION_SETTINGS, "emoji")
+			.trim()
+			.chars()
+			.filter(|character| !character.is_whitespace() && !character.is_control())
+			.take(16)
+			.collect();
+	}
+
+	fn delivered(&mut self, event: &Delivery<'_>) {
+		let Delivery::Sent { message, .. } = event else {
+			return;
+		};
+		if self.emoji.is_empty() {
+			return;
+		}
+		self.pending = Some(Intent::React {
+			channel: message.channel,
+			message: message.id,
+			emoji: self.emoji.clone(),
+			add: true,
+		});
+	}
+
+	fn take_intent(&mut self, _context: &IntentContext<'_>) -> Option<Intent> {
+		self.pending.take()
 	}
 }
 
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use crate::Plugin;
+	use crate::{Plugin, Registry};
 
-	fn message(author: u64, content: &str) -> model::Message {
-		let mut message = test_support::message(1, model::Id(7));
+	fn message(id: u64, author: u64, content: &str) -> model::Message {
+		let mut message = test_support::message(id, model::Id(7));
 		message.author.id = model::Id(author);
-		message.author.username = "someone".to_string();
+		message.author.name = "someone".to_string();
 		message.content = content.to_string();
 		message
 	}
 
-	fn inbound(mentions_me: bool) -> crate::Inbound {
-		crate::Inbound::new(model::Id(7), None, model::Id(1), 0)
-			.with_mentions(mentions_me)
+	fn inbound(me: u64) -> Inbound {
+		Inbound::new(model::Id(7), None, model::Id(me), 0)
+	}
+
+	/// A message that really mentions the owner, which is what a ping is.
+	fn ping(id: u64, me: u64, content: &str) -> model::Message {
+		let mut message = message(id, 2, content);
+		message.content = format!("<@{me}> {content}");
+		message
+			.mentions
+			.push(test_support::message(1, model::Id(me)).author);
+		message
 	}
 
 	#[test]
 	fn a_ping_is_remembered_and_named_when_it_is_taken_back() {
 		let mut plugin = GhostPingAlert::default();
 		let mut replies = Vec::new();
-		plugin.on_created(&inbound(true), &message(2, "hey you"), &mut replies);
+		plugin.on_created(&inbound(1), &ping(2, 1, "hey you"), &mut replies);
 		assert_eq!(plugin.remembered(), 1);
-		plugin.on_deleted(&message(2, ""));
+		plugin.on_deleted(&inbound(1), model::Id(7), model::Id(2), None);
 		assert_eq!(
 			plugin.take_toast().as_deref(),
-			Some("👻 Ghost ping from someone: \"hey you\"")
+			Some("👻 Ghost ping from someone: \"<@1> hey you\"")
 		);
 		assert!(plugin.take_toast().is_none(), "the line is shown once");
 	}
@@ -338,10 +469,27 @@ mod tests {
 	fn a_message_that_did_not_ping_you_is_not_remembered() {
 		let mut plugin = GhostPingAlert::default();
 		let mut replies = Vec::new();
-		plugin.on_created(&inbound(false), &message(2, "hey you"), &mut replies);
-		assert_eq!(plugin.remembered(), 0);
-		plugin.on_deleted(&message(2, ""));
+		plugin.on_created(&inbound(1), &message(2, 2, "hey you"), &mut replies);
+		assert_eq!(
+			plugin.remembered(),
+			0,
+			"a message that does not ping is not a ping"
+		);
+		plugin.on_deleted(&inbound(1), model::Id(7), model::Id(2), None);
 		assert!(plugin.take_toast().is_none());
+	}
+
+	#[test]
+	fn a_plain_mention_pings_and_everyone_is_separate() {
+		let mut plugin = GhostPingAlert::default();
+		let mut replies = Vec::new();
+		plugin.on_created(&inbound(1), &ping(1, 1, "hey"), &mut replies);
+		assert_eq!(plugin.remembered(), 1, "a mention of you is a ping");
+
+		let mut everyone = message(2, 2, "listen");
+		everyone.mention_everyone = true;
+		plugin.on_created(&inbound(1), &everyone, &mut replies);
+		assert_eq!(plugin.remembered(), 2, "so is @everyone, by default");
 	}
 
 	#[test]
@@ -353,22 +501,35 @@ mod tests {
 				.collect(),
 		));
 		let mut replies = Vec::new();
-		let mut everyone = message(2, "listen");
+		let mut everyone = message(2, 2, "listen");
 		everyone.mention_everyone = true;
-		plugin.on_created(&inbound(false), &everyone, &mut replies);
+		plugin.on_created(&inbound(1), &everyone, &mut replies);
 		assert_eq!(plugin.remembered(), 0);
 	}
 
 	#[test]
 	fn a_long_ping_is_quoted_to_the_length_you_ask_for() {
 		let mut plugin = GhostPingAlert::default();
-		let long = "x".repeat(200);
+		let long = "x".repeat(400);
 		let mut replies = Vec::new();
-		plugin.on_created(&inbound(true), &message(2, &long), &mut replies);
-		plugin.on_deleted(&message(2, ""));
+		plugin.on_created(&inbound(1), &ping(2, 1, &long), &mut replies);
+		plugin.on_deleted(&inbound(1), model::Id(7), model::Id(2), None);
 		let line = plugin.take_toast().expect("a line");
-		assert!(line.ends_with('…'), "{line}");
-		assert!(line.chars().count() < 140, "the quote stays short");
+		assert!(line.contains('…'), "the quote is cut: {line}");
+		assert!(line.chars().count() < 140, "and it stays short: {line}");
+	}
+
+	#[test]
+	fn an_empty_ping_is_still_named() {
+		let mut plugin = GhostPingAlert::default();
+		let mut replies = Vec::new();
+		// A ping can arrive with no text of its own, which is still a ping.
+		let mut empty = message(2, 2, "");
+		empty.mention_everyone = true;
+		plugin.on_created(&inbound(1), &empty, &mut replies);
+		plugin.on_deleted(&inbound(1), model::Id(7), model::Id(2), None);
+		let line = plugin.take_toast().expect("a line");
+		assert!(line.contains("(no text)"), "{line}");
 	}
 
 	#[test]
@@ -376,9 +537,7 @@ mod tests {
 		let mut plugin = GhostPingAlert::default();
 		let mut replies = Vec::new();
 		for id in 0..(MAX_PINGS as u64 + 50) {
-			let mut ping = message(2, "hey");
-			ping.id = model::Id(id);
-			plugin.on_created(&inbound(true), &ping, &mut replies);
+			plugin.on_created(&inbound(1), &ping(id, 1, "hey"), &mut replies);
 		}
 		assert_eq!(plugin.remembered(), MAX_PINGS);
 		assert!(plugin.summary().unwrap().contains("waiting"));
@@ -401,6 +560,21 @@ mod tests {
 	}
 
 	#[test]
+	fn the_same_refusal_is_reported_once() {
+		let mut plugin = DetectBlock::default();
+		let event = Delivery::Failed {
+			channel: model::Id(7),
+			me: model::Id(1),
+			content: "hello",
+			failure: "Permission denied",
+		};
+		plugin.delivered(&event);
+		plugin.delivered(&event);
+		assert!(plugin.take_toast().is_some());
+		assert!(plugin.take_toast().is_none());
+	}
+
+	#[test]
 	fn a_network_failure_is_not_a_block() {
 		let mut plugin = DetectBlock::default();
 		plugin.delivered(&Delivery::Failed {
@@ -415,7 +589,7 @@ mod tests {
 	#[test]
 	fn a_send_that_went_out_is_not_a_failure() {
 		let mut plugin = DetectBlock::default();
-		let sent = message(1, "hi");
+		let sent = message(1, 1, "hi");
 		plugin.delivered(&Delivery::Sent {
 			channel: model::Id(7),
 			message: &sent,
@@ -425,11 +599,21 @@ mod tests {
 	}
 
 	#[test]
+	fn a_name_is_only_kept_within_the_bound() {
+		let mut plugin = DetectBlock::default();
+		for id in 0..(MAX_PEERS as u64 + 10) {
+			plugin.remember(model::Id(id), format!("peer {id}"));
+		}
+		assert_eq!(plugin.peers.len(), MAX_PEERS);
+	}
+
+	#[test]
 	fn the_delete_names_only_your_own_last_message() {
 		let mut plugin = QuickDelete::default();
-		assert!(plugin.command("/delete").is_some());
+		let mut replies = Vec::new();
+		plugin.on_created(&inbound(1), &message(5, 1, "mine"), &mut replies);
 		let previous = crate::Previous {
-			id: model::Id(50),
+			id: model::Id(5),
 			author: model::Id(1),
 			content: "mine".into(),
 			attachments: 0,
@@ -442,13 +626,24 @@ mod tests {
 			me: model::Id(1),
 			previous: Some(&previous),
 		};
-		// A command run does not arm the delete; only a fresh conversation does.
-		assert!(plugin.take_intent(&context).is_none());
+		assert_eq!(
+			plugin.take_intent(&context),
+			Some(Intent::Delete {
+				channel: model::Id(7),
+				message: model::Id(5)
+			})
+		);
+		assert!(
+			plugin.take_intent(&context).is_none(),
+			"one press, one delete"
+		);
 	}
 
 	#[test]
-	fn nothing_is_deleted_when_there_is_nothing_of_yours() {
+	fn someones_else_message_never_arms_the_delete() {
 		let mut plugin = QuickDelete::default();
+		let mut replies = Vec::new();
+		plugin.on_created(&inbound(1), &message(5, 2, "theirs"), &mut replies);
 		let context = IntentContext {
 			channel: model::Id(7),
 			me: model::Id(1),
@@ -458,20 +653,103 @@ mod tests {
 	}
 
 	#[test]
-	fn a_name_is_only_kept_within_the_bound() {
-		let plugin = DetectBlock::default();
-		for id in 0..(MAX_PINGS as u64 + 10) {
-			plugin.remember(model::Id(id), format!("peer {id}"));
-		}
-		assert_eq!(plugin.direct_peers.borrow().len(), MAX_PINGS);
+	fn the_delete_button_arms_and_disarms_it() {
+		let mut plugin = QuickDelete::default();
+		assert_eq!(plugin.composer_button().unwrap().active, Some(true));
+		plugin.press_composer("quick-delete");
+		assert_eq!(plugin.composer_button().unwrap().active, Some(false));
 	}
 
 	#[test]
-	fn a_person_goes_by_the_name_they_set() {
-		let mut user = test_support::user(1);
-		user.username = "plain".into();
-		assert_eq!(display_name(&user), "plain");
-		user.global_name = Some("Chosen".into());
-		assert_eq!(display_name(&user), "Chosen");
+	fn a_send_reacts_to_itself_once() {
+		let mut plugin = SelfHeartbeat::default();
+		let sent = message(9, 1, "posted");
+		plugin.delivered(&Delivery::Sent {
+			channel: model::Id(7),
+			message: &sent,
+			me: model::Id(1),
+		});
+		let context = IntentContext {
+			channel: model::Id(7),
+			me: model::Id(1),
+			previous: None,
+		};
+		assert_eq!(
+			plugin.take_intent(&context),
+			Some(Intent::React {
+				channel: model::Id(7),
+				message: model::Id(9),
+				emoji: "👀".to_string(),
+				add: true,
+			})
+		);
+		assert!(plugin.take_intent(&context).is_none());
+	}
+
+	#[test]
+	fn a_reaction_setting_may_not_bring_whitespace() {
+		let mut plugin = SelfHeartbeat::default();
+		plugin.configure(&Values(
+			[("emoji".to_string(), serde_json::json!("a b\nc"))]
+				.into_iter()
+				.collect(),
+		));
+		let sent = message(9, 1, "posted");
+		plugin.delivered(&Delivery::Sent {
+			channel: model::Id(7),
+			message: &sent,
+			me: model::Id(1),
+		});
+		let context = IntentContext {
+			channel: model::Id(7),
+			me: model::Id(1),
+			previous: None,
+		};
+		match plugin.take_intent(&context) {
+			Some(Intent::React { emoji, .. }) => assert_eq!(emoji, "abc"),
+			other => panic!("expected a reaction, got {other:?}"),
+		}
+	}
+
+	#[test]
+	fn the_registry_hands_out_one_intent_at_a_time() {
+		let mut registry = Registry::new();
+		registry.set_enabled("QuickDelete", true);
+		assert!(
+			registry
+				.take_intent(&IntentContext {
+					channel: model::Id(7),
+					me: model::Id(1),
+					previous: None,
+				})
+				.is_none()
+		);
+
+		let mut replies: Vec<PendingReply> = Vec::new();
+		let _ = registry.observe(
+			&inbound(1),
+			crate::InboundEvent::Created(&message(5, 1, "mine")),
+		);
+		let _ = &mut replies;
+		let previous = crate::Previous {
+			id: model::Id(5),
+			author: model::Id(1),
+			content: "mine".into(),
+			attachments: 0,
+			age_ms: 100,
+			is_group: false,
+			replying: false,
+		};
+		assert_eq!(
+			registry.take_intent(&IntentContext {
+				channel: model::Id(7),
+				me: model::Id(1),
+				previous: Some(&previous),
+			}),
+			Some(Intent::Delete {
+				channel: model::Id(7),
+				message: model::Id(5)
+			})
+		);
 	}
 }

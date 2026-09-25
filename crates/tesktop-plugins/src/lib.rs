@@ -8,6 +8,7 @@
 //!
 //! Every hook is bounded by items and bytes, so message traffic cannot grow memory without limit.
 
+pub mod aftermath;
 pub mod autoreply;
 pub mod blockkeywords;
 pub mod body;
@@ -607,6 +608,10 @@ impl Registry {
 			Box::new(marker::AntiRickroll::default()),
 			Box::new(files::QuickMention::default()),
 			Box::new(files::QuickReply::default()),
+			Box::new(aftermath::GhostPingAlert::default()),
+			Box::new(aftermath::DetectBlock::default()),
+			Box::new(aftermath::QuickDelete::default()),
+			Box::new(aftermath::SelfHeartbeat::default()),
 			Box::new(blockkeywords::BlockKeywords::default()),
 			Box::new(silenceusers::SilenceUsers::default()),
 			Box::new(splitlarge::SplitLargeMessages::default()),
