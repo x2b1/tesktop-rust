@@ -611,7 +611,7 @@ impl Registry {
 			Box::new(aftermath::GhostPingAlert::default()),
 			Box::new(aftermath::DetectBlock::default()),
 			Box::new(aftermath::QuickDelete::default()),
-			Box::new(aftermath::SelfHeartbeat::default()),
+			Box::new(aftermath::AutoChannelReact::default()),
 			Box::new(blockkeywords::BlockKeywords::default()),
 			Box::new(silenceusers::SilenceUsers::default()),
 			Box::new(splitlarge::SplitLargeMessages::default()),

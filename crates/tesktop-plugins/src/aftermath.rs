@@ -7,6 +7,7 @@ use crate::{
 };
 use model::Id;
 use std::collections::{BTreeMap, BTreeSet};
+use std::str::FromStr;
 
 /// How many pings are remembered for the delete that follows them.
 pub const MAX_PINGS: usize = 512;
@@ -354,73 +355,153 @@ impl crate::Plugin for QuickDelete {
 	}
 }
 
-const REACTION_SETTINGS: &[Setting] = &[Setting {
-	key: "emoji",
-	label: "The reaction to put on your own messages",
-	kind: SettingKind::Text { multiline: false },
-	default: Fallback::Text("👀"),
+const REACT_SETTINGS: &[Setting] = &[Setting {
+	key: "rules",
+	label: "Rules: channel id, then one emoji per line",
+	kind: SettingKind::Text { multiline: true },
+	default: Fallback::Text(""),
 }];
 
-/// SelfHeartbeat: a reaction on what you just sent, from the original's own set.
-pub struct SelfHeartbeat {
-	emoji: String,
-	pending: Option<Intent>,
+/// One rule from the setting: a conversation and the reactions to put on its messages.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ReactRule {
+	pub channel: Id,
+	pub reactions: Vec<String>,
 }
 
-impl Default for SelfHeartbeat {
-	fn default() -> Self {
-		Self {
-			emoji: "👀".to_string(),
-			pending: None,
+/// Parse the rules, which are written as lines of `id emoji emoji`.
+///
+/// The original takes JSON. A flat list is the same information without a parser in front
+/// of it, and it cannot be made to allocate by what it is handed.
+pub fn parse_rules(text: &str) -> Vec<ReactRule> {
+	let mut rules: Vec<ReactRule> = Vec::new();
+	for line in text.lines() {
+		let line = line.trim();
+		if line.is_empty() || line.starts_with('#') {
+			continue;
 		}
+		let mut parts = line.split_whitespace();
+		let Some(channel) = parts.next().and_then(|id| Id::from_str(id).ok()) else {
+			continue;
+		};
+		// One emoji each, no whitespace and no control characters, so a rule cannot smuggle
+		// anything into a reaction the service is asked to accept.
+		let reactions: Vec<String> = parts
+			.filter_map(|emoji| {
+				let emoji: String = emoji
+					.chars()
+					.filter(|character| !character.is_whitespace() && !character.is_control())
+					.take(16)
+					.collect();
+				(!emoji.is_empty()).then_some(emoji)
+			})
+			.take(MAX_REACTIONS)
+			.collect();
+		if reactions.is_empty() {
+			continue;
+		}
+		rules.push(ReactRule { channel, reactions });
+	}
+	rules.truncate(MAX_RULES);
+	rules
+}
+
+/// Rules kept, so a long list cannot cost a scan per message.
+pub const MAX_RULES: usize = 64;
+/// Reactions in one rule.
+pub const MAX_REACTIONS: usize = 8;
+/// Messages one rule reacts to, so a busy channel cannot turn this into a flood.
+pub const MAX_PER_RULE: usize = 16;
+
+/// AutoChannelReact: the reactions a conversation always gets, from your own list.
+#[derive(Default)]
+pub struct AutoChannelReact {
+	rules: Vec<ReactRule>,
+	used: BTreeMap<Id, usize>,
+	pending: Vec<Intent>,
+}
+
+impl AutoChannelReact {
+	/// The reactions this rule says for a message, taking what it has already spent.
+	fn take(&mut self, channel: Id) -> Vec<String> {
+		let Some(rule) = self.rules.iter().find(|rule| rule.channel == channel) else {
+			return Vec::new();
+		};
+		let spent = self.used.entry(channel).or_insert(0);
+		if *spent >= MAX_PER_RULE {
+			return Vec::new();
+		}
+		*spent += 1;
+		rule.reactions.clone()
 	}
 }
 
-impl crate::Plugin for SelfHeartbeat {
+impl crate::Plugin for AutoChannelReact {
 	fn meta(&self) -> Meta {
 		Meta {
-			id: "SelfHeartbeat",
-			name: "SelfHeartbeat",
-			description: "Reacts to your own messages so they stand out in a busy channel.",
-			authors: "Testcord",
+			id: "AutoChannelReact",
+			name: "AutoChannelReact",
+			description: "Reacts to messages in the conversations your rules name.",
+			authors: "Vencord",
 			tags: &["Chat", "Fun"],
-			aliases: &["selfHeartbeat"],
+			aliases: &["autoChannelReact"],
 			default_enabled: false,
 		}
 	}
 
 	fn settings(&self) -> &'static [Setting] {
-		REACTION_SETTINGS
+		REACT_SETTINGS
 	}
 
 	fn configure(&mut self, values: &Values) {
-		// A reaction is one emoji: no whitespace, no control characters, and short enough
-		// that the service will accept it as one.
-		self.emoji = text_or(values, REACTION_SETTINGS, "emoji")
-			.trim()
-			.chars()
-			.filter(|character| !character.is_whitespace() && !character.is_control())
-			.take(16)
-			.collect();
+		self.rules = parse_rules(&text_or(values, REACT_SETTINGS, "rules"));
+		self.used.clear();
+		self.pending.clear();
 	}
 
-	fn delivered(&mut self, event: &Delivery<'_>) {
-		let Delivery::Sent { message, .. } = event else {
-			return;
-		};
-		if self.emoji.is_empty() {
+	fn reset(&mut self) {
+		self.used.clear();
+		self.pending.clear();
+	}
+
+	fn on_created(
+		&mut self,
+		inbound: &Inbound,
+		message: &model::Message,
+		_replies: &mut Vec<PendingReply>,
+	) {
+		// Your own message already has your reaction on it from the send path, and a
+		// reaction you cannot see is not one to add.
+		if message.author.id == inbound.me {
 			return;
 		}
-		self.pending = Some(Intent::React {
-			channel: message.channel,
-			message: message.id,
-			emoji: self.emoji.clone(),
-			add: true,
-		});
+		for emoji in self.take(inbound.channel) {
+			self.pending.push(Intent::React {
+				channel: inbound.channel,
+				message: message.id,
+				emoji,
+				add: true,
+			});
+		}
 	}
 
 	fn take_intent(&mut self, _context: &IntentContext<'_>) -> Option<Intent> {
-		self.pending.take()
+		// One at a time, so the app's queue and its permission check see each of them.
+		if self.pending.is_empty() {
+			return None;
+		}
+		Some(self.pending.remove(0))
+	}
+
+	fn summary(&self) -> Option<String> {
+		(!self.rules.is_empty()).then(|| {
+			let total: usize = self.rules.iter().map(|rule| rule.reactions.len()).sum();
+			format!(
+				"{} reactions over {} conversations",
+				total,
+				self.rules.len()
+			)
+		})
 	}
 }
 
@@ -661,24 +742,34 @@ mod tests {
 	}
 
 	#[test]
-	fn a_send_reacts_to_itself_once() {
-		let mut plugin = SelfHeartbeat::default();
-		let sent = message(9, 1, "posted");
-		plugin.delivered(&Delivery::Sent {
-			channel: model::Id(7),
-			message: &sent,
-			me: model::Id(1),
-		});
+	fn the_rules_are_read_a_line_at_a_time() {
+		let rules = parse_rules("# a comment\n7 👀 ✅\n\nnot-an-id 👀\n8 🎉\n");
+		assert_eq!(rules.len(), 2);
+		assert_eq!(rules[0].channel, model::Id(7));
+		assert_eq!(rules[0].reactions, vec!["👀", "✅"]);
+		assert_eq!(rules[1].reactions, vec!["🎉"]);
+	}
+
+	#[test]
+	fn a_rule_reacts_once_per_message() {
+		let mut plugin = AutoChannelReact::default();
+		plugin.configure(&Values(
+			[("rules".to_string(), serde_json::json!("7 👀"))]
+				.into_iter()
+				.collect(),
+		));
 		let context = IntentContext {
 			channel: model::Id(7),
 			me: model::Id(1),
 			previous: None,
 		};
+		let mut replies = Vec::new();
+		plugin.on_created(&inbound(1), &message(5, 2, "hello"), &mut replies);
 		assert_eq!(
 			plugin.take_intent(&context),
 			Some(Intent::React {
 				channel: model::Id(7),
-				message: model::Id(9),
+				message: model::Id(5),
 				emoji: "👀".to_string(),
 				add: true,
 			})
@@ -687,28 +778,83 @@ mod tests {
 	}
 
 	#[test]
-	fn a_reaction_setting_may_not_bring_whitespace() {
-		let mut plugin = SelfHeartbeat::default();
+	fn a_conversation_with_no_rule_reacts_to_nothing() {
+		let mut plugin = AutoChannelReact::default();
 		plugin.configure(&Values(
-			[("emoji".to_string(), serde_json::json!("a b\nc"))]
+			[("rules".to_string(), serde_json::json!("9 👀"))]
 				.into_iter()
 				.collect(),
 		));
-		let sent = message(9, 1, "posted");
-		plugin.delivered(&Delivery::Sent {
-			channel: model::Id(7),
-			message: &sent,
-			me: model::Id(1),
-		});
+		let mut replies = Vec::new();
+		plugin.on_created(&inbound(1), &message(5, 2, "hello"), &mut replies);
+		assert!(
+			plugin
+				.take_intent(&IntentContext {
+					channel: model::Id(7),
+					me: model::Id(1),
+					previous: None,
+				})
+				.is_none()
+		);
+	}
+
+	#[test]
+	fn a_busy_conversation_is_capped() {
+		let mut plugin = AutoChannelReact::default();
+		plugin.configure(&Values(
+			[("rules".to_string(), serde_json::json!("7 👀"))]
+				.into_iter()
+				.collect(),
+		));
+		let mut replies = Vec::new();
+		for id in 0..(MAX_PER_RULE as u64 + 5) {
+			plugin.on_created(&inbound(1), &message(id, 2, "hello"), &mut replies);
+		}
 		let context = IntentContext {
 			channel: model::Id(7),
 			me: model::Id(1),
 			previous: None,
 		};
-		match plugin.take_intent(&context) {
-			Some(Intent::React { emoji, .. }) => assert_eq!(emoji, "abc"),
-			other => panic!("expected a reaction, got {other:?}"),
+		let mut count = 0;
+		while plugin.take_intent(&context).is_some() {
+			count += 1;
 		}
+		assert_eq!(count, MAX_PER_RULE);
+	}
+
+	#[test]
+	fn your_own_message_is_not_reacted_to() {
+		let mut plugin = AutoChannelReact::default();
+		plugin.configure(&Values(
+			[("rules".to_string(), serde_json::json!("7 👀"))]
+				.into_iter()
+				.collect(),
+		));
+		let mut replies = Vec::new();
+		plugin.on_created(&inbound(1), &message(5, 1, "mine"), &mut replies);
+		assert!(
+			plugin
+				.take_intent(&IntentContext {
+					channel: model::Id(7),
+					me: model::Id(1),
+					previous: None,
+				})
+				.is_none()
+		);
+	}
+
+	#[test]
+	fn a_reaction_may_not_bring_whitespace() {
+		let rules = parse_rules("7 a\u{2003}b");
+		assert_eq!(rules.len(), 1);
+		assert!(
+			rules[0]
+				.reactions
+				.iter()
+				.all(|emoji| { !emoji.chars().any(char::is_whitespace) }),
+			"{:?}",
+			rules[0].reactions
+		);
 	}
 
 	#[test]

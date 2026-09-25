@@ -529,7 +529,7 @@ testcordplugins,autoBan,AutoBan,User list separated by /,TestcordDevs.dot,6,Fals
 testcordplugins,autoBanMenu,AutoBanMenu,Enhanced ban list with import/export/sync functionality.,"
 {name:""dot"",id:1400610916285812776n},
 {",1,False,False,False,False,False,,portable-ui,
-testcordplugins,autoChannelReact,AutoChannelReact,Channel reaction rules (JSON format),TestcordDevs.x2b,3,False,False,False,False,False,,portable-logic,
+testcordplugins,autoChannelReact,AutoChannelReact,Channel reaction rules (JSON format),TestcordDevs.x2b,3,False,False,False,False,False,,portable-logic,aftermath
 testcordplugins,autoClaim,AutoClaim,allowed guilds separated by /,TestcordDevs.dot,6,True,False,False,True,False,,rewrite,
 testcordplugins,autoCorrect,AutoCorrectNC,Where to show the button,"{name:""Nightcord"",id:0n}",10,False,False,False,False,False,,portable-logic,
 testcordplugins,autoDeco,AutoDisconnect,Enable AutoDeco,TestcordDevs.x2b,3,False,False,False,True,False,,excluded,

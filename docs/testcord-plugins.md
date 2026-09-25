@@ -80,7 +80,7 @@ MessageLogger record is session memory and is never written to disk; copy it out
 | GhostPingAlert | A message that pinged you and is then taken back is named, with the quote cut to the length you set, and a plain mention is a ping while @everyone is its own switch | Nothing; the port is complete |
 | DetectBlock | A direct message that will not go out is named once, and only for a refusal: a network failure or a rate limit says nothing about the other person and is not reported | Nothing; the port is complete |
 | QuickDelete | A button in the composer's row deletes your own last message here, and only your own | The keybind the original uses |
-| SelfHeartbeat | Your own messages get a reaction once they are sent, with the emoji yours to choose | Nothing; the port is complete |
+| AutoChannelReact | The reactions a conversation always gets, from rules you write, capped so a busy channel cannot turn it into a flood, and never on your own message | The rules editor, which is yours |
 | MessageLogger | Records created, edited and deleted messages, and copies the record out | The searchable history window, edit diffs and the deleted-message styling |
 | SilenceUsers | Takes `@everyone`, role and user pings out of messages by the listed people | Dropping the desktop notification for those messages, which the state owner raises |
 | SplitLargeMessages | Splits an oversized body on newlines, spaces or an exact length and sends the parts in order with your delay | Reading the account's Nitro tier for the 4000-character limit, and slowmode awareness |
