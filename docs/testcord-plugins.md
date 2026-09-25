@@ -86,6 +86,8 @@ MessageLogger record is session memory and is never written to disk; copy it out
 | Signature | Appends your signature under every message you send | The composer button and composer menu entry that toggle it |
 | EmbeddedURLs | Rewrites a recognised link to the form that embeds inline, leaving everything else alone | TestCord's per-origin map, which this port keeps short to the hosts it recognises |
 | SentFromMyUname | Stamps a "Sent from my" line under what you send, with a per-channel whitelist and a `nouname ` one-message opt-out | Reading your uname: the text is yours to set |
+| HideMessages | A hide entry in the message menu, and the message stays out of the conversation until the app restarts, bounded to 2048 ids | Hiding a direct message from the channel list |
+| AntiDeleteMessage | Deleted bodies are kept so you can still read them, with the app's own recovery cache | The per-server exemption and the direct-message switch, because the app already protects direct messages itself |
 | Annoiler | `/annoil` puts a spoiler around every character | Nothing; the port is complete |
 | ClapText | `/clap` puts a clap between every word | Nothing; the port is complete |
 | VibeCheck | `/vibe` drops a mood from TestCord's own list, chosen by the clock so the same second gives the same line | `Math.random` |

@@ -243,7 +243,7 @@ equicordplugins,globalBadges,GlobalBadges,Adds global badges from other client m
 equicordplugins,googleThat,GoogleThat,If the sent link should hyperlink with the query as the label,"Devs.Samwich,EquicordDevs.KrystalSkull",4,False,False,False,False,False,,portable-ui,
 equicordplugins,guildPickerDumper,GuildPickerDumper,Context menu to dump and download a server's emojis and stickers.,"EquicordDevs.Cortex,Devs.Samwich,Equicor",1,False,False,False,False,False,,portable-logic,
 equicordplugins,hideChatButtons,HideChatButtons,Color it red on open,EquicordDevs.iamme,3,False,False,False,False,False,,portable-logic,
-equicordplugins,hideMessages,HideMessages,Hide the hide button in the message popover.,EquicordDevs.yash,3,True,False,False,False,False,,rewrite,
+equicordplugins,hideMessages,HideMessages,Hide the hide button in the message popover.,EquicordDevs.yash,3,True,False,False,False,False,,rewrite,visibility
 equicordplugins,hideServers,HideServers,Allows you to hide servers from the guild list and quick switcher by right clicking them,EquicordDevs.bep,1,True,False,False,False,False,,rewrite,
 equicordplugins,homeTyping,HomeTyping,Changes the home button to a typing indicator if someone in your dms is typing,Devs.Samwich,0,True,False,False,False,False,,rewrite,
 equicordplugins,hopOn,HopOn,Regex to trigger on,Devs.ImLvna,3,False,False,False,True,False,,portable-hook,
@@ -506,7 +506,7 @@ testcordplugins,animalese,Animalese,Volume of the animalese sound,TestcordDevs.x
 testcordplugins,animstatus,AnimatedStatus,,,6,False,False,False,False,False,,portable-logic,
 testcordplugins,annoiler,Annoiler,"Makes you send messages with spoilers around every single character. Originally made by Kyza for Powercord, Us",TestcordDevs.x2b,0,False,False,False,False,False,,portable-ui,commands
 testcordplugins,antiDeco,AntiDisconnect,Automatically reconnects to voice channel in case of forced disconnection,TestcordDevs.x2b,1,False,False,False,True,False,,portable-hook,
-testcordplugins,antiDeleteMessage,AntiDeleteMessage,Enable automatic message restoration (toggle with toolbar button),"{name:""Nightcord"",id:0n}",6,False,False,False,True,False,,portable-hook,
+testcordplugins,antiDeleteMessage,AntiDeleteMessage,Enable automatic message restoration (toggle with toolbar button),"{name:""Nightcord"",id:0n}",6,False,False,False,True,False,,portable-hook,visibility
 testcordplugins,antiGroup,AntiGroup,Enable AntiGroup plugin,"
 {
 name:""Bash"",

@@ -12,6 +12,8 @@ pub struct Display {
 	pub hide_edited: bool,
 	/// Keep messages from being marked as read while they are on screen.
 	pub hold_read_ack: bool,
+	/// Keep the body of a deleted message so it can still be read.
+	pub preserve_deleted: bool,
 	/// The composer's counter, or `None` for the app's own near-limit counter.
 	pub counter: Option<Counter>,
 }

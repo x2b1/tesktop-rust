@@ -30,6 +30,8 @@ pub struct DisplayPatch {
 	pub hide_edited: Option<bool>,
 	/// Keep messages from being marked as read while they are on screen.
 	pub hold_read_ack: Option<bool>,
+	/// Keep the body of a deleted message so it can still be read.
+	pub preserve_deleted: Option<bool>,
 	pub counter: Option<Counter>,
 }
 

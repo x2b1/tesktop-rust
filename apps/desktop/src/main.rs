@@ -3808,6 +3808,7 @@ impl Desktop {
 			offset_minutes: display.offset_minutes,
 			hide_edited: display.hide_edited,
 			hold_read_ack: display.hold_read_ack,
+			preserve_deleted: display.preserve_deleted,
 			counter: display.counter.map(|counter| ui::Counter {
 				always: counter.always,
 				colors: counter.colors,
@@ -3830,6 +3831,12 @@ impl Desktop {
 		}
 		// Rebuilding the rows is only worth its allocations while the page is open or a change
 		// has not been written back yet.
+		// Deleted bodies are kept while any port asks for it, the same way the extension
+		// runtime's own retention flag is honoured.
+		let preserve = self.state.preserve_deleted_messages || display.preserve_deleted;
+		if preserve != self.state.preserve_deleted_messages {
+			self.state.set_preserve_deleted_messages(preserve);
+		}
 		if self.messaging.testcord_settings_open() || self.tesktop_dirty {
 			self.messaging.testcord.entries = self
 				.tesktop

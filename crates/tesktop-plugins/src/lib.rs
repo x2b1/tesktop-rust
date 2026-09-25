@@ -25,6 +25,7 @@ pub mod silenceusers;
 pub mod splitlarge;
 pub mod stamp;
 pub mod store;
+pub mod visibility;
 
 use model::{Id, Message};
 use serde_json::Value;
@@ -271,6 +272,8 @@ pub struct Display {
 	pub hide_edited: bool,
 	/// Keep messages from being marked as read while they are on screen.
 	pub hold_read_ack: bool,
+	/// Keep the body of a deleted message so it can still be read.
+	pub preserve_deleted: bool,
 	/// The composer's counter, or `None` for the app's own near-limit counter.
 	pub counter: Option<display::Counter>,
 }
@@ -437,6 +440,8 @@ impl Registry {
 			Box::new(commands::Annoiler::default()),
 			Box::new(commands::ClapText::default()),
 			Box::new(commands::VibeCheck::default()),
+			Box::new(visibility::HideMessages::default()),
+			Box::new(visibility::AntiDeleteMessage::default()),
 			Box::new(blockkeywords::BlockKeywords::default()),
 			Box::new(silenceusers::SilenceUsers::default()),
 			Box::new(splitlarge::SplitLargeMessages::default()),
@@ -683,6 +688,7 @@ impl Registry {
 			display.floor_relative |= patch.floor_relative.unwrap_or(false);
 			display.hide_edited |= patch.hide_edited.unwrap_or(false);
 			display.hold_read_ack |= patch.hold_read_ack.unwrap_or(false);
+			display.preserve_deleted |= patch.preserve_deleted.unwrap_or(false);
 			if let Some(counter) = patch.counter {
 				display.counter = Some(counter);
 			}
