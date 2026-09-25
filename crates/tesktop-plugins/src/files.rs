@@ -174,8 +174,8 @@ impl crate::Plugin for DownloadAllAttachments {
 		self.images = flag_or(values, DOWNLOAD_SETTINGS, "images");
 	}
 
-	fn message_actions(&self) -> &'static [crate::MessageAction] {
-		&[crate::MessageAction {
+	fn message_actions(&self) -> Vec<crate::MessageAction> {
+		vec![crate::MessageAction {
 			id: "download-all",
 			label: "Download every file here",
 		}]
@@ -412,8 +412,8 @@ impl crate::Plugin for QuickMention {
 		}
 	}
 
-	fn message_actions(&self) -> &'static [crate::MessageAction] {
-		&[crate::MessageAction {
+	fn message_actions(&self) -> Vec<crate::MessageAction> {
+		vec![crate::MessageAction {
 			id: "mention-author",
 			label: "Mention this person",
 		}]
@@ -479,8 +479,8 @@ impl crate::Plugin for QuickReply {
 			.collect();
 	}
 
-	fn message_actions(&self) -> &'static [crate::MessageAction] {
-		&[crate::MessageAction {
+	fn message_actions(&self) -> Vec<crate::MessageAction> {
+		vec![crate::MessageAction {
 			id: "quick-reply",
 			label: "Write my usual reply",
 		}]

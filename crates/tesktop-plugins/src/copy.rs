@@ -43,8 +43,8 @@ impl crate::Plugin for CopyUserUrls {
 		}
 	}
 
-	fn message_actions(&self) -> &'static [MessageAction] {
-		&[MessageAction {
+	fn message_actions(&self) -> Vec<MessageAction> {
+		vec![MessageAction {
 			id: "user-url",
 			label: "Copy user link",
 		}]
@@ -70,8 +70,8 @@ impl crate::Plugin for CopyUserMention {
 		}
 	}
 
-	fn message_actions(&self) -> &'static [MessageAction] {
-		&[MessageAction {
+	fn message_actions(&self) -> Vec<MessageAction> {
+		vec![MessageAction {
 			id: "user-mention",
 			label: "Copy mention",
 		}]
@@ -116,8 +116,8 @@ impl crate::Plugin for CopyStickerLinks {
 		self.still = Some(flag_or(values, SETTINGS, "copyAnimatedAsPng"));
 	}
 
-	fn message_actions(&self) -> &'static [MessageAction] {
-		&[MessageAction {
+	fn message_actions(&self) -> Vec<MessageAction> {
+		vec![MessageAction {
 			id: "sticker-link",
 			label: "Copy sticker link",
 		}]

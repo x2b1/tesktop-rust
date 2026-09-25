@@ -69,8 +69,8 @@ impl crate::Plugin for HideMessages {
 		self.is_hidden(message.id)
 	}
 
-	fn message_actions(&self) -> &'static [crate::MessageAction] {
-		&[crate::MessageAction {
+	fn message_actions(&self) -> Vec<crate::MessageAction> {
+		vec![crate::MessageAction {
 			id: "hide",
 			label: "Hide this message",
 		}]

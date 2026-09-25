@@ -279,8 +279,8 @@ impl crate::Plugin for BaseDecoder {
 		self.show_action = flag_or(values, DECODE_SETTINGS, "showAction");
 	}
 
-	fn message_actions(&self) -> &'static [crate::MessageAction] {
-		&[crate::MessageAction {
+	fn message_actions(&self) -> Vec<crate::MessageAction> {
+		vec![crate::MessageAction {
 			id: "decode-base64",
 			label: "Decode the base64 here",
 		}]

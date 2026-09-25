@@ -129,8 +129,8 @@ impl crate::Plugin for AskMeToMute {
 		}
 	}
 
-	fn message_actions(&self) -> &'static [crate::MessageAction] {
-		&[crate::MessageAction {
+	fn message_actions(&self) -> Vec<crate::MessageAction> {
+		vec![crate::MessageAction {
 			id: "mute-reminder",
 			label: "Remind me when a moderator mutes me",
 		}]

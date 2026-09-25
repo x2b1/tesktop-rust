@@ -494,7 +494,7 @@ testcordplugins,WebCordHardened,WebCordHardened,Block Discord telemetry endpoint
 testcordplugins,WebhookSend,WebhookSend,Send Discord webhooks from a tabbed modal with visual embed builder and saved history.,TestcordDevs.x2b,1,False,False,False,False,False,native.ts,native-feature,
 testcordplugins,ZIPplus,ZIP+,Automatically zip specified file types and folders before upload,"EquicordDevs.justjxke,EquicordDevs.SSnow",3,True,False,False,False,False,,rewrite,
 testcordplugins,ZeroWidthSanitizer,ZeroWidthSanitizer,Sanitize outgoing messages (before sending),"{name:""Irritably"",id:928787166916640838n",4,False,False,False,False,False,,portable-logic,clean
-testcordplugins,abreviation,Abbreviation,Enable Abbreviation plugin,TestcordDevs.x2b,8,False,False,False,False,False,,portable-logic,
+testcordplugins,abreviation,Abbreviation,Enable Abbreviation plugin,TestcordDevs.x2b,8,False,False,False,False,False,,portable-logic,reacts
 testcordplugins,accroche,Hook,Enable Hook plugin,"
 {
 name:""Bash"",
@@ -603,7 +603,7 @@ testcordplugins,customStream,Default,Use custom preview instead of screen captur
 name:""TopQ"",
 id:523800559791374356n
 }",7,True,False,False,False,False,,rewrite,
-testcordplugins,customreactionbuttons,CustomReactionButtons,Custom reaction buttons (restart needed after adding/removing),TestcordDevs.x2b,1,False,False,False,False,False,,portable-logic,
+testcordplugins,customreactionbuttons,CustomReactionButtons,Custom reaction buttons (restart needed after adding/removing),TestcordDevs.x2b,1,False,False,False,False,False,,portable-logic,reacts
 testcordplugins,deepsearch,DeepSearch,Maximum number of search results to return,TestcordDevs.x2b,4,False,False,False,False,False,,portable-logic,
 testcordplugins,defaultStatusForever,DefaultStatusForever,Make statuses default to last forever,TestcordDevs.x2b,0,False,False,False,False,False,,portable-logic,
 testcordplugins,define,Define,/define looks up a word's dictionary definition (sent only to you).,"{name:""Sharp"",id:0n}",1,False,False,False,False,False,,portable-ui,

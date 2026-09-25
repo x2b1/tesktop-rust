@@ -27,6 +27,7 @@ pub mod noreplymention;
 pub mod notify;
 pub mod polite;
 pub mod react;
+pub mod reacts;
 pub mod schedule;
 pub mod sendtext;
 pub mod silenceusers;
@@ -515,9 +516,11 @@ pub trait Plugin {
 	fn display(&self) -> display::DisplayPatch {
 		display::DisplayPatch::default()
 	}
-	/// Entries this plugin adds to a message's menu.
-	fn message_actions(&self) -> &'static [MessageAction] {
-		&[]
+	/// Entries this plugin adds to a message's menu. A port builds these from its own
+	/// settings, so the list is owned; the app asks for it when the enabled set changes and
+	/// not per frame.
+	fn message_actions(&self) -> Vec<MessageAction> {
+		Vec::new()
 	}
 	/// Run one of this plugin's actions against a message.
 	fn run_action(&self, _action: &str, _message: &Message) -> Option<ActionResult> {
@@ -614,6 +617,8 @@ impl Registry {
 			Box::new(aftermath::DetectBlock::default()),
 			Box::new(aftermath::QuickDelete::default()),
 			Box::new(aftermath::AutoChannelReact::default()),
+			Box::new(reacts::CustomReactionButtons::default()),
+			Box::new(reacts::Abbreviation::default()),
 			Box::new(blockkeywords::BlockKeywords::default()),
 			Box::new(silenceusers::SilenceUsers::default()),
 			Box::new(splitlarge::SplitLargeMessages::default()),
@@ -1034,17 +1039,14 @@ impl Registry {
 		if !self.any_enabled() {
 			return Vec::new();
 		}
-		self.active()
-			.into_iter()
-			.flat_map(|index| {
-				let id = self.plugins[index].meta().id;
-				self.plugins[index]
-					.message_actions()
-					.iter()
-					.map(move |action| (id, *action))
-					.collect::<Vec<_>>()
-			})
-			.collect()
+		let mut all = Vec::new();
+		for index in self.active() {
+			let id = self.plugins[index].meta().id;
+			for action in self.plugins[index].message_actions() {
+				all.push((id, action));
+			}
+		}
+		all
 	}
 
 	/// Run one action, if the plugin that advertised it is enabled and answers.
