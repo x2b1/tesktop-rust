@@ -3843,9 +3843,7 @@ impl Desktop {
 		// does, and is empty whenever no port draws anything.
 		if self.tesktop_dirty || self.tesktop_markers_channel != self.state.selected {
 			self.tesktop_markers_channel = self.state.selected;
-			let markers = self
-				.tesktop
-				.message_markers(self.state.timeline.iter());
+			let markers = self.tesktop.message_markers(self.state.timeline.iter());
 			self.messaging.message_markers = std::sync::Arc::new(markers);
 		}
 		// Rebuilding the rows is only worth its allocations while the page is open or a change
