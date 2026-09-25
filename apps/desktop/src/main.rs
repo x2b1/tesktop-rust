@@ -3947,6 +3947,8 @@ impl Desktop {
 			oldest_unread,
 			visible: self.state.selected == Some(channel),
 			me,
+			hour: ui::local_now().hour() as u8,
+			playing: self.state.local_game_activity.is_some(),
 		})
 	}
 

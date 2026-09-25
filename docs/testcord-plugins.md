@@ -30,7 +30,8 @@ remembered state.
 | `command` / `command_names` | A typed line that starts with `/` | Expand a slash command into the body to send, and name the commands for the composer's list |
 | `route` | The same body, before it is split | Claim the send so the host edits the previous message instead |
 | `split` | The same body, after the rewrite | Return several bodies, sent in order with `chunk_delay_ms` between them |
-| `notice` | An accepted message, before the state owner queues an alert | Silence the sound, or add a toast in the window |
+| `notice` | An accepted message, before the state owner queues an alert | Silence the sound, or add a toast in the window; the host also supplies the local hour and whether a game is running |
+| `presence` | Startup and settings changes | Ask the owner to be set do not disturb while a game runs |
 | `message_actions` / `run_action` | A message's own menu, then the entry the owner picked | Offer a clipboard or notice action on that message |
 | `display` | Every frame, folded into one `Display` | Choose the clock format, an offset, relative rounding, the edited marker, the composer counter, and whether read state waits for you |
 
@@ -86,6 +87,8 @@ MessageLogger record is session memory and is never written to disk; copy it out
 | Signature | Appends your signature under every message you send | The composer button and composer menu entry that toggle it |
 | EmbeddedURLs | Rewrites a recognised link to the form that embeds inline, leaving everything else alone | TestCord's per-origin map, which this port keeps short to the hosts it recognises |
 | SentFromMyUname | Stamps a "Sent from my" line under what you send, with a per-channel whitelist and a `nouname ` one-message opt-out | Reading your uname: the text is yours to set |
+| QuietHours | No alerts between the hours you pick, wrapping past midnight, with a toast still shown for the conversation you are reading | Nothing; the port is complete |
+| AutoDNDWhilePlaying | Alerts are quiet while a game is running, with an opt-out and a do-not-disturb status intent | Writing the status to Discord, which the app's own presence owns |
 | HideMessages | A hide entry in the message menu, and the message stays out of the conversation until the app restarts, bounded to 2048 ids | Hiding a direct message from the channel list |
 | AntiDeleteMessage | Deleted bodies are kept so you can still read them, with the app's own recovery cache | The per-server exemption and the direct-message switch, because the app already protects direct messages itself |
 | Annoiler | `/annoil` puts a spoiler around every character | Nothing; the port is complete |

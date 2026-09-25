@@ -20,6 +20,7 @@ pub mod display;
 pub mod messagelogger;
 pub mod noreplymention;
 pub mod notify;
+pub mod schedule;
 pub mod sendtext;
 pub mod silenceusers;
 pub mod splitlarge;
@@ -152,6 +153,14 @@ impl Values {
 			_ => None,
 		}
 	}
+}
+
+/// What a port wants the owner's presence to be while a game runs.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Presence {
+	#[default]
+	Keep,
+	DoNotDisturbWhilePlaying,
 }
 
 /// What the host should do with an inbound message.
@@ -359,6 +368,10 @@ pub trait Plugin {
 	}
 	/// Rewrite an accepted inbound message before it enters the timeline.
 	fn mutate_incoming(&mut self, _message: &mut Message) {}
+	/// What this plugin wants the owner's presence to be.
+	fn presence(&self) -> Presence {
+		Presence::Keep
+	}
 	/// What this plugin wants announced for an accepted message.
 	fn notice(&self, _event: &notify::Notify<'_>) -> notify::Notice {
 		notify::Notice::default()
@@ -442,6 +455,8 @@ impl Registry {
 			Box::new(commands::VibeCheck::default()),
 			Box::new(visibility::HideMessages::default()),
 			Box::new(visibility::AntiDeleteMessage::default()),
+			Box::new(schedule::QuietHours::default()),
+			Box::new(schedule::AutoDndWhilePlaying::default()),
 			Box::new(blockkeywords::BlockKeywords::default()),
 			Box::new(silenceusers::SilenceUsers::default()),
 			Box::new(splitlarge::SplitLargeMessages::default()),
@@ -666,6 +681,21 @@ impl Registry {
 			}
 		}
 		false
+	}
+
+	/// The strongest presence change any active port asked for.
+	pub fn presence(&self) -> Presence {
+		if !self.any_enabled() {
+			return Presence::Keep;
+		}
+		self.active()
+			.into_iter()
+			.map(|index| self.plugins[index].presence())
+			.max_by_key(|presence| match presence {
+				Presence::Keep => 0,
+				Presence::DoNotDisturbWhilePlaying => 1,
+			})
+			.unwrap_or_default()
 	}
 
 	/// Fold every active port's opinion about announcing a message.

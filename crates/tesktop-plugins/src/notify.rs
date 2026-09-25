@@ -18,6 +18,10 @@ pub struct Notify<'a> {
 	/// The conversation the owner is looking at right now.
 	pub visible: bool,
 	pub me: Id,
+	/// The hour in the owner's own zone, so a schedule reads the clock on the wall.
+	pub hour: u8,
+	/// A game is running right now, as the app already tracks.
+	pub playing: bool,
 }
 
 /// Whether to raise the app's own alert, and whether to say something in the window too.
@@ -366,6 +370,8 @@ mod tests {
 			oldest_unread: oldest,
 			visible: false,
 			me: Id(1),
+			hour: 12,
+			playing: false,
 		}
 	}
 

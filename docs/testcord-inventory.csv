@@ -7,7 +7,7 @@ plugins,alwaysTrust,AlwaysTrust,Remove the untrusted domain popup when opening l
 plugins,anonymiseFileNames,AnonymiseFileNames,Whether to anonymise file names by default,Devs.fawn,9,True,False,False,False,False,,rewrite,
 plugins,appleMusic.desktop,AppleMusicRichPresence,Which type of activity,Devs.RyanCaoDev,16,False,False,False,False,False,native.ts,native-feature,
 plugins,arRPC.web,WebRichPresence,Client plugin for arRPC to enable RPC on Discord Web (experimental),Devs.Ducko,0,False,False,False,False,False,,portable-logic,
-plugins,autoDndWhilePlaying.discordDesktop,AutoDNDWhilePlaying,Status to set while playing a game,Devs.thororen,2,False,False,False,True,False,,portable-hook,
+plugins,autoDndWhilePlaying.discordDesktop,AutoDNDWhilePlaying,Status to set while playing a game,Devs.thororen,2,False,False,False,True,False,,portable-hook,schedule
 plugins,betterFolders,BetterFolders,Display servers from folder on dedicated sidebar,"Devs.juby,Devs.AutumnVN,Devs.Nuckyz",11,True,False,False,True,False,,rewrite,
 plugins,betterGifAltText,BetterGifAltText,Change GIF alt text from simply being 'GIF' to containing the gif tags / filename,Devs.Ven,0,True,False,False,False,False,,rewrite,
 plugins,betterGifPicker,BetterGifPicker,Makes the gif picker open the favourite category by default,Devs.Samwich,0,True,False,False,False,False,,rewrite,
@@ -756,7 +756,7 @@ testcordplugins,purgeMessages,PurgeMessages,Purges messages from a channel,Testc
 testcordplugins,quickDelete,QuickDelete,Keyboard shortcut to delete your last message in the current channel.,TestcordDevs.Sharp,2,False,False,False,False,False,,portable-logic,
 testcordplugins,quickSnippet,QuickSnippet,list of channel IDs to whitelist,TestcordDevs.x2b,2,True,False,False,False,False,,rewrite,
 testcordplugins,quickmsg,QuickMsg,"Delay in milliseconds between sending and deleting the message (lower = harder to catch, but may fail if the s",TestcordDevs.x2b,3,False,False,False,False,False,,portable-logic,
-testcordplugins,quietHours,QuietHours,"Quiet hours start (24h hour, 0-23)","{name:""Sharp"",id:0n}",2,False,False,False,False,False,,portable-logic,
+testcordplugins,quietHours,QuietHours,"Quiet hours start (24h hour, 0-23)","{name:""Sharp"",id:0n}",2,False,False,False,False,False,,portable-logic,schedule
 testcordplugins,rPunisher,retardExterminator,Enable automatic banning of users who spam rejoin voice channels,TestcordDevs.dot,6,False,False,False,True,False,,excluded,
 testcordplugins,readableSpoilers,ReadableSpoilers,Gives unrevealed spoilers a subtle neon outline so you can spot them at a glance.,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-logic,
 testcordplugins,realtimeTimestamps,RealtimeTimestamps,Seconds format displayed on every message timestamp,"{name:""Nightcord"",id:253979869n}",3,False,False,False,False,False,,portable-logic,
