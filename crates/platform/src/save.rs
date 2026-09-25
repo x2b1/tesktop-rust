@@ -17,6 +17,22 @@ pub fn extension_source(
 	}
 }
 
+/// TestCord's own `settings.json`, for importing plugin choices into tesktop2.
+pub fn testcord_settings_source(
+	parent: Arc<winit::window::Window>,
+) -> impl std::future::Future<Output = Option<PathBuf>> + Send + 'static {
+	let dialog = rfd::AsyncFileDialog::new()
+		.set_parent(parent.as_ref())
+		.set_title("Import TestCord settings")
+		.add_filter("TestCord settings", &["json"])
+		.pick_file();
+	async move {
+		let file = dialog.await?;
+		drop(parent);
+		Some(file.path().to_owned())
+	}
+}
+
 pub fn icon_source(
 	parent: Arc<winit::window::Window>,
 	title: &'static str,

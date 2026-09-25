@@ -172,10 +172,12 @@ impl<'de> serde::Deserialize<'de> for CachedEmbeds {
 	}
 }
 impl LocalStore {
+	/// The account-isolated data directory every local store shares.
+	pub fn data_root() -> Option<std::path::PathBuf> {
+		Some(dirs::data_local_dir()?.join("tesktop2"))
+	}
 	pub fn open_default() -> Result<Self> {
-		let root = dirs::data_local_dir()
-			.ok_or(StoreError::Unavailable)?
-			.join("tesktop2");
+		let root = Self::data_root().ok_or(StoreError::Unavailable)?;
 		std::fs::create_dir_all(&root).map_err(|_| StoreError::Unavailable)?;
 		#[cfg(unix)]
 		{

@@ -58,7 +58,10 @@ use client_core::{
 };
 use eframe::egui;
 use model::Delivery;
-use std::{sync::Arc, time::Duration};
+use std::{
+	sync::{Arc, mpsc},
+	time::{Duration, Instant},
+};
 use zeroize::Zeroizing;
 
 /// Sign-in header strip: doubles as the window drag region, so it clears the traffic lights.
@@ -364,7 +367,8 @@ fn main() -> eframe::Result {
 		"tesktop2",
 		options,
 		Box::new(move |cc| {
-			let desktop = Desktop::new(cc, demo, frame_sample, transparency_available)?;
+			let mut desktop = Desktop::new(cc, demo, frame_sample, transparency_available)?;
+			desktop.tesktop_load();
 			if start_minimized {
 				cc.egui_ctx
 					.send_viewport_cmd(egui::ViewportCommand::Minimized(true));
@@ -727,6 +731,13 @@ impl SessionEnd {
 struct Desktop {
 	extensions: extension_bridge::Bridge,
 	extension_close_pending: bool,
+	/// The bundled TestCord ports and their stored settings.
+	tesktop: tesktop_plugins::Registry,
+	/// Where the plugin settings file lives, once the data directory is known.
+	tesktop_root: Option<std::path::PathBuf>,
+	tesktop_picker: Option<std::sync::mpsc::Receiver<Option<std::path::PathBuf>>>,
+	tesktop_dirty: bool,
+	tesktop_epoch: Instant,
 	login: Option<platform::LoginView>,
 	captcha: captcha::Captcha,
 	connection: Option<connection::Connection>,
@@ -827,6 +838,55 @@ struct Desktop {
 	synthetic_id: u64,
 	token_input: Zeroizing<String>,
 }
+
+/// One settings row for the TestCord page, falling back to the value the plugin declares.
+fn tesktop_field(
+	registry: &tesktop_plugins::Registry,
+	id: &str,
+	setting: &tesktop_plugins::Setting,
+) -> ui::testcord::Field {
+	use tesktop_plugins::{Fallback, SettingKind};
+	let stored = registry.value(id, setting.key);
+	let (kind, fallback) = match (setting.kind, setting.default) {
+		(SettingKind::Toggle, Fallback::Flag(value)) => {
+			(ui::testcord::Kind::Toggle, ui::testcord::Value::Flag(value))
+		}
+		(SettingKind::Text { multiline }, Fallback::Text(value)) => (
+			ui::testcord::Kind::Text { multiline },
+			ui::testcord::Value::Text(value.to_string()),
+		),
+		(SettingKind::Number { min, max }, Fallback::Number(value)) => (
+			ui::testcord::Kind::Number { min, max },
+			ui::testcord::Value::Number(value),
+		),
+		_ => (ui::testcord::Kind::Toggle, ui::testcord::Value::Flag(false)),
+	};
+	let value = match (&kind, stored) {
+		(ui::testcord::Kind::Toggle, Some(serde_json::Value::Bool(stored))) => {
+			ui::testcord::Value::Flag(*stored)
+		}
+		(ui::testcord::Kind::Number { .. }, Some(serde_json::Value::Number(stored))) => {
+			ui::testcord::Value::Number(stored.as_i64().unwrap_or_default())
+		}
+		(_, Some(serde_json::Value::String(stored))) => ui::testcord::Value::Text(stored.clone()),
+		_ => fallback,
+	};
+	ui::testcord::Field {
+		key: setting.key.to_string(),
+		label: setting.label.to_string(),
+		kind,
+		value,
+	}
+}
+
+fn tesktop_value(value: ui::testcord::Value) -> serde_json::Value {
+	match value {
+		ui::testcord::Value::Flag(value) => serde_json::Value::Bool(value),
+		ui::testcord::Value::Text(value) => serde_json::Value::String(value),
+		ui::testcord::Value::Number(value) => serde_json::Value::from(value),
+	}
+}
+
 /// Check only navigation whose effective access can change with this event.
 fn access_candidates(state: &State, event: &Event) -> Vec<model::Id> {
 	use client_core::permissions::Event as Permission;
@@ -1854,6 +1914,11 @@ impl Desktop {
 		Ok(Self {
 			extensions: extension_bridge::Bridge::default(),
 			extension_close_pending: false,
+			tesktop: tesktop_plugins::Registry::new(),
+			tesktop_root: None,
+			tesktop_picker: None,
+			tesktop_dirty: false,
+			tesktop_epoch: Instant::now(),
 			login: None,
 			captcha: captcha::Captcha::default(),
 			connection: None,
@@ -2744,7 +2809,10 @@ impl Desktop {
 		}
 	}
 	/// Dispatches one queued command to the demo or live transport.
-	fn command(&mut self, command: Command) {
+	fn command(&mut self, mut command: Command) {
+		if !self.tesktop_rewrite(&mut command) {
+			return;
+		}
 		if matches!(&command, Command::Interaction(client_core::interactions::Request {data:client_core::interactions::Data::Modal{components,..},..}) if interaction_uploads::has_files(components))
 		{
 			self.interaction_upload(command);
@@ -3682,6 +3750,268 @@ impl Desktop {
 			self.state.command_rejected(command);
 		}
 	}
+
+	/// Monotonic milliseconds, so plugin cooldowns never read a wall clock.
+	fn tesktop_now(&self) -> u64 {
+		self.tesktop_epoch.elapsed().as_millis() as u64
+	}
+
+	/// Read the stored plugin settings once the data directory is known.
+	fn tesktop_load(&mut self) {
+		let Some(root) = local_store::LocalStore::data_root() else {
+			return;
+		};
+		if let Some(stored) = tesktop_plugins::store::load(&root) {
+			tesktop_plugins::store::restore(&mut self.tesktop, &stored);
+		}
+		self.tesktop_root = Some(root);
+	}
+
+	/// Keep the settings page, the import picker, the saved file and the send queue in step.
+	fn tesktop_tick(&mut self, ctx: &egui::Context) {
+		// Rebuilding the rows is only worth its allocations while the page is open or a change
+		// has not been written back yet.
+		if self.messaging.testcord_settings_open() || self.tesktop_dirty {
+			self.messaging.testcord.entries = self
+				.tesktop
+				.metas()
+				.iter()
+				.map(|meta| {
+					let mut entry = ui::testcord::Entry::new(
+						meta.id,
+						meta.name,
+						meta.description,
+						meta.authors,
+						meta.tags,
+						self.tesktop.enabled(meta.id),
+					);
+					entry.summary = self.tesktop.summary(meta.id).unwrap_or_default();
+					entry.log = self.tesktop.export(meta.id).is_some();
+					entry.fields = self
+						.tesktop
+						.settings_of(meta.id)
+						.iter()
+						.map(|setting| tesktop_field(&self.tesktop, meta.id, setting))
+						.collect();
+					entry
+				})
+				.collect();
+		}
+		if let Some(picker) = &self.tesktop_picker {
+			match picker.try_recv() {
+				Ok(Some(source)) => self.tesktop_import(&source),
+				Ok(None) => {}
+				Err(mpsc::TryRecvError::Disconnected) => self.tesktop_picker = None,
+				Err(mpsc::TryRecvError::Empty) => {}
+			}
+		}
+		for request in std::mem::take(&mut self.messaging.testcord.requests) {
+			match request {
+				ui::testcord::Request::SetEnabled { id, enabled } => {
+					self.tesktop.set_enabled(&id, enabled);
+					self.tesktop_dirty = true;
+				}
+				ui::testcord::Request::SetValue { id, key, value } => {
+					self.tesktop.set_value(&id, &key, tesktop_value(value));
+					self.tesktop_dirty = true;
+				}
+				ui::testcord::Request::CopyLog { id } => {
+					if let Some(log) = self.tesktop.export(&id) {
+						ctx.copy_text(log);
+						self.messaging
+							.testcord
+							.report("Copied the log to the clipboard.");
+					}
+				}
+				ui::testcord::Request::Import if self.tesktop_picker.is_none() => {
+					let (send, receive) = mpsc::sync_channel(1);
+					let future = platform::save::testcord_settings_source(self.window.clone());
+					let ctx = ctx.clone();
+					self.runtime.spawn(async move {
+						let _ = send.send(future.await);
+						ctx.request_repaint();
+					});
+					self.tesktop_picker = Some(receive);
+				}
+				ui::testcord::Request::Import => {}
+			}
+		}
+		if self.tesktop_dirty
+			&& let Some(root) = self.tesktop_root.clone()
+		{
+			match tesktop_plugins::store::save(&root, &self.tesktop) {
+				Ok(()) => self.tesktop_dirty = false,
+				Err(error) => self
+					.messaging
+					.toasts
+					.push(ui::design::Level::Warning, error),
+			}
+		}
+		self.tesktop_send_replies();
+	}
+
+	fn tesktop_import(&mut self, source: &std::path::Path) {
+		let Ok(bytes) = std::fs::read(source) else {
+			self.messaging
+				.testcord
+				.report("That file could not be read.");
+			return;
+		};
+		if bytes.len() > tesktop_plugins::MAX_SETTINGS_BYTES {
+			self.messaging
+				.testcord
+				.report("That settings file is too large to import.");
+			return;
+		}
+		let Ok(value) = serde_json::from_slice::<serde_json::Value>(&bytes) else {
+			self.messaging
+				.testcord
+				.report("That file is not a TestCord settings file.");
+			return;
+		};
+		let imported = tesktop_plugins::store::import_testcord(&mut self.tesktop, &value);
+		self.tesktop_dirty = true;
+		self.messaging.testcord.report(if imported == 0 {
+			"No bundled TestCord plugins were found in that file.".to_string()
+		} else {
+			format!("Imported {imported} TestCord plugins.")
+		});
+	}
+
+	/// A plugin may hold a reply until its delay elapsed; it still goes through the send path.
+	fn tesktop_send_replies(&mut self) {
+		for reply in self.tesktop.take_replies(self.tesktop_now()) {
+			let selected = self.state.selected == Some(reply.channel);
+			if !selected || !self.state.can_send(reply.channel) {
+				self.messaging.toasts.push(
+					ui::design::Level::Warning,
+					"Auto-reply skipped; open that channel to send it",
+				);
+				continue;
+			}
+			if let Some(command) = self.state.prepare_text_send(&reply.content) {
+				self.command(command);
+			}
+		}
+	}
+
+	/// Let the bundled ports rewrite or veto an outgoing body. False means it was not sent.
+	fn tesktop_rewrite(&mut self, command: &mut Command) -> bool {
+		let me = self
+			.state
+			.user
+			.as_ref()
+			.map_or(model::Id(0), |user| user.id);
+		let (channel, sending, nonce) = match command {
+			Command::Send { channel, nonce, .. } => (*channel, true, Some(nonce.clone())),
+			Command::Edit { channel, .. } => (*channel, false, None),
+			_ => return true,
+		};
+		let mut body = match command {
+			Command::Send { content, .. } | Command::Edit { content, .. } => {
+				std::mem::take(content)
+			}
+			_ => return true,
+		};
+		let context = tesktop_plugins::SendContext::new(channel, me);
+		let outcome = if sending {
+			self.tesktop.before_send(&context, &mut body)
+		} else {
+			self.tesktop.before_edit(&context, &mut body)
+		};
+		let outcome = match outcome {
+			Ok(()) => {
+				// The pending row must show the body that goes out, not the typed one.
+				if let Some(nonce) = &nonce
+					&& let Some(pending) = self
+						.state
+						.pending
+						.iter_mut()
+						.find(|pending| &pending.nonce == nonce)
+				{
+					pending.content.clone_from(&body);
+				}
+				true
+			}
+			Err(reason) => {
+				if let Some(nonce) = nonce {
+					self.state.apply(Envelope {
+						generation: self.state.generation,
+						event: Event::SendResult {
+							nonce,
+							result: Err(Failure::ProtocolAt(reason)),
+						},
+					});
+				} else {
+					self.state.status = reason;
+				}
+				false
+			}
+		};
+		if let Command::Send { content, .. } | Command::Edit { content, .. } = command {
+			*content = body;
+		}
+		outcome
+	}
+
+	/// Offer an inbound event to the bundled ports. True means a plugin hid the message.
+	fn tesktop_observe(&mut self, event: &Event) -> bool {
+		let me = self
+			.state
+			.user
+			.as_ref()
+			.map_or(model::Id(0), |user| user.id);
+		let now = self.tesktop_now();
+		let channel = match event {
+			Event::Message(message) => message.channel,
+			Event::Patch(patch) => patch.channel,
+			Event::Delete { channel, .. } => *channel,
+			_ => return false,
+		};
+		let inbound = tesktop_plugins::Inbound::new(
+			channel,
+			self.state.channel(channel).and_then(|found| found.guild),
+			me,
+			now,
+		);
+		match event {
+			Event::Message(message) => {
+				self.tesktop
+					.observe(&inbound, tesktop_plugins::InboundEvent::Created(message))
+					== tesktop_plugins::Verdict::Ignore
+			}
+			Event::Patch(patch) => {
+				let model::Patch::Value(after) = &patch.content else {
+					return false;
+				};
+				let Some(previous) = self.state.timeline.get(patch.id) else {
+					return false;
+				};
+				let edit = tesktop_plugins::Edit {
+					channel,
+					id: patch.id,
+					author: &previous.author,
+					before: &previous.content,
+					after,
+				};
+				self.tesktop
+					.observe(&inbound, tesktop_plugins::InboundEvent::Edited(&edit))
+					== tesktop_plugins::Verdict::Ignore
+			}
+			Event::Delete { id, .. } => {
+				self.tesktop.observe(
+					&inbound,
+					tesktop_plugins::InboundEvent::Deleted {
+						channel,
+						id: *id,
+						last: self.state.timeline.get(*id),
+					},
+				) == tesktop_plugins::Verdict::Ignore
+			}
+			_ => false,
+		}
+	}
+
 	/// Boot stage while a saved login is being restored, so launch shows progress
 	/// instead of a welcome card the user cannot act on yet.
 	fn restoring(&self) -> Option<&'static str> {
@@ -4915,6 +5245,10 @@ impl Desktop {
 			if event.generation != self.state.generation {
 				continue;
 			}
+			// A hidden message is treated as if the service had never sent it.
+			if self.tesktop_observe(&event.event) {
+				continue;
+			}
 			let user_action_notice = user_action_notice(&event.event);
 			let user_action_was_pending =
 				user_action_notice.is_some() && self.state.user_action_pending();
@@ -5416,6 +5750,7 @@ impl eframe::App for Desktop {
 			&self.window,
 			self.fixture_only,
 		);
+		self.tesktop_tick(ctx);
 		self.sync_customization(ctx);
 		#[cfg(feature = "demo")]
 		if self.demo_typing
@@ -6433,6 +6768,36 @@ impl eframe::App for Desktop {
 #[cfg(test)]
 mod tests {
 	use super::*;
+	#[test]
+	fn the_settings_page_shows_stored_values_and_the_declared_default() {
+		let mut registry = tesktop_plugins::Registry::new();
+		let blocked = registry
+			.settings_of("BlockKeywords")
+			.iter()
+			.find(|setting| setting.key == "blockedWords")
+			.unwrap();
+		assert!(matches!(
+			tesktop_field(&registry, "BlockKeywords", blocked).value,
+			ui::testcord::Value::Text(ref value) if value.is_empty()
+		));
+		registry.set_value("BlockKeywords", "blockedWords", "spoiler".into());
+		assert!(matches!(
+			tesktop_field(&registry, "BlockKeywords", blocked).value,
+			ui::testcord::Value::Text(ref value) if value == "spoiler"
+		));
+	}
+	#[test]
+	fn control_values_round_trip_through_the_registry() {
+		let value = ui::testcord::Value::Number(1_500);
+		assert_eq!(
+			tesktop_value(value),
+			serde_json::Value::Number(1_500.into())
+		);
+		assert_eq!(
+			tesktop_value(ui::testcord::Value::Flag(true)),
+			serde_json::Value::Bool(true)
+		);
+	}
 	#[test]
 	fn user_action_results_use_toasts() {
 		let success = Event::UserAction(client_core::user_actions::Event::Written {

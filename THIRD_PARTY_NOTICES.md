@@ -219,6 +219,17 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
+# Bundled TestCord ports (September 25, 2026)
+
+The native TestCord plugin runtime compiles owner-supplied keyword and trigger patterns with
+**regex 1.13.1** (MIT OR Apache-2.0) and its **regex-automata 0.4.18** and
+**regex-syntax 0.8.11** crates under the same terms. Their unmodified license texts are
+bundled at `assets/licenses/files/regex-1.13.1-LICENSE-*`,
+`assets/licenses/files/regex-automata-0.4.18-LICENSE-*` and
+`assets/licenses/files/regex-syntax-0.8.11-LICENSE-*`; `Cargo.lock` records the registry
+archive checksums. The ClearURLs table shipped with the client is an original subset written
+for this repository, not the ClearURLs rule database, which stays under its own license.
+
 # Community extension runtime (September 12, 2026)
 
 Wasmi 2.0.0 and its core, collections and IR crates are MIT OR Apache-2.0.

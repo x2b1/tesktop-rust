@@ -90,6 +90,7 @@ mod server_stickers;
 mod settings;
 mod shortcuts;
 mod switcher;
+pub mod testcord;
 mod thumbhash;
 mod timeline;
 #[cfg(test)]
@@ -184,6 +185,7 @@ pub struct MessagingUi {
 	interaction_components: components::Components,
 	pub verification: VerificationUi,
 	pub extensions: ExtensionUi,
+	pub testcord: crate::testcord::TestCord,
 	friends: friends::Friends,
 	account_menu: account_menu::AccountMenu,
 	pub own_presence: model::OwnPresence,

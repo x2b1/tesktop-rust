@@ -11,6 +11,7 @@ license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]
 extensions = { path = "crates/extensions" }
+tesktop-plugins = { path = "crates/tesktop-plugins" }
 discord-voice = { path = "crates/discord-voice" }
 model = { path = "crates/model" }
 client-core = { path = "crates/client-core" }
@@ -30,6 +31,7 @@ rasterlottie = { version = "=0.2.2", default-features = false }
 tokio-tungstenite = { version = "=0.30.0", default-features = false, features = ["connect", "rustls-tls-webpki-roots"] }
 futures-util = { version = "0.3", default-features = false, features = ["sink", "std"] }
 flate2 = "1"
+regex = "=1.13.1"
 zeroize = "1.8"
 thiserror = "2"
 url = "2"

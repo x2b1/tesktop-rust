@@ -30,11 +30,12 @@ enum Page {
 	Storage,
 	Updates,
 	Extensions,
+	TestCord,
 	Themes,
 }
 impl Page {
 	/// Every page in sidebar order; the narrow-window page picker lists them the same way.
-	const ALL: [Self; 14] = [
+	const ALL: [Self; 15] = [
 		Self::Account,
 		Self::Profile,
 		Self::MessagingPermissions,
@@ -47,6 +48,7 @@ impl Page {
 		Self::Activity,
 		Self::General,
 		Self::Updates,
+		Self::TestCord,
 		Self::Themes,
 		Self::Extensions,
 	];
@@ -75,7 +77,10 @@ impl Page {
 				Self::Updates,
 			],
 		),
-		("Customization", &[Self::Themes, Self::Extensions]),
+		(
+			"Customization",
+			&[Self::TestCord, Self::Themes, Self::Extensions],
+		),
 	];
 	fn label(self) -> &'static str {
 		match self {
@@ -92,6 +97,7 @@ impl Page {
 			Self::Storage => "Data & Privacy",
 			Self::Updates => "Updates",
 			Self::Extensions => "Extensions",
+			Self::TestCord => "TestCord Plugins",
 			Self::Themes => "Themes",
 		}
 	}
@@ -112,6 +118,7 @@ impl Page {
 			Self::Storage => "What tesktop2 keeps on this device.",
 			Self::Updates => "Keep tesktop2 up to date on this device.",
 			Self::Extensions => "Manage community plugins.",
+			Self::TestCord => "TestCord plugins ported to this client.",
 			Self::Themes => "Choose a community theme.",
 		}
 	}
@@ -146,6 +153,9 @@ impl Page {
 				"system keybinds keyboard shortcuts custom default formatting navigation"
 			}
 			Self::Extensions => "extensions plugins shop store catalog import community tools",
+			Self::TestCord => {
+				"testcord plugins clearurls blockkeywords autoreply messagelogger tracking keywords import settings"
+			}
 			Self::Themes => "themes shop store catalog import community appearance colors",
 		};
 		keywords.contains(query)
@@ -232,6 +242,10 @@ impl MessagingUi {
 			Page::Extensions => Some(extensions::ExtensionKind::Plugin),
 			_ => None,
 		}
+	}
+
+	pub fn testcord_settings_open(&self) -> bool {
+		self.settings.open && self.settings.page == Page::TestCord
 	}
 
 	pub fn voice_settings_open(&self) -> bool {
@@ -425,6 +439,7 @@ impl MessagingUi {
 										&mut self.keybind_capture,
 										self.global_keybind_status,
 									),
+									Page::TestCord => self.testcord.show(ui),
 									Page::Extensions | Page::Themes => {
 										self.extensions
 											.select_themes(self.settings.page == Page::Themes);
