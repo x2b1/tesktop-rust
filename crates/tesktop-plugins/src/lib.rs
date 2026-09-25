@@ -12,6 +12,7 @@ pub mod autoreply;
 pub mod blockkeywords;
 pub mod body;
 pub mod burst;
+pub mod casing;
 pub mod clearurls;
 pub mod copy;
 pub mod display;
@@ -413,6 +414,9 @@ impl Registry {
 			Box::new(burst::MessageBurst::default()),
 			Box::new(stamp::EmbeddedUrls::default()),
 			Box::new(stamp::SentFromMyUname::default()),
+			Box::new(casing::WriteUpperCase::default()),
+			Box::new(casing::FixCodeblockGap),
+			Box::new(casing::NormalizeMessageLinks),
 			Box::new(blockkeywords::BlockKeywords::default()),
 			Box::new(silenceusers::SilenceUsers::default()),
 			Box::new(splitlarge::SplitLargeMessages::default()),

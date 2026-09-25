@@ -48,7 +48,7 @@ plugins,f8break,F8Break,Pause the client when you press F8 with DevTools (+ brea
 plugins,fakeNitro,FakeNitro,Allows sending fake emojis (also bypasses missing permission to use custom emojis),"Devs.Arjix,Devs.D3SOX,Devs.Ven,Devs.fawn",12,True,False,False,False,False,,rewrite,
 plugins,fakeProfileThemes,FakeProfileThemes,Default color source if both are present,"Devs.Alyxia,Devs.Remty",1,True,False,False,False,False,,rewrite,
 plugins,favEmojiFirst,FavoriteEmojiFirst,Manage your emoji aliases.,"Devs.Aria,Devs.Ven,EquicordDevs.justjxke",3,True,True,False,False,False,,rewrite,
-plugins,fixCodeblockGap,FixCodeblockGap,Removes the gap between codeblocks and text below it,Devs.Grzesiek11,0,True,False,False,False,False,,rewrite,
+plugins,fixCodeblockGap,FixCodeblockGap,Removes the gap between codeblocks and text below it,Devs.Grzesiek11,0,True,False,False,False,False,,rewrite,casing
 plugins,fixImagesQuality,FixImagesQuality,Also load the original image in Chat. WARNING: Read the caveats above,"Devs.Nuckyz,Devs.Ven",1,True,False,False,False,False,,rewrite,
 plugins,fixSpotifyEmbeds.desktop,FixSpotifyEmbeds,The volume % to set for spotify embeds. Anything above 10% is veeeery loud,Devs.Ven,1,False,False,False,False,False,native.ts,native-feature,
 plugins,fixYoutubeEmbeds.desktop,FixYoutubeEmbeds,Adds descriptions to youtube video embeds,"Devs.coolelectronics,Devs.arHSM",1,True,False,False,False,False,native.ts,native-feature,
@@ -290,7 +290,7 @@ equicordplugins,noNitroUpsell,NoNitroUpsell,Removes all of Discord's nitro upsel
 equicordplugins,noPushToTalk,NoPushToTalk,Bypasses the push-to-talk requirement for voice activity in channels that enforce it.,EquicordDevs.omaw,0,True,False,False,False,False,,rewrite,
 equicordplugins,noRPC.discordDesktop,NoRPC,Disables Discord's RPC server.,Devs.Cyn,0,True,False,False,False,False,,rewrite,
 equicordplugins,noRoleHeaders,NoRoleHeaders,We are all equal!! Removes the role headers in the member list.,Devs.Samwich,0,True,False,False,False,False,,rewrite,
-equicordplugins,normalizeMessageLinks,NormalizeMessageLinks,Strip canary/ptb from message links,Devs.bb010g,0,True,False,False,False,False,,rewrite,
+equicordplugins,normalizeMessageLinks,NormalizeMessageLinks,Strip canary/ptb from message links,Devs.bb010g,0,True,False,False,False,False,,rewrite,casing
 equicordplugins,notificationTitle.discordDesktop,NotificationTitle,Makes desktop notifications more informative,Devs.Kyuuhachi,0,True,False,False,False,False,,rewrite,
 equicordplugins,orbolayBridge,OrbolayBridge,Port to connect to,EquicordDevs.SpikeHD,2,False,False,False,True,False,,portable-hook,
 equicordplugins,partyMode,PartyMode,Party intensity,Devs.UwUDev,1,False,False,False,False,False,,portable-logic,
@@ -371,7 +371,7 @@ equicordplugins,webpackTarball,WebpackTarball,Include patched modules,Devs.Kyuuh
 equicordplugins,whitelistedEmojis,WhitelistedEmojis,Hide default Unicode emojis from the autocomplete unless whitelisted.,EquicordDevs.creations,7,True,False,False,False,False,,rewrite,
 equicordplugins,whosWatching,WhosWatching,Show spectators under screenshare panel,"EquicordDevs.Fres,Devs.thororen",1,True,False,False,False,False,,rewrite,
 equicordplugins,wigglyText,WigglyText,Animation intensity in px,EquicordDevs.nexpid,1,True,False,False,False,False,,rewrite,
-equicordplugins,writeUpperCase,WriteUpperCase,Strings not to capitilise (seperate with a comma),"Devs.Samwich,EquicordDevs.KrystalSkull",0,False,False,False,False,False,,portable-logic,
+equicordplugins,writeUpperCase,WriteUpperCase,Strings not to capitilise (seperate with a comma),"Devs.Samwich,EquicordDevs.KrystalSkull",0,False,False,False,False,False,,portable-logic,casing
 equicordplugins,zipPreview,ZipPreview,Previews ZIP contents inside file attachments.,EquicordDevs.justjxke,0,True,False,False,False,False,native.ts,native-feature,
 testcordplugins,2FA HIder,1FA,hide the 2fa moderation warning because annoying,"{id:1003477997728313405n,name:""Death""}",0,True,False,False,False,False,,rewrite,
 testcordplugins,AnonLi,AnonLi,Anon.li API key used for Drop uploads.,"{name:""irritably"",id:928787166916640838n",6,False,False,False,False,False,native.ts,native-feature,
