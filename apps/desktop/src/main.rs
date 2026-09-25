@@ -4193,6 +4193,12 @@ impl Desktop {
 					self.command(command);
 				}
 			}
+			tesktop_plugins::Intent::Leave { channel } => {
+				self.command(Command::GroupAction {
+					action: client_core::group_actions::Action::Leave(channel),
+					request: self.state.request.wrapping_add(1),
+				});
+			}
 			tesktop_plugins::Intent::React {
 				channel,
 				message,

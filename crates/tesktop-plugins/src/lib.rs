@@ -28,6 +28,7 @@ pub mod messagelogger;
 pub mod noreplymention;
 pub mod notify;
 pub mod polite;
+pub mod quiet;
 pub mod react;
 pub mod reacts;
 pub mod schedule;
@@ -286,6 +287,8 @@ pub enum Intent {
 		emoji: String,
 		add: bool,
 	},
+	/// Leave a group conversation. The app checks the access and asks for the request id.
+	Leave { channel: model::Id },
 }
 
 /// Where a port is standing when it names a service action, so it can say which message it
@@ -626,6 +629,8 @@ impl Registry {
 			Box::new(reacts::CustomReactionButtons::default()),
 			Box::new(reacts::Abbreviation::default()),
 			Box::new(filter::RobloxFilter::default()),
+			Box::new(quiet::AutoDeleteDms::default()),
+			Box::new(quiet::StartupTimings::default()),
 			Box::new(forget::AutoDeleter::default()),
 			Box::new(blockkeywords::BlockKeywords::default()),
 			Box::new(silenceusers::SilenceUsers::default()),

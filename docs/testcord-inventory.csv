@@ -135,7 +135,7 @@ plugins,silentTyping,SilentTyping,Toggle functionality of your own typing indica
 plugins,sortFriendRequests,SortFriends,Show dates on friend requests,"Devs.Megu,EquicordDevs.CallMeGii",1,True,False,False,False,False,,rewrite,
 plugins,spotifyCrack,SpotifyCrack,Disable Spotify auto-pause,"Devs.Cyn,Devs.Nuckyz",2,True,False,False,False,False,,rewrite,
 plugins,spotifyShareCommands,SpotifyShareCommands,"Share your current Spotify track, album or artist via slash command (/track, /album, /artist)",Devs.katlyn,1,False,False,False,False,False,,portable-ui,
-plugins,startupTimings,StartupTimings,Adds Startup Timings to the Settings menu,Devs.Megu,0,False,False,False,False,False,,portable-logic,
+plugins,startupTimings,StartupTimings,Adds Startup Timings to the Settings menu,Devs.Megu,0,False,False,False,False,False,,portable-logic,quiet
 plugins,stickerPaste,StickerPaste,Makes picking a sticker in the sticker picker insert it into the chatbox instead of instantly sending,Devs.ImBanana,0,True,False,False,False,False,,rewrite,
 plugins,streamerModeOnStream,StreamerModeOn,Automatically enables streamer mode when you start streaming in Discord,Devs.IcedMarina,1,False,False,False,True,False,,portable-hook,
 plugins,superReactionTweaks,SuperReactionTweaks,Reaction picker will default to Super Reactions,"Devs.FieryFlames,Devs.ant0n",4,True,False,False,False,False,,rewrite,
@@ -533,7 +533,7 @@ testcordplugins,autoChannelReact,AutoChannelReact,Channel reaction rules (JSON f
 testcordplugins,autoClaim,AutoClaim,allowed guilds separated by /,TestcordDevs.dot,6,True,False,False,True,False,,rewrite,
 testcordplugins,autoCorrect,AutoCorrectNC,Where to show the button,"{name:""Nightcord"",id:0n}",10,False,False,False,False,False,,portable-logic,
 testcordplugins,autoDeco,AutoDisconnect,Enable AutoDeco,TestcordDevs.x2b,3,False,False,False,True,False,,excluded,
-testcordplugins,autoDeleteDms,AutoDeleteDMs,Delete messages after (value),TestcordDevs.x2b,5,False,False,False,False,False,,portable-logic,
+testcordplugins,autoDeleteDms,AutoDeleteDMs,Delete messages after (value),TestcordDevs.x2b,5,False,False,False,False,False,,portable-logic,quiet
 testcordplugins,autoDeleter,AutoDeleter,Enable automatic message deletion,"
 {
 name:""Bash"",
