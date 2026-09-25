@@ -32,10 +32,12 @@ mod extension_actions;
 mod extension_admin_actions;
 mod extension_app;
 mod extension_server_actions;
-mod extensions_ui;
+pub mod extensions_ui;
 mod theme_editor;
 mod thread_create;
-pub use extensions_ui::{ExtensionContext, ExtensionEntry, ExtensionRequest, ExtensionUi};
+pub use extensions_ui::{
+	ExtensionContext, ExtensionEntry, ExtensionRequest, ExtensionUi, MenuAction,
+};
 pub mod emoji;
 mod emoji_details;
 mod emoji_picker;
@@ -186,6 +188,8 @@ pub struct MessagingUi {
 	pub verification: VerificationUi,
 	pub extensions: ExtensionUi,
 	pub testcord: crate::testcord::TestCord,
+	/// Message-menu entries the bundled TestCord ports contribute, refreshed when they change.
+	pub testcord_message_actions: std::sync::Arc<Vec<MenuAction>>,
 	friends: friends::Friends,
 	account_menu: account_menu::AccountMenu,
 	pub own_presence: model::OwnPresence,
@@ -3740,6 +3744,7 @@ impl MessagingUi {
 						self.timeline.instant_scrolling =
 							!self.reading_preferences.smooth_scrolling;
 						self.timeline.extension_actions = self.extensions.message_actions();
+						self.timeline.plugin_actions = self.testcord_message_actions.clone();
 						let mut seen = std::collections::BTreeSet::new();
 						let author_lookup: Vec<_> = state
 							.timeline
@@ -3777,6 +3782,9 @@ impl MessagingUi {
 							state.request_author_members(&self.timeline.visible_authors)
 						{
 							commands.push(command);
+						}
+						if let Some(picked) = self.timeline.plugin_request.take() {
+							self.testcord.picked = Some(picked);
 						}
 						if let Some((action, text)) = self.timeline.extension_request.take() {
 							self.extensions

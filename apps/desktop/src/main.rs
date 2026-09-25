@@ -3784,6 +3784,21 @@ impl Desktop {
 
 	/// Keep the settings page, the import picker, the saved file and the send queue in step.
 	fn tesktop_tick(&mut self, ctx: &egui::Context) {
+		// The message menu follows the enabled set, not the settings, so it only changes with
+		// one. Rebuilding it per frame would allocate for nothing on an idle client.
+		if self.tesktop_dirty || self.messaging.testcord_message_actions.is_empty() {
+			self.messaging.testcord_message_actions = std::sync::Arc::new(
+				self.tesktop
+					.message_actions()
+					.into_iter()
+					.map(|(plugin, action)| ui::MenuAction {
+						plugin: plugin.to_string(),
+						action: action.id.to_string(),
+						label: action.label.to_string(),
+					})
+					.collect(),
+			);
+		}
 		// Rebuilding the rows is only worth its allocations while the page is open or a change
 		// has not been written back yet.
 		if self.messaging.testcord_settings_open() || self.tesktop_dirty {
@@ -3863,6 +3878,38 @@ impl Desktop {
 			}
 		}
 		self.tesktop_send_replies();
+		self.tesktop_run_action(ctx);
+	}
+
+	/// Run a message-menu entry a plugin offered, and put its result on the clipboard.
+	fn tesktop_run_action(&mut self, ctx: &egui::Context) {
+		let Some(picked) = self.messaging.testcord.picked.take() else {
+			return;
+		};
+		let Some(message) = self.state.timeline.get(picked.message).cloned() else {
+			self.messaging
+				.testcord
+				.report("That message is no longer in this conversation.");
+			return;
+		};
+		match self
+			.tesktop
+			.run_action(&picked.plugin, &picked.action, &message)
+		{
+			Some(tesktop_plugins::ActionResult::Clipboard(text)) => {
+				ctx.copy_text(text);
+				self.messaging
+					.toasts
+					.push(ui::design::Level::Success, "Copied to the clipboard");
+			}
+			Some(tesktop_plugins::ActionResult::Notice(text)) => {
+				self.messaging.toasts.push(ui::design::Level::Info, text);
+			}
+			None => self
+				.messaging
+				.testcord
+				.report("That plugin no longer offers this action."),
+		}
 	}
 
 	fn tesktop_import(&mut self, source: &std::path::Path) {

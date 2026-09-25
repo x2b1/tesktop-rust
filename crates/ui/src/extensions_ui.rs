@@ -120,7 +120,7 @@ pub enum ExtensionRequest {
 }
 
 #[derive(Clone)]
-pub(crate) struct MenuAction {
+pub struct MenuAction {
 	pub plugin: String,
 	pub action: String,
 	pub label: String,

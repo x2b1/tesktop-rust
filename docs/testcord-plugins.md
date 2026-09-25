@@ -28,6 +28,7 @@ remembered state.
 | `on_created` / `on_edited` / `on_deleted` | The same events, after `ignore` | Record them, queue a reply |
 | `before_send` / `before_edit` | Every outgoing body and its reply mention | Rewrite either, or refuse it with a reason |
 | `split` | The same body, after the rewrite | Return several bodies, sent in order with `chunk_delay_ms` between them |
+| `message_actions` / `run_action` | A message's own menu, then the entry the owner picked | Offer a clipboard or notice action on that message |
 
 A queued reply keeps its delay and is sent by the app through its own send path, so permission
 checks, the pending row and the service round trip behave exactly as for a typed message. A
@@ -51,6 +52,7 @@ message path.
 | Queued replies | 8 messages, 8 KiB |
 | Split message parts | 8 parts per message, 16 queued, 2000 characters each by default |
 | Muted and exempt lists | 256 ids each |
+| Message-menu entries | 8 per message, 128 characters per label |
 | Message log | 2000 entries, 4 MiB, 2000 characters per body, 256 KiB per export |
 
 ## Storage
@@ -69,6 +71,9 @@ MessageLogger record is session memory and is never written to disk; copy it out
 | MessageLogger | Records created, edited and deleted messages, and copies the record out | The searchable history window, edit diffs and the deleted-message styling |
 | SilenceUsers | Takes `@everyone`, role and user pings out of messages by the listed people | Dropping the desktop notification for those messages, which the state owner raises |
 | SplitLargeMessages | Splits an oversized body on newlines, spaces or an exact length and sends the parts in order with your delay | Reading the account's Nitro tier for the 4000-character limit, and slowmode awareness |
+| CopyUserURLs | Adds a Copy user link entry to a message's menu | The user context menu in the member list, which is a separate surface |
+| CopyUserMention | Adds a Copy mention entry to a message's menu | As above |
+| CopyStickerLinks | Adds a Copy sticker link entry to a message that carries stickers, with an option to copy an animated sticker as a still | The Open link entry and the sticker picker surface |
 | NoReplyMention | Applies a reply-mention policy: never ping, ping only listed people, or leave your choice alone | Reading the Shift key: this client shows an explicit mention switch in the reply header, so the port applies a policy at send time instead |
 
 ## The rest of TestCord

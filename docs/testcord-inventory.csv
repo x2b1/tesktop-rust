@@ -27,8 +27,8 @@ plugins,consoleJanitor,ConsoleJanitor,Disables Discords loggers,"Devs.Nuckyz,Dev
 plugins,consoleShortcuts,ConsoleShortcuts,Adds shorter Aliases for many things on the window. Run `shortcutList` for a list.,Devs.Ven,0,True,False,False,False,False,native.ts,native-feature,
 plugins,copyEmojiMarkdown,CopyEmojiMarkdown,Copy the raw unicode character instead of :name: for default emojis (👽),"Devs.HappyEnderman,Devs.Vishnya",2,False,False,False,False,False,,portable-logic,
 plugins,copyFileContents,CopyFileContents,Adds a button to text file attachments to copy their contents,"Devs.Obsidian,Devs.Nuckyz",0,True,False,False,False,False,,rewrite,
-plugins,copyStickerLinks,CopyStickerLinks,Adds the ability to copy & open Sticker links,"Devs.Ven,Devs.Byeoon",1,False,False,False,False,False,,portable-logic,
-plugins,copyUserURLs,CopyUserURLs,Adds a 'Copy User URL' option to the user context menu.,Devs.castdrian,1,False,False,False,False,False,,portable-logic,
+plugins,copyStickerLinks,CopyStickerLinks,Adds the ability to copy & open Sticker links,"Devs.Ven,Devs.Byeoon",1,False,False,False,False,False,,portable-logic,copy
+plugins,copyUserURLs,CopyUserURLs,Adds a 'Copy User URL' option to the user context menu.,Devs.castdrian,1,False,False,False,False,False,,portable-logic,copy
 plugins,crashHandler,CrashHandler,Whether to attempt to prevent Discord crashes.,Devs.Nuckyz,2,True,False,False,False,False,,rewrite,
 plugins,customCommands,ephemeral,Whether the response should only be visible to you,"Devs.Ven,Devs.Luna,",0,False,False,False,False,False,,portable-ui,
 plugins,customIdle,CustomIdle,Minutes before Discord goes idle (0 to disable auto-idle),Devs.newwares,2,True,False,False,False,False,,rewrite,
@@ -202,7 +202,7 @@ equicordplugins,commandPalette,CommandPalette,Raycast style command palette for 
 equicordplugins,contentWarning,ContentWarning,Only show trigger content on click instead of hover,EquicordDevs.camila314,2,True,False,False,False,False,,rewrite,
 equicordplugins,copyProfileColors,CopyProfileColors,A plugin to copy people's profile gradient colors to clipboard.,"EquicordDevs.Crxa,EquicordDevs.Cortex,Eq",1,False,False,False,False,False,,portable-logic,
 equicordplugins,copyStatusUrls,CopyStatusUrls,Copy the users status url when you right-click it,Devs.sadan,0,True,False,False,False,False,,rewrite,
-equicordplugins,copyUserMention,CopyUserMention,"Adds a button to copy user's mention on the user context menu, works best with ValidUser.","EquicordDevs.Cortex,Devs.castdrian",1,False,False,False,False,False,,portable-logic,
+equicordplugins,copyUserMention,CopyUserMention,"Adds a button to copy user's mention on the user context menu, works best with ValidUser.","EquicordDevs.Cortex,Devs.castdrian",1,False,False,False,False,False,,portable-logic,copy
 equicordplugins,cursorBuddy,CursorBuddy,Pick a cursor buddy,"Devs.Ven,Devs.adryd,EquicordDevs.nexpid,",18,False,False,False,False,False,,portable-logic,
 equicordplugins,customFolderIcons,CustomFolderIcons,Customize folder icons with any png,EquicordDevs.sadan,1,True,False,False,False,False,,rewrite,
 equicordplugins,customSounds,CustomSounds,Customize Discord's sounds.,"Devs.ScattrdBlade,Devs.TheKodeToad",1,False,False,False,False,False,,portable-logic,

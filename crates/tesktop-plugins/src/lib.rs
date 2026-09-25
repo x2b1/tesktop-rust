@@ -11,6 +11,7 @@
 pub mod autoreply;
 pub mod blockkeywords;
 pub mod clearurls;
+pub mod copy;
 pub mod messagelogger;
 pub mod noreplymention;
 pub mod silenceusers;
@@ -235,6 +236,20 @@ pub enum InboundEvent<'a> {
 	Other,
 }
 
+/// One entry a plugin adds to a message's own menu.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct MessageAction {
+	pub id: &'static str,
+	pub label: &'static str,
+}
+
+/// What running an action produced.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ActionResult {
+	Clipboard(String),
+	Notice(&'static str),
+}
+
 pub trait Plugin {
 	fn meta(&self) -> Meta;
 	fn settings(&self) -> &'static [Setting] {
@@ -275,6 +290,14 @@ pub trait Plugin {
 	}
 	/// Rewrite an accepted inbound message before it enters the timeline.
 	fn mutate_incoming(&mut self, _message: &mut Message) {}
+	/// Entries this plugin adds to a message's menu.
+	fn message_actions(&self) -> &'static [MessageAction] {
+		&[]
+	}
+	/// Run one of this plugin's actions against a message.
+	fn run_action(&self, _action: &str, _message: &Message) -> Option<ActionResult> {
+		None
+	}
 	/// One-line status for the settings page.
 	fn summary(&self) -> Option<String> {
 		None
@@ -307,6 +330,9 @@ impl Registry {
 	pub fn new() -> Self {
 		let plugins: Vec<Box<dyn Plugin>> = vec![
 			Box::new(clearurls::ClearUrls),
+			Box::new(copy::CopyUserUrls),
+			Box::new(copy::CopyUserMention),
+			Box::new(copy::CopyStickerLinks::default()),
 			Box::new(blockkeywords::BlockKeywords::default()),
 			Box::new(silenceusers::SilenceUsers::default()),
 			Box::new(splitlarge::SplitLargeMessages::default()),
@@ -474,6 +500,38 @@ impl Registry {
 				(!parts.is_empty()).then_some(parts)
 			})
 			.unwrap_or_default()
+	}
+
+	/// Every message-menu entry the active plugins offer, with the plugin that owns it.
+	pub fn message_actions(&self) -> Vec<(&'static str, MessageAction)> {
+		if !self.any_enabled() {
+			return Vec::new();
+		}
+		self.active()
+			.into_iter()
+			.flat_map(|index| {
+				let id = self.plugins[index].meta().id;
+				self.plugins[index]
+					.message_actions()
+					.iter()
+					.map(move |action| (id, *action))
+					.collect::<Vec<_>>()
+			})
+			.collect()
+	}
+
+	/// Run one action, if the plugin that advertised it is enabled and answers.
+	pub fn run_action(
+		&mut self,
+		plugin: &str,
+		action: &str,
+		message: &Message,
+	) -> Option<ActionResult> {
+		let index = self.resolve(plugin)?;
+		if !self.enabled(plugin) {
+			return None;
+		}
+		self.plugins[index].run_action(action, message)
 	}
 
 	/// The slowest delay any active plugin asked for between message parts.
@@ -757,6 +815,39 @@ mod tests {
 			registry.summary("Probe").as_deref(),
 			Some("1 created, 0 edits, 0 deletes, reset true")
 		);
+	}
+
+	#[test]
+	fn message_actions_follow_the_enabled_set() {
+		let mut registry = Registry::new();
+		assert!(registry.message_actions().is_empty());
+		registry.set_enabled("CopyUserURLs", true);
+		let actions = registry.message_actions();
+		assert_eq!(actions.len(), 1);
+		assert_eq!(actions[0].0, "CopyUserURLs");
+		assert_eq!(actions[0].1.id, "user-url");
+
+		let mut message = test_support::message(5, Id(7));
+		message.author.id = Id(3);
+		assert_eq!(
+			registry.run_action("CopyUserURLs", "user-url", &message),
+			Some(ActionResult::Clipboard(
+				"<https://discord.com/users/3>".into()
+			))
+		);
+		assert!(
+			registry
+				.run_action("CopyUserURLs", "nope", &message)
+				.is_none()
+		);
+
+		registry.set_enabled("CopyUserURLs", false);
+		assert!(
+			registry
+				.run_action("CopyUserURLs", "user-url", &message)
+				.is_none()
+		);
+		assert!(registry.message_actions().is_empty());
 	}
 
 	#[test]

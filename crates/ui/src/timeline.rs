@@ -38,7 +38,9 @@ pub struct TimelineView {
 	/// A private command response the reader dismissed this frame.
 	pub(super) dismiss_ephemeral: Option<Id>,
 	pub(super) extension_actions: std::sync::Arc<Vec<crate::extensions_ui::MenuAction>>,
+	pub(super) plugin_actions: std::sync::Arc<Vec<crate::extensions_ui::MenuAction>>,
 	pub(super) extension_request: Option<(crate::extensions_ui::MenuAction, String)>,
+	pub(super) plugin_request: Option<crate::testcord::Picked>,
 	pub(super) user_action: Option<crate::user_menu::Action>,
 	pub(super) restore_pending: Option<String>,
 	pub(super) cancel_upload: bool,
@@ -744,10 +746,12 @@ fn deleted_message_actions(popup: egui::Popup<'_>, action: &mut Option<DeletedLo
 #[allow(clippy::too_many_arguments, clippy::type_complexity)]
 fn message_actions(
 	popup: egui::Popup<'_>,
-	(message, extension_actions, extension_request): (
+	(message, extension_actions, extension_request, plugin_actions, plugin_request): (
 		&Message,
 		&[crate::extensions_ui::MenuAction],
 		&mut Option<(crate::extensions_ui::MenuAction, String)>,
+		&[crate::extensions_ui::MenuAction],
+		&mut Option<crate::testcord::Picked>,
 	),
 	actions: (bool, bool, bool, bool),
 	selection: (
@@ -778,6 +782,21 @@ fn message_actions(
 					if ui.button(&action.label).clicked() {
 						*extension_request =
 							Some((action.clone(), message.display_text().into_owned()));
+						ui.close();
+					}
+				}
+			});
+			ui.separator();
+		}
+		if !plugin_actions.is_empty() {
+			ui.menu_button("TestCord", |ui| {
+				for action in plugin_actions {
+					if ui.button(&action.label).clicked() {
+						*plugin_request = Some(crate::testcord::Picked {
+							plugin: action.plugin.clone(),
+							action: action.action.clone(),
+							message: message.id,
+						});
 						ui.close();
 					}
 				}
@@ -1285,6 +1304,8 @@ impl TimelineView {
 			let following = restored.is_none_or(|cursor| cursor.message.is_none());
 			*self = Self {
 				extension_actions: self.extension_actions.clone(),
+				plugin_actions: self.plugin_actions.clone(),
+				plugin_request: self.plugin_request.take(),
 				hide_media_links: self.hide_media_links,
 				instant_scrolling: self.instant_scrolling,
 				suppressed_deleted_highlight: std::mem::take(
@@ -2911,6 +2932,8 @@ impl TimelineView {
 										message,
 										&self.extension_actions,
 										&mut self.extension_request,
+										&self.plugin_actions,
+										&mut self.plugin_request,
 									),
 									(own, can_reply, can_edit, can_delete),
 									(
@@ -4281,7 +4304,7 @@ mod tests {
 						let menu = action_button(ui, crate::icons::Icon::More, "More");
 						message_actions(
 							egui::Popup::menu(&menu),
-							(&message, &[], &mut None),
+							(&message, &[], &mut None, &[], &mut None),
 							(own, true, true, can_delete),
 							(None, None, &mut reply),
 							(&mut editing, &mut edit_started),

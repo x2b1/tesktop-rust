@@ -48,6 +48,14 @@ pub struct Entry {
 	pub log: bool,
 }
 
+/// A message-menu entry the owner picked, waiting for the app to run it.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Picked {
+	pub plugin: String,
+	pub action: String,
+	pub message: model::Id,
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum Request {
 	SetEnabled {
@@ -72,6 +80,10 @@ pub struct TestCord {
 	/// Drained by the app; one request per control the owner touched.
 	pub requests: Vec<Request>,
 	pub notice: String,
+	/// Message-menu entries the active plugins offer, rebuilt by the app when they change.
+	pub message_actions: std::sync::Arc<Vec<crate::extensions_ui::MenuAction>>,
+	/// The entry the owner picked on a message.
+	pub picked: Option<Picked>,
 	expanded: Option<String>,
 	buffers: BTreeMap<(String, String), String>,
 }
