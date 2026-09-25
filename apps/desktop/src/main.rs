@@ -3915,6 +3915,22 @@ impl Desktop {
 		}
 		self.tesktop_send_replies();
 		self.tesktop_run_action(ctx);
+		self.tesktop_open_url();
+	}
+
+	/// An address a port asked for, opened with the desktop's own handler. The scheme is
+	/// checked first, so a setting cannot reach a `file:` address or a script.
+	fn tesktop_open_url(&mut self) {
+		let Some(url) = self.tesktop.take_url() else {
+			return;
+		};
+		match platform::urls::open(&url) {
+			Ok(()) => {}
+			Err(refused) => self
+				.messaging
+				.toasts
+				.push(ui::design::Level::Warning, format!("Not opening {refused}")),
+		}
 	}
 
 	/// What the bundled ports want announced for an accepted message.
@@ -3947,7 +3963,7 @@ impl Desktop {
 			oldest_unread,
 			visible: self.state.selected == Some(channel),
 			me,
-			hour: ui::local_now().hour() as u8,
+			hour: local_hour(),
 			playing: self.state.local_game_activity.is_some(),
 		})
 	}
@@ -7381,4 +7397,12 @@ mod tests {
 			}
 		));
 	}
+}
+
+/// The hour in this machine's own zone, falling back to UTC when the zone is unavailable,
+/// which is a wrong hour for an hour rather than a wrong window for a day.
+fn local_hour() -> u8 {
+	use time::OffsetDateTime;
+	let now = OffsetDateTime::now_local().unwrap_or_else(|_| OffsetDateTime::now_utc());
+	u8::try_from(now.hour()).unwrap_or(0)
 }

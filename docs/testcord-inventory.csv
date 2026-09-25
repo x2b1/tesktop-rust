@@ -246,9 +246,9 @@ equicordplugins,hideChatButtons,HideChatButtons,Color it red on open,EquicordDev
 equicordplugins,hideMessages,HideMessages,Hide the hide button in the message popover.,EquicordDevs.yash,3,True,False,False,False,False,,rewrite,visibility
 equicordplugins,hideServers,HideServers,Allows you to hide servers from the guild list and quick switcher by right clicking them,EquicordDevs.bep,1,True,False,False,False,False,,rewrite,
 equicordplugins,homeTyping,HomeTyping,Changes the home button to a typing indicator if someone in your dms is typing,Devs.Samwich,0,True,False,False,False,False,,rewrite,
-equicordplugins,hopOn,HopOn,Regex to trigger on,Devs.ImLvna,3,False,False,False,True,False,,portable-hook,
+equicordplugins,hopOn,HopOn,Regex to trigger on,Devs.ImLvna,3,False,False,False,True,False,,portable-hook,react
 equicordplugins,husk,Husk,Attempt to find emoji of same name in server before using ID in settings (useful if no nitro),Devs.nin0dev,4,False,False,False,False,False,,portable-logic,
-equicordplugins,iRememberYou,IRememberYou,"Locally saves everyone you've been communicating with (including servers), in case of lose","EquicordDevs.zoodogood,EquicordDevs.keir",0,False,False,False,False,False,,portable-logic,
+equicordplugins,iRememberYou,IRememberYou,"Locally saves everyone you've been communicating with (including servers), in case of lose","EquicordDevs.zoodogood,EquicordDevs.keir",0,False,False,False,False,False,,portable-logic,react
 equicordplugins,iconViewer,IconViewer,Adds a new tab to settings to preview all icons.,EquicordDevs.iamme,1,False,False,False,False,False,,portable-logic,
 equicordplugins,idleAutoRestart,IdleAutoRestart,Enable automatic restart after idle,EquicordDevs.SteelTech,2,False,False,False,False,False,,portable-logic,
 equicordplugins,ignoreCalls,IgnoreCalls,User IDs (comma + space) who should be permanetly ignored,"EquicordDevs.TheArmagan,Devs.thororen",3,True,False,False,True,False,,rewrite,
@@ -521,7 +521,7 @@ testcordplugins,antiStereo,AntiStereo,Force mono (disable stereo),"
 name:""Bash"",
 id:1327483363518582784n,",2,True,False,False,False,False,,rewrite,
 testcordplugins,apisniper,ApiSniper,"Detects and logs API keys, tokens, and credentials from chat messages",TestcordDevs.x2b,1,False,False,False,True,False,,excluded,
-testcordplugins,askMeToMute,AskMeToMute,"Mute yourself when moderators server mute you, and automatically remove your server mute if you have permissio",TestcordDevs.x2b,1,False,False,False,True,False,,portable-hook,
+testcordplugins,askMeToMute,AskMeToMute,"Mute yourself when moderators server mute you, and automatically remove your server mute if you have permissio",TestcordDevs.x2b,1,False,False,False,True,False,,portable-hook,react
 testcordplugins,audioCenter,AudioCenter - Virtual Output,Enable audio center,TestcordDevs.x2b,8,False,False,False,False,False,,portable-logic,
 testcordplugins,audioLimiter,AudioLimiter,Maximum allowed volume (%),TestcordDevs.x2b,0,False,False,False,False,False,,portable-logic,
 testcordplugins,auditLogChannel,AuditLogChannel,Adds an audit log channel,TestcordDevs.x2b,0,True,False,False,False,False,,rewrite,

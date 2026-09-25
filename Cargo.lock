@@ -6313,6 +6313,7 @@ dependencies = [
  "symphonia",
  "tesktop-plugins",
  "test-support",
+ "time",
  "tokio",
  "tokio-tungstenite",
  "ui",

@@ -16,6 +16,7 @@ developer-session = []
 demo = ["dep:test-support", "ui/demo"]
 
 [dependencies]
+time = { workspace = true, features = ["local-offset"] }
 extensions.workspace = true
 tesktop-plugins.workspace = true
 serde.workspace = true

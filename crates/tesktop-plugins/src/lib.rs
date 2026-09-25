@@ -20,6 +20,7 @@ pub mod display;
 pub mod messagelogger;
 pub mod noreplymention;
 pub mod notify;
+pub mod react;
 pub mod schedule;
 pub mod sendtext;
 pub mod silenceusers;
@@ -368,6 +369,11 @@ pub trait Plugin {
 	}
 	/// Rewrite an accepted inbound message before it enters the timeline.
 	fn mutate_incoming(&mut self, _message: &mut Message) {}
+	/// An address the owner asked to open, handed over once. The host opens it; a port that
+	/// watched a message for a reason is not the one that calls the desktop.
+	fn take_url(&mut self) -> Option<String> {
+		None
+	}
 	/// What this plugin wants the owner's presence to be.
 	fn presence(&self) -> Presence {
 		Presence::Keep
@@ -457,6 +463,9 @@ impl Registry {
 			Box::new(visibility::AntiDeleteMessage::default()),
 			Box::new(schedule::QuietHours::default()),
 			Box::new(schedule::AutoDndWhilePlaying::default()),
+			Box::new(react::HopOn::default()),
+			Box::new(react::AskMeToMute),
+			Box::new(react::IRememberYou::default()),
 			Box::new(blockkeywords::BlockKeywords::default()),
 			Box::new(silenceusers::SilenceUsers::default()),
 			Box::new(splitlarge::SplitLargeMessages::default()),
@@ -681,6 +690,19 @@ impl Registry {
 			}
 		}
 		false
+	}
+
+	/// Take the address the first active port is handing over, if any.
+	pub fn take_url(&mut self) -> Option<String> {
+		if !self.any_enabled() {
+			return None;
+		}
+		for index in self.active() {
+			if let Some(url) = self.plugins[index].take_url() {
+				return Some(url);
+			}
+		}
+		None
 	}
 
 	/// The strongest presence change any active port asked for.

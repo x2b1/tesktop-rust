@@ -10,6 +10,7 @@ pub mod processes;
 pub mod save;
 pub mod startup;
 pub mod tray;
+pub mod urls;
 pub mod video;
 #[cfg(target_os = "macos")]
 pub mod window;
