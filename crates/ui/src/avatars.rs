@@ -1147,6 +1147,23 @@ impl Avatars {
 		opens_profile: bool,
 		hover_name: bool,
 	) -> egui::Response {
+		// Streamer Mode replaces the owner's own artwork, and keeps the tooltip and
+		// accessible name honest so the account is not leaked through either.
+		if crate::avatar_masked(user.id) {
+			let (_, response) = ui.allocate_exact_size(
+				egui::Vec2::splat(size),
+				if opens_profile {
+					egui::Sense::click()
+				} else {
+					egui::Sense::hover()
+				},
+			);
+			let rect = ui
+				.layout()
+				.align_size_within_rect(egui::Vec2::splat(size), response.rect);
+			crate::design::masked_avatar(ui, rect);
+			return response.on_hover_text("Hidden");
+		}
 		let (_, response) = ui.allocate_exact_size(
 			egui::Vec2::splat(size),
 			if opens_profile {

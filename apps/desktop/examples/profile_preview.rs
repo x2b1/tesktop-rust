@@ -442,6 +442,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 			| "server"
 			| "server-engagement"
 			| "server-stickers"
+			| "accessibility"
+			| "streamer-mode"
+			| "language"
 			| "forum" | "forum-post"
 			| "forum-gallery"
 			| "forum-settings"
@@ -658,6 +661,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 						&page
 					},
 				);
+				// Preview the accessibility choices at their non-default values so the
+				// page shows what the toggles actually do.
+				if page == "accessibility" {
+					messaging.high_contrast = true;
+					messaging.reduce_saturation = true;
+					messaging.always_underline_links = true;
+					messaging.font_scale = 125;
+					messaging.reduce_motion = true;
+					messaging.publish_accessibility();
+				}
+				if page == "language" {
+					// A non-default locale, so the preview shows the picker resolving a
+					// stored value rather than falling back to the raw tag.
+					messaging.locale = "de".to_owned();
+				}
+				if page == "streamer-mode" {
+					messaging.streamer_mode = true;
+				}
 				if page == "extensions" {
 					seed_catalog(
 						&mut messaging.extensions,

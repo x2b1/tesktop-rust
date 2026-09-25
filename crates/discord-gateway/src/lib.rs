@@ -186,11 +186,14 @@ impl Diagnostics {
 		self.record_to(label, &mut std::io::stderr());
 	}
 	fn record_to(&mut self, label: &'static str, writer: &mut impl std::io::Write) {
+		// Charge the real line: "[tesktop2 " + scope + "] " + label + "\n". The 13 is the
+		// literal prefix and suffix, and under-charging here would let the buffer exceed
+		// its byte cap across many records.
 		let bytes = self
 			.scope
 			.len()
 			.saturating_add(label.len())
-			.saturating_add(11);
+			.saturating_add(13);
 		if self.remaining == 0 || bytes > self.bytes {
 			return;
 		}
@@ -2724,7 +2727,9 @@ mod member_tests {
 		// Byte accounting includes UTF-8 and formatting, independently of the line cap.
 		output.clear();
 		let mut short = Diagnostics::new("members", true);
-		short.bytes = 20;
+		// Exactly one line fits: "[tesktop2 members] é\n" is 22 bytes once the two-byte
+		// character is counted, so the budget is that and the next record cannot fit.
+		short.bytes = 22;
 		short.record_to("\u{e9}", &mut output);
 		short.record_to("another line", &mut output);
 		assert_eq!(output, "[tesktop2 members] \u{e9}\n".as_bytes());
@@ -2733,7 +2738,8 @@ mod member_tests {
 		let mut oversized = Diagnostics::new("gateway", true);
 		oversized.record_to(std::str::from_utf8(&OVERSIZED).unwrap(), &mut output);
 		assert_eq!(oversized.remaining, 64);
-		assert_eq!(output.len(), 20);
+		// Still only the one line from the previous case: the oversized record is refused.
+		assert_eq!(output.len(), 22);
 
 		struct Closed;
 		impl std::io::Write for Closed {

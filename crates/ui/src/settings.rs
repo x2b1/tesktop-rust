@@ -4,6 +4,14 @@ use crate::{MessagingUi, design, icons};
 use client_core::State;
 use egui::RichText;
 
+impl MessagingUi {
+	/// Publish the streamer-mode choice on construction and whenever the page renders,
+	/// so the display helpers agree with the stored preference from the first frame.
+	fn sync_streamer_mode(&mut self) {
+		crate::set_streamer_mode(self.streamer_mode);
+	}
+}
+
 #[derive(Default)]
 pub(super) struct Settings {
 	pub open: bool,
@@ -32,10 +40,13 @@ enum Page {
 	Extensions,
 	TestCord,
 	Themes,
+	Accessibility,
+	StreamerMode,
+	Language,
 }
 impl Page {
 	/// Every page in sidebar order; the narrow-window page picker lists them the same way.
-	const ALL: [Self; 15] = [
+	const ALL: [Self; 18] = [
 		Self::Account,
 		Self::Profile,
 		Self::MessagingPermissions,
@@ -51,6 +62,9 @@ impl Page {
 		Self::TestCord,
 		Self::Themes,
 		Self::Extensions,
+		Self::Accessibility,
+		Self::StreamerMode,
+		Self::Language,
 	];
 	/// Sidebar sections: account-level choices first, then how this app looks and behaves,
 	/// then community add-ons.
@@ -62,6 +76,7 @@ impl Page {
 				Self::Profile,
 				Self::MessagingPermissions,
 				Self::Storage,
+				Self::StreamerMode,
 			],
 		),
 		(
@@ -75,6 +90,8 @@ impl Page {
 				Self::Activity,
 				Self::General,
 				Self::Updates,
+				Self::Accessibility,
+				Self::Language,
 			],
 		),
 		(
@@ -99,6 +116,9 @@ impl Page {
 			Self::Extensions => "Extensions",
 			Self::TestCord => "TestCord Plugins",
 			Self::Themes => "Themes",
+			Self::Accessibility => "Accessibility",
+			Self::StreamerMode => "Streamer Mode",
+			Self::Language => "Language & Time",
 		}
 	}
 	fn description(self) -> &'static str {
@@ -120,6 +140,9 @@ impl Page {
 			Self::Extensions => "Manage community plugins.",
 			Self::TestCord => "TestCord plugins ported to this client.",
 			Self::Themes => "Choose a community theme.",
+			Self::Accessibility => "Text size, contrast, motion and audio.",
+			Self::StreamerMode => "Hide identifying detail while sharing your screen.",
+			Self::Language => "Language and time format for this client.",
 		}
 	}
 	fn matches(self, query: &str) -> bool {
@@ -157,6 +180,13 @@ impl Page {
 				"testcord plugins clearurls blockkeywords autoreply messagelogger tracking keywords import settings"
 			}
 			Self::Themes => "themes shop store catalog import community appearance colors",
+			Self::Accessibility => {
+				"accessibility a11y text size font scale readability contrast saturation high contrast reduced motion animation links underline screen reader tts"
+			}
+			Self::StreamerMode => {
+				"streamer mode stream recording obs xsplit screenshot hide personal information privacy email notes invite links sound"
+			}
+			Self::Language => "language locale time zone clock 24 hour timestamp en-US english",
 		};
 		keywords.contains(query)
 	}
@@ -264,12 +294,14 @@ impl MessagingUi {
 		self.preview_settings("themes");
 		self.extensions.preview_theme_maker(tab);
 	}
-	/// Fixture-only entry point for the native offline settings preview.
+	/// Fixture-only entry point for the native offline settings preview. The preview
+	/// passes CLI-style names, so hyphens and spaces both have to resolve.
 	pub fn preview_settings(&mut self, page: &str) {
 		self.settings.open = true;
+		let needle = page.to_lowercase().replace('-', " ");
 		if let Some(page) = Page::ALL
 			.into_iter()
-			.find(|candidate| candidate.label().to_lowercase().contains(page))
+			.find(|candidate| candidate.label().to_lowercase().contains(&needle))
 		{
 			self.settings.page = page;
 		}
@@ -280,6 +312,9 @@ impl MessagingUi {
 		state: &mut State,
 		commands: &mut Vec<client_core::Command>,
 	) {
+		// Every frame, not just when the page is open, so the mask applies across the
+		// whole client while the preference is on.
+		self.sync_streamer_mode();
 		let colors = design::palette_for(ctx);
 		let size = ctx.content_rect().size() - egui::vec2(32.0, 40.0);
 		let width = size.x.clamp(280.0, 1100.0);
@@ -440,6 +475,9 @@ impl MessagingUi {
 										self.global_keybind_status,
 									),
 									Page::TestCord => self.testcord.show(ui),
+									Page::Accessibility => self.accessibility_settings(ui),
+									Page::StreamerMode => self.streamer_mode_settings(ui, state),
+									Page::Language => self.language_settings(ui),
 									Page::Extensions | Page::Themes => {
 										self.extensions
 											.select_themes(self.settings.page == Page::Themes);
@@ -943,6 +981,169 @@ impl MessagingUi {
 			}
 		});
 		self.layout_settings(ui, demo);
+	}
+
+	/// Text size, contrast, motion and audio. These apply immediately and are kept on
+	/// this device, so they survive a restart without touching the account.
+	fn accessibility_settings(&mut self, ui: &mut egui::Ui) {
+		// These are read by `design::apply` while rebuilding styles, so publish them
+		// before the rows change them, and again when a row is interacted with.
+		self.publish_accessibility();
+		design::section(
+			ui,
+			"Accessibility",
+			Some("Adjust how much of the interface animates, and how it reads."),
+		);
+		design::group(ui, "Text readability", |ui| {
+			design::slider_row(
+				ui,
+				"Text size",
+				Some("Scales message text, labels and controls together."),
+				&mut self.font_scale,
+				80..=125,
+				"%",
+			);
+			design::card_divider(ui);
+			design::switch(
+				ui,
+				"Always underline links",
+				Some("Distinguish links by underline as well as colour."),
+				&mut self.always_underline_links,
+			);
+		});
+		design::group(ui, "Color & contrast", |ui| {
+			design::switch(
+				ui,
+				"Enable high contrast mode",
+				Some("Strengthen text and border contrast across the interface."),
+				&mut self.high_contrast,
+			);
+			design::card_divider(ui);
+			design::switch(
+				ui,
+				"Apply saturation setting to custom colors",
+				Some("Also desaturates colors a community theme supplies."),
+				&mut self.reduce_saturation,
+			);
+		});
+		design::group(ui, "Reduced motion", |ui| {
+			design::switch(
+				ui,
+				"Enable reduced motion",
+				Some("Removes transitions and non-essential animation."),
+				&mut self.reduce_motion,
+			);
+			design::card_divider(ui);
+			design::switch(
+				ui,
+				"Sync with computer setting",
+				Some("Follow the desktop's reduce-motion preference."),
+				&mut self.reduce_motion_sync,
+			);
+		});
+		design::group(ui, "Audio & screen reader", |ui| {
+			design::switch(
+				ui,
+				"Play animated emoji",
+				Some("Animate emoji while the window has focus."),
+				&mut self.animate_emoji,
+			);
+			design::card_divider(ui);
+			design::switch(
+				ui,
+				"Speak messages out loud",
+				Some("Read incoming messages aloud using the system voice."),
+				&mut self.tts_messages,
+			);
+		});
+		// Republish so a toggle takes effect on the next style rebuild rather than the
+		// next time this page is opened.
+		self.publish_accessibility();
+		self.sync_streamer_mode();
+	}
+
+	/// Streamer Mode hides detail that would identify the account in a recording.
+	fn streamer_mode_settings(&mut self, ui: &mut egui::Ui, state: &State) {
+		self.sync_streamer_mode();
+		// Record the owner so the row below shows the real effect on this account.
+		crate::set_own_user(crate::own_id(state));
+		design::section(
+			ui,
+			"Streamer Mode",
+			Some("Hide identifying detail while you stream or record."),
+		);
+		design::group(ui, "Streamer Mode", |ui| {
+			design::switch(
+				ui,
+				"Enable Streamer Mode",
+				Some("Masks your name, avatar and account details on screen."),
+				&mut self.streamer_mode,
+			);
+			// Take effect immediately: the display helpers read this process-wide.
+			crate::set_streamer_mode(self.streamer_mode);
+			ui.add_space(6.0);
+			design::hint(
+				ui,
+				"Applies to this device only. Your own name and avatar are replaced on screen; other people are unaffected.",
+			);
+		});
+		// Show the mask as it will actually appear, using this account's own name.
+		if let Some(user) = state.user.as_ref() {
+			design::group(ui, "Preview", |ui| {
+				ui.horizontal(|ui| {
+					ui.spacing_mut().item_spacing.x = 8.0;
+					let colors = design::palette(ui);
+					let rect = ui
+						.allocate_exact_size(egui::vec2(32.0, 32.0), egui::Sense::hover())
+						.1
+						.rect;
+					if crate::streamer_mode() {
+						design::masked_avatar(ui, rect);
+					} else {
+						self.avatars.show_plain(ui, user, 32.0, state.demo);
+					}
+					ui.label(
+						design::semibold(ui, crate::display_name(state, user.id, &user.name), 14.0)
+							.color(colors.text_strong),
+					);
+				});
+			});
+		}
+	}
+
+	/// Language and time. The tag is sent with requests so the service localizes them.
+	fn language_settings(&mut self, ui: &mut egui::Ui) {
+		design::section(
+			ui,
+			"Language & Time",
+			Some("Choose the language the service replies in."),
+		);
+		design::group(ui, "Language", |ui| {
+			const LOCALES: [(&str, &str); 6] = [
+				("en-US", "English (US)"),
+				("en-GB", "English (UK)"),
+				("de", "Deutsch"),
+				("es-ES", "Español"),
+				("fr", "Français"),
+				("ja", "日本語"),
+			];
+			design::row(ui, "Language", None, |ui| {
+				let current = LOCALES
+					.iter()
+					.find(|(tag, _)| *tag == self.locale.as_str())
+					.map(|(_, name)| (*name).to_owned())
+					.unwrap_or_else(|| self.locale.clone());
+				egui::ComboBox::from_id_salt("settings-locale")
+					.selected_text(current)
+					.show_ui(ui, |ui| {
+						for (tag, name) in LOCALES {
+							ui.selectable_value(&mut self.locale, (*tag).to_owned(), name);
+						}
+					});
+			});
+			ui.add_space(6.0);
+			design::hint(ui, "Timestamps follow your system clock and time zone.");
+		});
 	}
 
 	fn chat_settings(&mut self, ui: &mut egui::Ui, demo: bool) {

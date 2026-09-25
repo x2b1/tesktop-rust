@@ -105,7 +105,6 @@ mod verification;
 mod voice;
 use client_core::{Command, MAX_CONTENT, MAX_DRAFT_BYTES, NavStep, State};
 use egui::{RichText, TextEdit};
-pub use local_time::now as local_now;
 pub use local_time::{Counter, Display};
 use model::{Freshness, Id};
 pub use verification::VerificationUi;
@@ -416,6 +415,105 @@ pub struct MessagingUi {
 	pub transparency: u8,
 	pub blur: u8,
 	pub transparent_all: bool,
+	/// Hide identifying detail while screen sharing or recording.
+	pub streamer_mode: bool,
+	/// Follow the desktop's reduce-motion preference instead of overriding it.
+	pub reduce_motion_sync: bool,
+	/// Dim interface motion regardless of the desktop setting.
+	pub reduce_motion: bool,
+	pub always_underline_links: bool,
+	pub high_contrast: bool,
+	pub reduce_saturation: bool,
+	/// Interface text scale as a percentage of the base size.
+	pub font_scale: u8,
+	pub animate_emoji: bool,
+	pub legacy_chat_input: bool,
+	pub show_shortcuts_list: bool,
+	pub tts_messages: bool,
+	pub locale: String,
+}
+
+/// Process-wide Streamer Mode state. Like the accessibility flags, this has to be
+/// readable from display helpers in several modules, and those run before any settings
+/// page renders.
+mod streamer {
+	use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+
+	static ENABLED: AtomicBool = AtomicBool::new(false);
+	static OWN: AtomicU64 = AtomicU64::new(0);
+
+	pub(super) fn set(enabled: bool) {
+		ENABLED.store(enabled, Ordering::Relaxed);
+	}
+	pub(super) fn enabled() -> bool {
+		ENABLED.load(Ordering::Relaxed)
+	}
+	pub(super) fn set_own(id: model::Id) {
+		OWN.store(id.0, Ordering::Relaxed);
+	}
+	pub(super) fn own() -> model::Id {
+		model::Id(OWN.load(Ordering::Relaxed))
+	}
+	/// A snowflake is never zero in practice, so zero means "signed out" and nothing is
+	/// masked rather than everything being masked by accident.
+	pub(super) fn masks(user: model::Id) -> bool {
+		enabled() && own() != model::Id(0) && own() == user
+	}
+}
+
+/// Whether the owner's own identifying detail should be hidden on screen.
+pub fn streamer_mode() -> bool {
+	streamer::enabled()
+}
+
+pub fn set_streamer_mode(enabled: bool) {
+	streamer::set(enabled);
+}
+
+/// Replace the owner's name with a neutral label while Streamer Mode is on. Returns the
+/// name unchanged for anyone else, so a shared screen never leaks the account holder.
+pub fn masked_name(own: model::Id, user: model::Id, name: &str) -> &str {
+	if streamer::enabled() && own != model::Id(0) && own == user {
+		"Hidden"
+	} else {
+		name
+	}
+}
+
+/// Name for a row, masked when it belongs to the owner and Streamer Mode is on.
+pub fn display_name<'a>(state: &client_core::State, user: model::Id, name: &'a str) -> &'a str {
+	masked_name(own_id(state), user, name)
+}
+
+/// The signed-in account's id, or `Id(0)` when signed out. The mask compares against
+/// this, so an unknown owner never masks anyone.
+pub fn own_id(state: &client_core::State) -> model::Id {
+	state.user.as_ref().map_or(model::Id(0), |user| user.id)
+}
+
+/// Record the signed-in account so display helpers can recognise the owner without
+/// being handed the whole `State`.
+pub fn set_own_user(id: model::Id) {
+	streamer::set_own(id);
+}
+
+/// Whether this user's avatar should be replaced while Streamer Mode is on.
+pub fn avatar_masked(user: model::Id) -> bool {
+	streamer::masks(user)
+}
+
+impl MessagingUi {
+	/// Copy the accessibility choices into the process-wide state that
+	/// `design::apply` reads, since egui styles are rebuilt before any page renders.
+	pub fn publish_accessibility(&self) {
+		design::publish_accessibility(
+			self.high_contrast,
+			self.reduce_saturation,
+			self.reduce_motion,
+			self.always_underline_links,
+			self.font_scale,
+		);
+	}
 }
 
 /// Context strip (reply/edit) drawn as the rounded top of the composer block.
@@ -1628,12 +1726,18 @@ impl MessagingUi {
 														egui::Label::new(
 															design::semibold(
 																ui,
-																state
-																	.user
-																	.as_ref()
-																	.map_or("Your account", |u| {
-																		u.name.as_str()
-																	}),
+																// This card is always the owner, so the
+																// mask applies to every name here.
+																state.user.as_ref().map_or(
+																	"Your account",
+																	|u| {
+																		if streamer_mode() {
+																			"Hidden"
+																		} else {
+																			u.name.as_str()
+																		}
+																	},
+																),
 																14.0,
 															)
 															.color(colors.text_strong),

@@ -53,6 +53,18 @@ impl Settings {
 			expanded_folders: ui.expanded_folders.clone(),
 			user_volumes: ui.voice_user_volume_overrides(),
 			muted_users: ui.voice_user_mutes().to_vec(),
+			streamer_mode: ui.streamer_mode,
+			reduce_motion_sync: ui.reduce_motion_sync,
+			reduce_motion: ui.reduce_motion,
+			always_underline_links: ui.always_underline_links,
+			high_contrast: ui.high_contrast,
+			reduce_saturation: ui.reduce_saturation,
+			font_scale: ui.font_scale,
+			animate_emoji: ui.animate_emoji,
+			legacy_chat_input: ui.legacy_chat_input,
+			show_shortcuts_list: ui.show_shortcuts_list,
+			tts_messages: ui.tts_messages,
+			locale: ui.locale.clone(),
 		};
 		if value != self.current {
 			self.state.touched = true;
@@ -91,6 +103,18 @@ impl Settings {
 		ui.expanded_folders.clone_from(&value.expanded_folders);
 		ui.set_voice_user_volume_overrides(&value.user_volumes);
 		ui.set_voice_user_mutes(&value.muted_users);
+		ui.streamer_mode = value.streamer_mode;
+		ui.reduce_motion_sync = value.reduce_motion_sync;
+		ui.reduce_motion = value.reduce_motion;
+		ui.always_underline_links = value.always_underline_links;
+		ui.high_contrast = value.high_contrast;
+		ui.reduce_saturation = value.reduce_saturation;
+		ui.font_scale = value.font_scale;
+		ui.animate_emoji = value.animate_emoji;
+		ui.legacy_chat_input = value.legacy_chat_input;
+		ui.show_shortcuts_list = value.show_shortcuts_list;
+		ui.tts_messages = value.tts_messages;
+		ui.locale.clone_from(&value.locale);
 	}
 }
 
@@ -106,6 +130,13 @@ mod tests {
 		ui.notifications_enabled = defaults.notifications_enabled;
 		ui.transparency = defaults.transparency;
 		ui.blur = defaults.blur;
+		// `MessagingUi::default()` leaves the accessibility fields at their type defaults,
+		// which are not the stored ones: a fresh install wants motion on and 100% text.
+		ui.reduce_motion_sync = defaults.reduce_motion_sync;
+		ui.font_scale = defaults.font_scale;
+		ui.animate_emoji = defaults.animate_emoji;
+		ui.show_shortcuts_list = defaults.show_shortcuts_list;
+		ui.locale.clone_from(&defaults.locale);
 		settings.observe(&ui);
 		assert!(
 			!settings.state.touched,

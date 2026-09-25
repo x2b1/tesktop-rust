@@ -2185,6 +2185,9 @@ impl Desktop {
 		let _ = ui::emoji::install(ctx);
 		// Publish before `apply`, which reads these while rebuilding the egui styles.
 		self.messaging.publish_accessibility();
+		// The display helpers compare against the signed-in account, so record it too.
+		ui::set_own_user(ui::own_id(&self.state));
+		ui::set_streamer_mode(self.messaging.streamer_mode);
 		ui::design::apply(ctx);
 		ctx.set_theme(self.appearance);
 		self.messaging

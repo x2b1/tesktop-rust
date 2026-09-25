@@ -262,6 +262,108 @@ mod overlay {
 	/// [light, dark] — the chat and frame hairline is stronger in light.
 	pub(super) const BORDER: [(u32, u8); 2] = [(0x97979e, 0x47), (0x94949c, 0x1f)];
 }
+/// Process-wide accessibility state. egui styles are rebuilt in [`apply`] before any
+/// settings page can render, so these choices cannot live on `Ui`; they are published
+/// from the settings page and read back here.
+mod accessibility {
+	use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
+
+	pub(super) static HIGH_CONTRAST: AtomicBool = AtomicBool::new(false);
+	pub(super) static REDUCE_SATURATION: AtomicBool = AtomicBool::new(false);
+	pub(super) static REDUCE_MOTION: AtomicBool = AtomicBool::new(false);
+	pub(super) static UNDERLINE_LINKS: AtomicBool = AtomicBool::new(false);
+	pub(super) static FONT_SCALE: AtomicU8 = AtomicU8::new(100);
+
+	pub(super) fn high_contrast() -> bool {
+		HIGH_CONTRAST.load(Ordering::Relaxed)
+	}
+	pub(super) fn reduce_saturation() -> bool {
+		REDUCE_SATURATION.load(Ordering::Relaxed)
+	}
+	pub(super) fn reduce_motion() -> bool {
+		REDUCE_MOTION.load(Ordering::Relaxed)
+	}
+	pub(super) fn underline_links() -> bool {
+		UNDERLINE_LINKS.load(Ordering::Relaxed)
+	}
+	pub(super) fn font_scale() -> f32 {
+		f32::from(FONT_SCALE.load(Ordering::Relaxed)) / 100.0
+	}
+}
+
+/// Record the accessibility choices. Clamped here so a corrupt stored value cannot
+/// collapse the text scale to nothing.
+pub fn publish_accessibility(
+	high_contrast: bool,
+	reduce_saturation: bool,
+	reduce_motion: bool,
+	underline_links: bool,
+	font_scale: u8,
+) {
+	use std::sync::atomic::Ordering;
+	accessibility::HIGH_CONTRAST.store(high_contrast, Ordering::Relaxed);
+	accessibility::REDUCE_SATURATION.store(reduce_saturation, Ordering::Relaxed);
+	accessibility::REDUCE_MOTION.store(reduce_motion, Ordering::Relaxed);
+	accessibility::UNDERLINE_LINKS.store(underline_links, Ordering::Relaxed);
+	accessibility::FONT_SCALE.store(font_scale.clamp(80, 125), Ordering::Relaxed);
+}
+
+/// Apply the accessibility choices to a resolved palette: pull text and borders away
+/// from their surfaces for high contrast, and cap saturation for reduced saturation.
+fn accessible(mut p: Palette) -> Palette {
+	if accessibility::high_contrast() {
+		let base = p.base.to_srgba_unmultiplied()[1];
+		let deepen = |c: Color32| {
+			let [r, g, b, a] = c.to_srgba_unmultiplied();
+			let luma = f32::from(r) * 0.299 + f32::from(g) * 0.587 + f32::from(b) * 0.114;
+			let target = if luma > f32::from(base) { 255.0 } else { 0.0 };
+			let mix = |v: u8| (f32::from(v) + (target - f32::from(v)) * 0.35).round() as u8;
+			Color32::from_rgba_unmultiplied(mix(r), mix(g), mix(b), a)
+		};
+		p.text_strong = deepen(p.text_strong);
+		p.text = deepen(p.text);
+		p.muted = deepen(p.muted);
+		p.border = p.border.gamma_multiply(1.8);
+	}
+	if accessibility::reduce_saturation() {
+		let flatten = |c: Color32| {
+			let [r, g, b, a] = c.to_srgba_unmultiplied();
+			let luma = (f32::from(r) * 0.299 + f32::from(g) * 0.587 + f32::from(b) * 0.114).round();
+			let v = luma as u8;
+			Color32::from_rgba_unmultiplied(v, v, v, a)
+		};
+		p.accent = flatten(p.accent);
+		p.positive = flatten(p.positive);
+		p.warning = flatten(p.warning);
+		p.danger = flatten(p.danger);
+	}
+	p
+}
+
+/// Placeholder avatar painted in place of the owner's own artwork while Streamer Mode is
+/// on. Deliberately contentless: a silhouette would still be recognisable.
+pub fn masked_avatar(ui: &egui::Ui, rect: egui::Rect) {
+	let p = palette(ui);
+	ui.painter()
+		.rect_filled(rect, rect.height() * 0.5, p.raised);
+}
+
+/// Whether link text should keep its underline rather than relying on colour alone.
+pub fn links_underlined() -> bool {
+	accessibility::underline_links()
+}
+
+/// Animation multiplier for views that animate. Zero means "do not animate": this egui
+/// revision has no style field for transition clocks, so animated views multiply their
+/// own durations by this.
+pub fn animation_scale() -> f32 {
+	if accessibility::reduce_motion() {
+		0.0
+	} else {
+		1.0
+	}
+}
+
 /// Flatten a translucent tint onto an opaque surface with straight alpha compositing.
 fn over(surface: Color32, (tint, alpha): (u32, u8)) -> Color32 {
 	let a = f32::from(alpha) / 255.0;
@@ -964,9 +1066,15 @@ pub fn apply(ctx: &egui::Context) {
 	let metrics = EXTENSION_STYLE.get();
 	let item_spacing = metrics.item_spacing.unwrap_or([8, 8]);
 	let button_padding = metrics.button_padding.unwrap_or([12, 6]);
+	let scale = accessibility::font_scale();
 	for theme in [egui::Theme::Dark, egui::Theme::Light] {
-		let p = opaque_surfaces(colors(theme == egui::Theme::Dark, variant));
+		let p = opaque_surfaces(accessible(colors(theme == egui::Theme::Dark, variant)));
 		let mut style = (*ctx.style_of(theme)).clone();
+		for (id, existing) in style.text_styles.clone() {
+			style
+				.text_styles
+				.insert(id, FontId::new(existing.size * scale, existing.family));
+		}
 		style.text_styles.insert(
 			egui::TextStyle::Heading,
 			FontId::new(
@@ -1607,6 +1715,88 @@ mod tests {
 	fn the_settings_slider_takes_pointer_and_keyboard_input() {
 		// Also reachable from the demo binary as `--demo-check-settings-sliders`.
 		debug_slider_check();
+	}
+
+	#[test]
+	fn streamer_mode_masks_only_the_signed_in_account() {
+		// These live in `crate`, not `super`, so this test needs no import.
+		crate::set_streamer_mode(false);
+		crate::set_own_user(model::Id(7));
+
+		// Off: nothing is masked, so the preference cannot leak into a normal session.
+		assert_eq!(
+			crate::masked_name(model::Id(7), model::Id(7), "Centipede"),
+			"Centipede"
+		);
+		assert!(!crate::avatar_masked(model::Id(7)));
+
+		crate::set_streamer_mode(true);
+		// On: the owner is hidden by name and by avatar.
+		assert_eq!(
+			crate::masked_name(model::Id(7), model::Id(7), "Centipede"),
+			"Hidden"
+		);
+		assert!(crate::avatar_masked(model::Id(7)));
+		// Everyone else stays readable, otherwise a shared screen would be useless.
+		assert_eq!(
+			crate::masked_name(model::Id(7), model::Id(9), "Someone else"),
+			"Someone else"
+		);
+		assert!(!crate::avatar_masked(model::Id(9)));
+
+		// Signed out: an unknown owner must mask nobody rather than everybody.
+		crate::set_own_user(model::Id(0));
+		assert_eq!(
+			crate::masked_name(model::Id(0), model::Id(0), "Anyone"),
+			"Anyone"
+		);
+		assert!(!crate::avatar_masked(model::Id(0)));
+
+		crate::set_streamer_mode(false);
+		crate::set_own_user(model::Id(0));
+	}
+
+	#[test]
+	fn accessibility_is_off_until_a_page_publishes_it() {
+		use super::*;
+		// Restoring the defaults keeps this test independent of the process-wide state
+		// other tests may have published.
+		publish_accessibility(false, false, false, false, 100);
+		let p = accessible(builtin_colors(true, Variant::Standard));
+		assert_eq!(p.text, builtin_colors(true, Variant::Standard).text);
+
+		// High contrast pulls text away from its surface without touching surfaces.
+		publish_accessibility(true, false, false, false, 100);
+		let contrasted = accessible(builtin_colors(true, Variant::Standard));
+		let base = contrasted.base.to_srgba_unmultiplied()[1] as f32;
+		let text = contrasted.text.to_srgba_unmultiplied()[1] as f32;
+		assert!(
+			(text - base).abs() > (p.text.to_srgba_unmultiplied()[1] as f32 - base).abs(),
+			"high contrast should widen the gap between text and surface"
+		);
+		// Surfaces themselves are unchanged.
+		assert_eq!(
+			contrasted.base,
+			builtin_colors(true, Variant::Standard).base
+		);
+
+		// Reduced saturation collapses the accent to a single grey channel value.
+		publish_accessibility(false, true, false, false, 100);
+		let flat = accessible(builtin_colors(true, Variant::Standard));
+		let [r, g, b, _] = flat.accent.to_srgba_unmultiplied();
+		assert_eq!(
+			(r, g),
+			(g, b),
+			"accent should be grey under reduced saturation"
+		);
+
+		// The font scale is clamped so a corrupt stored value cannot collapse the text.
+		publish_accessibility(false, false, false, false, 0);
+		assert_eq!(accessibility::font_scale(), 0.8);
+		publish_accessibility(false, false, false, false, 255);
+		assert_eq!(accessibility::font_scale(), 1.25);
+
+		publish_accessibility(false, false, false, false, 100);
 	}
 
 	#[test]

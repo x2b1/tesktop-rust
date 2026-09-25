@@ -68,6 +68,30 @@ pub struct AppPreferences {
 	pub user_volumes: Vec<(u64, u16)>,
 	/// Voice participants silenced on this device only, bounded like the volume overrides.
 	pub muted_users: Vec<u64>,
+	/// Hide identifying detail in screenshots and screen shares.
+	pub streamer_mode: bool,
+	/// Follow the desktop's reduce-motion preference instead of overriding it.
+	pub reduce_motion_sync: bool,
+	/// Dim interface motion and transitions regardless of the desktop setting.
+	pub reduce_motion: bool,
+	/// Keep link text underlined so it is distinguishable without colour.
+	pub always_underline_links: bool,
+	/// Raise contrast for interface text and borders.
+	pub high_contrast: bool,
+	/// Cap interface saturation, including colours a community theme supplies.
+	pub reduce_saturation: bool,
+	/// Interface text scale as a percentage of the base size.
+	pub font_scale: u8,
+	/// Play animated avatars and emoji while the window has focus.
+	pub animate_emoji: bool,
+	/// Prefer the classic composer instead of the newer chat input.
+	pub legacy_chat_input: bool,
+	/// Show the keyboard shortcut list on demand.
+	pub show_shortcuts_list: bool,
+	/// Read pending notifications aloud from /tts.
+	pub tts_messages: bool,
+	/// Language tag sent with account and message requests.
+	pub locale: String,
 }
 impl Default for AppPreferences {
 	fn default() -> Self {
@@ -97,6 +121,20 @@ impl Default for AppPreferences {
 			expanded_folders: Vec::new(),
 			user_volumes: Vec::new(),
 			muted_users: Vec::new(),
+			// `Default` gives false/0, which is wrong for these: a fresh install wants
+			// motion and animation on and the base text scale.
+			streamer_mode: false,
+			reduce_motion_sync: true,
+			reduce_motion: false,
+			always_underline_links: false,
+			high_contrast: false,
+			reduce_saturation: false,
+			font_scale: 100,
+			animate_emoji: true,
+			legacy_chat_input: false,
+			show_shortcuts_list: true,
+			tts_messages: false,
+			locale: String::from("en-US"),
 		}
 	}
 }
@@ -1676,6 +1714,30 @@ mod tests {
 			Err(StoreError::Incompatible)
 		));
 	}
+	#[test]
+	fn preferences_written_before_the_accessibility_page_keep_sane_values() {
+		// A row saved before these fields existed deserializes through `#[serde(default)]`.
+		// The point of the test is that the migrated values match a fresh install, so a
+		// returning user does not silently get zero text scale or no motion.
+		let legacy: AppPreferences =
+			serde_json::from_str(r#"{"notifications_enabled":true}"#).unwrap();
+		let fresh = AppPreferences::default();
+		assert_eq!(legacy.font_scale, fresh.font_scale);
+		assert_eq!(legacy.locale, fresh.locale);
+		assert!(legacy.animate_emoji);
+		assert!(legacy.reduce_motion_sync);
+		assert!(legacy.show_shortcuts_list);
+		assert!(!legacy.streamer_mode);
+		assert!(!legacy.high_contrast);
+		// And an explicit stored value still wins over the default.
+		let chosen: AppPreferences =
+			serde_json::from_str(r#"{"font_scale":125,"locale":"de","high_contrast":true}"#)
+				.unwrap();
+		assert_eq!(chosen.font_scale, 125);
+		assert_eq!(chosen.locale, "de");
+		assert!(chosen.high_contrast);
+	}
+
 	#[test]
 	fn app_preferences_round_trip_and_reject_invalid_replacement() {
 		let store = LocalStore::initialize(Connection::open_in_memory().unwrap()).unwrap();

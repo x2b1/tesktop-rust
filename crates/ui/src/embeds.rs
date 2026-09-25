@@ -45,6 +45,10 @@ fn link(
 	}
 	if target.is_some() {
 		text = text.color(ui.visuals().hyperlink_color);
+		// Underlined links stay distinguishable without relying on colour alone.
+		if crate::design::links_underlined() {
+			text = text.underline();
+		}
 	}
 	let response = ui.add(egui::Label::new(text).wrap().sense(if target.is_some() {
 		egui::Sense::click()

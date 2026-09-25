@@ -7,6 +7,7 @@ use std::{
 	collections::{BTreeMap, BTreeSet},
 	hash::{DefaultHasher, Hash, Hasher},
 };
+use unicode_segmentation::UnicodeSegmentation;
 
 #[derive(Clone, Copy)]
 enum TargetReveal {
@@ -511,7 +512,12 @@ fn starter_row(
 							crate::account_badge::name(
 								ui,
 								&message.author,
-								state.message_author_name(message),
+								// Streamer Mode masks only the owner's own messages.
+								crate::display_name(
+									state,
+									message.author.id,
+									state.message_author_name(message),
+								),
 								15.5,
 								color,
 								egui::Sense::hover(),
@@ -2434,10 +2440,13 @@ impl TimelineView {
 												);
 											}
 											if self.display.word_count {
-												if let Some(count) = word_and_characters(&message.content)
+												if let Some(count) =
+													word_and_characters(&message.content)
 												{
 													ui.label(
-														RichText::new(count).small().color(colors.muted),
+														RichText::new(count)
+															.small()
+															.color(colors.muted),
 													);
 												}
 											}
@@ -8081,13 +8090,18 @@ mod tests {
 /// The "N words, M characters" line under a message, or `None` when the message is too
 /// short for a count to be worth reading. Mirrors the port's own threshold.
 pub fn word_and_characters(content: &str) -> Option<String> {
-	let words = content.split(char::is_whitespace).filter(|word| !word.is_empty()).count();
+	let words = content
+		.split(char::is_whitespace)
+		.filter(|word| !word.is_empty())
+		.count();
 	if words <= 5 {
 		return None;
 	}
+	// Grapheme clusters, not `char`s or bytes: a flag is one character to a reader but
+	// two `char`s and four bytes in a file.
 	Some(format!(
 		"{words} words, {} characters",
-		content.chars().count()
+		content.graphemes(true).count()
 	))
 }
 
@@ -8099,8 +8113,13 @@ mod word_count_tests {
 	fn a_short_message_is_not_counted() {
 		assert_eq!(word_and_characters("one two three four five"), None);
 		assert_eq!(word_and_characters(""), None);
-		assert_eq!(word_and_characters("   
-  "), None);
+		assert_eq!(
+			word_and_characters(
+				"   
+  "
+			),
+			None
+		);
 	}
 
 	#[test]
@@ -8114,19 +8133,21 @@ mod word_count_tests {
 	#[test]
 	fn runs_of_whitespace_do_not_become_words() {
 		assert_eq!(
-			word_and_characters("a  b
+			word_and_characters(
+				"a  b
 c	d
-e f g h"),
+e f g h"
+			),
 			Some("8 words, 16 characters".to_string())
 		);
 	}
 
 	#[test]
 	fn characters_are_counted_as_they_read() {
-		// A flag is one character to a reader and four bytes in a file.
+		// 24 ASCII characters plus one flag: 25 graphemes, but 26 `char`s and 32 bytes.
 		assert_eq!(
-			word_and_characters("one two three four five flag"),
-			Some("6 words, 31 characters".to_string())
+			word_and_characters("one two three four five \u{1F1E6}\u{1F1FA}"),
+			Some("6 words, 25 characters".to_string())
 		);
 	}
 }
