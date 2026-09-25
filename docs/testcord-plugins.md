@@ -23,9 +23,11 @@ remembered state.
 
 | Hook | Fires on | Plugin may |
 |---|---|---|
-| `ignore` | An accepted inbound message | Hide it, so it never enters the timeline |
+| `mutate_incoming` | An accepted inbound message, before it is stored | Take pings or other content out of it |
+| `ignore` | The same message, after `mutate_incoming` | Hide it, so it never enters the timeline |
 | `on_created` / `on_edited` / `on_deleted` | The same events, after `ignore` | Record them, queue a reply |
-| `before_send` / `before_edit` | Every outgoing body | Rewrite it, or refuse it with a reason |
+| `before_send` / `before_edit` | Every outgoing body and its reply mention | Rewrite either, or refuse it with a reason |
+| `split` | The same body, after the rewrite | Return several bodies, sent in order with `chunk_delay_ms` between them |
 
 A queued reply keeps its delay and is sent by the app through its own send path, so permission
 checks, the pending row and the service round trip behave exactly as for a typed message. A
@@ -47,6 +49,8 @@ message path.
 | Blocked keyword patterns | 256 patterns, 8 KiB total, 512 KiB regex size limit each |
 | Auto-reply memory | 1024 processed ids, 256 tracked users and channels, 64 rate-window stamps |
 | Queued replies | 8 messages, 8 KiB |
+| Split message parts | 8 parts per message, 16 queued, 2000 characters each by default |
+| Muted and exempt lists | 256 ids each |
 | Message log | 2000 entries, 4 MiB, 2000 characters per body, 256 KiB per export |
 
 ## Storage
@@ -63,6 +67,9 @@ MessageLogger record is session memory and is never written to disk; copy it out
 | BlockKeywords | Ignores messages matching your words, in the body and in embed titles and descriptions | The second mode, which shows a matched message greyed out instead of dropping it |
 | AutoReplyContent | Answers a trigger with one of your responses, with TestCord's channel, mention, cooldown and rate-limit rules | Responses are picked by a hash of the message id instead of `Math.random`, so a given message always gets the same answer |
 | MessageLogger | Records created, edited and deleted messages, and copies the record out | The searchable history window, edit diffs and the deleted-message styling |
+| SilenceUsers | Takes `@everyone`, role and user pings out of messages by the listed people | Dropping the desktop notification for those messages, which the state owner raises |
+| SplitLargeMessages | Splits an oversized body on newlines, spaces or an exact length and sends the parts in order with your delay | Reading the account's Nitro tier for the 4000-character limit, and slowmode awareness |
+| NoReplyMention | Applies a reply-mention policy: never ping, ping only listed people, or leave your choice alone | Reading the Shift key: this client shows an explicit mention switch in the reply header, so the port applies a policy at send time instead |
 
 ## Deliberately not ported
 

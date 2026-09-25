@@ -1,9 +1,14 @@
-# tesktop2
+# tesktop-rust
 
-> **tesktop2** is the Tesktop/TestCord distribution of the native Serein client. The native
-> Rust/egui/wgpu UI and networking runtime are based on Serein; Tesktop features are layered
-> on top without replacing that client. Serein remains the upstream project and is used under
-> its original MIT/Apache-2.0 terms.
+**tesktop2** is the Tesktop/TestCord distribution of the native Serein client, and this
+repository is its home. The native Rust/egui/wgpu UI and networking runtime are based on
+[Serein](https://github.com/ViceVerse-cz/Serein); Tesktop features are layered on top without
+replacing that client. Serein remains the upstream project and is used under its original
+MIT/Apache-2.0 terms.
+
+TestCord plugins are ported natively here rather than injected into a web client; see
+[docs/testcord-plugins.md](docs/testcord-plugins.md) for the contract, the bounds, the ports
+that ship today and what is deliberately left out.
 
 <p align="center">
   <a href="https://github.com/ViceVerse-cz/rustcord">

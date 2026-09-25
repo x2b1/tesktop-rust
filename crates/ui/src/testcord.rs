@@ -14,8 +14,16 @@ pub enum Value {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Kind {
 	Toggle,
-	Text { multiline: bool },
-	Number { min: i64, max: i64 },
+	Text {
+		multiline: bool,
+	},
+	Number {
+		min: i64,
+		max: i64,
+	},
+	Choice {
+		options: &'static [(&'static str, &'static str)],
+	},
 }
 
 #[derive(Clone, Debug)]
@@ -198,6 +206,36 @@ impl TestCord {
 							id: entry.id.clone(),
 							key: field.key.clone(),
 							value: Value::Flag(value),
+						});
+					}
+				}
+				(Kind::Choice { options }, Value::Text(value)) => {
+					let mut selected = value.clone();
+					let label = options
+						.iter()
+						.find(|(option, _)| *option == selected.as_str())
+						.map_or(selected.as_str(), |(_, label)| *label);
+					egui::ComboBox::from_id_salt((
+						"testcord-choice",
+						entry.id.clone(),
+						field.key.clone(),
+					))
+					.selected_text(label)
+					.width(ui.available_width())
+					.show_ui(ui, |ui| {
+						for (option, option_label) in *options {
+							ui.selectable_value(
+								&mut selected,
+								(*option).to_string(),
+								*option_label,
+							);
+						}
+					});
+					if selected != *value {
+						self.request(Request::SetValue {
+							id: entry.id.clone(),
+							key: field.key.clone(),
+							value: Value::Text(selected),
 						});
 					}
 				}

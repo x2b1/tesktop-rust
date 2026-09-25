@@ -4,7 +4,7 @@
 //! cleaning works offline and never blocks a send on a network round trip, so this port covers
 //! the widely used providers rather than all of them.
 
-use crate::{Meta, SendContext};
+use crate::{Meta, Outgoing};
 use url::Url;
 
 struct Provider {
@@ -211,21 +211,13 @@ impl crate::Plugin for ClearUrls {
 		}
 	}
 
-	fn before_send(
-		&mut self,
-		_context: &SendContext,
-		content: &mut String,
-	) -> Result<(), &'static str> {
-		*content = clean(content);
+	fn before_send(&mut self, outgoing: &mut Outgoing<'_>) -> Result<(), &'static str> {
+		*outgoing.body = clean(outgoing.body);
 		Ok(())
 	}
 
-	fn before_edit(
-		&mut self,
-		_context: &SendContext,
-		content: &mut String,
-	) -> Result<(), &'static str> {
-		*content = clean(content);
+	fn before_edit(&mut self, outgoing: &mut Outgoing<'_>) -> Result<(), &'static str> {
+		*outgoing.body = clean(outgoing.body);
 		Ok(())
 	}
 

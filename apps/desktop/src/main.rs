@@ -738,6 +738,8 @@ struct Desktop {
 	tesktop_picker: Option<std::sync::mpsc::Receiver<Option<std::path::PathBuf>>>,
 	tesktop_dirty: bool,
 	tesktop_epoch: Instant,
+	/// Parts of a split message waiting for their delay, and the channel they belong to.
+	tesktop_chunks: std::collections::VecDeque<(u64, model::Id, String)>,
 	login: Option<platform::LoginView>,
 	captcha: captcha::Captcha,
 	connection: Option<connection::Connection>,
@@ -839,6 +841,14 @@ struct Desktop {
 	token_input: Zeroizing<String>,
 }
 
+/// The message a send is replying to, if it is a reply at all.
+fn reply_target(command: &Command) -> Option<model::Id> {
+	match command {
+		Command::Send { reply, .. } => reply.as_ref().map(|reply| reply.target()),
+		_ => None,
+	}
+}
+
 /// One settings row for the TestCord page, falling back to the value the plugin declares.
 fn tesktop_field(
 	registry: &tesktop_plugins::Registry,
@@ -858,6 +868,10 @@ fn tesktop_field(
 		(SettingKind::Number { min, max }, Fallback::Number(value)) => (
 			ui::testcord::Kind::Number { min, max },
 			ui::testcord::Value::Number(value),
+		),
+		(SettingKind::Choice(options), Fallback::Text(value)) => (
+			ui::testcord::Kind::Choice { options },
+			ui::testcord::Value::Text(value.to_string()),
 		),
 		_ => (ui::testcord::Kind::Toggle, ui::testcord::Value::Flag(false)),
 	};
@@ -1919,6 +1933,7 @@ impl Desktop {
 			tesktop_picker: None,
 			tesktop_dirty: false,
 			tesktop_epoch: Instant::now(),
+			tesktop_chunks: Default::default(),
 			login: None,
 			captcha: captcha::Captcha::default(),
 			connection: None,
@@ -3878,9 +3893,29 @@ impl Desktop {
 		});
 	}
 
-	/// A plugin may hold a reply until its delay elapsed; it still goes through the send path.
+	/// A plugin may hold a reply or a message part until its delay elapsed; each still goes
+	/// through the app's own send path.
 	fn tesktop_send_replies(&mut self) {
-		for reply in self.tesktop.take_replies(self.tesktop_now()) {
+		let now = self.tesktop_now();
+		let queued = std::mem::take(&mut self.tesktop_chunks)
+			.into_iter()
+			.collect::<Vec<_>>();
+		let (ready, waiting): (Vec<_>, Vec<_>) =
+			queued.into_iter().partition(|(due, _, _)| *due <= now);
+		self.tesktop_chunks = waiting.into_iter().collect();
+		for (_, channel, body) in ready {
+			if self.state.selected != Some(channel) || !self.state.can_send(channel) {
+				self.messaging.toasts.push(
+					ui::design::Level::Warning,
+					"Message part not sent; open that channel to finish the message",
+				);
+				continue;
+			}
+			if let Some(command) = self.state.prepare_text_send(&body) {
+				self.command(command);
+			}
+		}
+		for reply in self.tesktop.take_replies(now) {
 			let selected = self.state.selected == Some(reply.channel);
 			if !selected || !self.state.can_send(reply.channel) {
 				self.messaging.toasts.push(
@@ -3895,7 +3930,7 @@ impl Desktop {
 		}
 	}
 
-	/// Let the bundled ports rewrite or veto an outgoing body. False means it was not sent.
+	/// Let the bundled ports rewrite, split or veto an outgoing message. False means it was not sent.
 	fn tesktop_rewrite(&mut self, command: &mut Command) -> bool {
 		let me = self
 			.state
@@ -3913,15 +3948,52 @@ impl Desktop {
 			}
 			_ => return true,
 		};
+		let mut mention = match command {
+			Command::Send { reply, .. } => reply.as_ref().is_some_and(|reply| reply.mention),
+			_ => false,
+		};
+		let replying = matches!(command, Command::Send { reply: Some(_), .. });
+		let author = self
+			.state
+			.timeline
+			.get(
+				replying
+					.then(|| reply_target(command))
+					.flatten()
+					.unwrap_or(model::Id(0)),
+			)
+			.map_or(model::Id(0), |message| message.author.id);
+		let roles = self
+			.state
+			.timeline
+			.get(
+				replying
+					.then(|| reply_target(command))
+					.flatten()
+					.unwrap_or(model::Id(0)),
+			)
+			.map(|message| message.author_roles.clone())
+			.unwrap_or_default();
+		let reply = replying.then(|| tesktop_plugins::Reply {
+			message: reply_target(command).unwrap_or(model::Id(0)),
+			author,
+			roles: &roles,
+			mention: &mut mention,
+		});
+		let mut outgoing = tesktop_plugins::Outgoing {
+			channel,
+			me,
+			body: &mut body,
+			reply,
+		};
 		let context = tesktop_plugins::SendContext::new(channel, me);
 		let outcome = if sending {
-			self.tesktop.before_send(&context, &mut body)
+			self.tesktop.before_send(&mut outgoing)
 		} else {
-			self.tesktop.before_edit(&context, &mut body)
+			self.tesktop.before_edit(&mut outgoing)
 		};
 		let outcome = match outcome {
 			Ok(()) => {
-				// The pending row must show the body that goes out, not the typed one.
 				if let Some(nonce) = &nonce
 					&& let Some(pending) = self
 						.state
@@ -3929,6 +4001,7 @@ impl Desktop {
 						.iter_mut()
 						.find(|pending| &pending.nonce == nonce)
 				{
+					// The pending row must show the body that goes out, not the typed one.
 					pending.content.clone_from(&body);
 				}
 				true
@@ -3948,10 +4021,46 @@ impl Desktop {
 				false
 			}
 		};
+		if let Command::Send { reply, .. } = command
+			&& let Some(reply) = reply
+		{
+			reply.mention = mention;
+		}
+		// An oversized body becomes several messages, the first one riding this command.
+		if outcome && sending {
+			let parts = self.tesktop.split(&context, &body);
+			if parts.len() > 1 {
+				let delay = self.tesktop.chunk_delay_ms().max(1);
+				let now = self.tesktop_now();
+				for (index, part) in parts.iter().enumerate().skip(1) {
+					self.tesktop_queue_chunk(now + delay * index as u64, channel, part.clone());
+				}
+				body = parts[0].clone();
+				if let Some(nonce) = match command {
+					Command::Send { nonce, .. } => Some(nonce.clone()),
+					_ => None,
+				} && let Some(pending) = self
+					.state
+					.pending
+					.iter_mut()
+					.find(|pending| pending.nonce == nonce)
+				{
+					pending.content.clone_from(&body);
+				}
+			}
+		}
 		if let Command::Send { content, .. } | Command::Edit { content, .. } = command {
 			*content = body;
 		}
 		outcome
+	}
+
+	/// Hold one part of a split message until its turn comes.
+	fn tesktop_queue_chunk(&mut self, due: u64, channel: model::Id, body: String) {
+		while self.tesktop_chunks.len() >= tesktop_plugins::splitlarge::MAX_QUEUED_CHUNKS {
+			self.tesktop_chunks.pop_front();
+		}
+		self.tesktop_chunks.push_back((due, channel, body));
 	}
 
 	/// Offer an inbound event to the bundled ports. True means a plugin hid the message.
@@ -5244,6 +5353,10 @@ impl Desktop {
 		for mut event in events {
 			if event.generation != self.state.generation {
 				continue;
+			}
+			// Plugins see the message as it will be stored: pings can be taken out first.
+			if let Event::Message(message) = &mut event.event {
+				self.tesktop.mutate_incoming(message);
 			}
 			// A hidden message is treated as if the service had never sent it.
 			if self.tesktop_observe(&event.event) {

@@ -12,6 +12,9 @@ pub mod autoreply;
 pub mod blockkeywords;
 pub mod clearurls;
 pub mod messagelogger;
+pub mod noreplymention;
+pub mod silenceusers;
+pub mod splitlarge;
 pub mod store;
 
 use model::{Id, Message};
@@ -47,8 +50,15 @@ pub struct Meta {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SettingKind {
 	Toggle,
-	Text { multiline: bool },
-	Number { min: i64, max: i64 },
+	Text {
+		multiline: bool,
+	},
+	Number {
+		min: i64,
+		max: i64,
+	},
+	/// A closed list of `(value, label)` pairs; the stored value is the first element.
+	Choice(&'static [(&'static str, &'static str)]),
 }
 
 /// The value a setting falls back to, and the single place it is declared.
@@ -178,6 +188,23 @@ impl SendContext {
 	}
 }
 
+/// A reply the owner is sending, including the decision the composer made about the mention.
+pub struct Reply<'a> {
+	pub message: Id,
+	pub author: Id,
+	pub roles: &'a [Id],
+	pub mention: &'a mut bool,
+}
+
+/// The body and reply of one outgoing message, which plugins may rewrite.
+pub struct Outgoing<'a> {
+	pub channel: Id,
+	pub me: Id,
+	pub body: &'a mut String,
+	/// `None` unless the owner is replying to a message.
+	pub reply: Option<Reply<'a>>,
+}
+
 /// A message edit as the host saw it: the timeline body before and after the patch.
 #[derive(Clone, Copy)]
 pub struct Edit<'a> {
@@ -230,21 +257,24 @@ pub trait Plugin {
 	}
 	fn on_edited(&mut self, _inbound: &Inbound, _edit: &Edit<'_>) {}
 	fn on_deleted(&mut self, _inbound: &Inbound, _channel: Id, _id: Id, _last: Option<&Message>) {}
-	/// Rewrite the body, or refuse it with a reason the app shows instead of sending.
-	fn before_send(
-		&mut self,
-		_context: &SendContext,
-		_content: &mut String,
-	) -> Result<(), &'static str> {
+	/// Rewrite the body or the reply mention, or refuse it with a reason the app shows
+	/// instead of sending.
+	fn before_send(&mut self, _outgoing: &mut Outgoing<'_>) -> Result<(), &'static str> {
 		Ok(())
 	}
-	fn before_edit(
-		&mut self,
-		_context: &SendContext,
-		_content: &mut String,
-	) -> Result<(), &'static str> {
+	fn before_edit(&mut self, _outgoing: &mut Outgoing<'_>) -> Result<(), &'static str> {
 		Ok(())
 	}
+	/// Split one oversized body into several bodies. The app sends them in order.
+	fn split(&self, _context: &SendContext, _body: &str) -> Vec<String> {
+		Vec::new()
+	}
+	/// How long the app should wait between the parts of one message.
+	fn chunk_delay_ms(&self) -> Option<u64> {
+		None
+	}
+	/// Rewrite an accepted inbound message before it enters the timeline.
+	fn mutate_incoming(&mut self, _message: &mut Message) {}
 	/// One-line status for the settings page.
 	fn summary(&self) -> Option<String> {
 		None
@@ -278,6 +308,9 @@ impl Registry {
 		let plugins: Vec<Box<dyn Plugin>> = vec![
 			Box::new(clearurls::ClearUrls),
 			Box::new(blockkeywords::BlockKeywords::default()),
+			Box::new(silenceusers::SilenceUsers::default()),
+			Box::new(splitlarge::SplitLargeMessages::default()),
+			Box::new(noreplymention::NoReplyMention::default()),
 			Box::new(autoreply::AutoReplyContent::default()),
 			Box::new(messagelogger::MessageLogger::default()),
 		];
@@ -409,32 +442,60 @@ impl Registry {
 		Verdict::Show
 	}
 
-	pub fn before_send(
-		&mut self,
-		context: &SendContext,
-		content: &mut String,
-	) -> Result<(), &'static str> {
+	pub fn before_send(&mut self, outgoing: &mut Outgoing<'_>) -> Result<(), &'static str> {
 		if !self.any_enabled() {
 			return Ok(());
 		}
 		for index in self.active() {
-			self.plugins[index].before_send(context, content)?;
+			self.plugins[index].before_send(outgoing)?;
 		}
 		Ok(())
 	}
 
-	pub fn before_edit(
-		&mut self,
-		context: &SendContext,
-		content: &mut String,
-	) -> Result<(), &'static str> {
+	pub fn before_edit(&mut self, outgoing: &mut Outgoing<'_>) -> Result<(), &'static str> {
 		if !self.any_enabled() {
 			return Ok(());
 		}
 		for index in self.active() {
-			self.plugins[index].before_edit(context, content)?;
+			self.plugins[index].before_edit(outgoing)?;
 		}
 		Ok(())
+	}
+
+	/// The first plugin that wants a body split wins; the rest see nothing.
+	pub fn split(&self, context: &SendContext, body: &str) -> Vec<String> {
+		if !self.any_enabled() {
+			return Vec::new();
+		}
+		self.active()
+			.into_iter()
+			.find_map(|index| {
+				let parts = self.plugins[index].split(context, body);
+				(!parts.is_empty()).then_some(parts)
+			})
+			.unwrap_or_default()
+	}
+
+	/// The slowest delay any active plugin asked for between message parts.
+	pub fn chunk_delay_ms(&self) -> u64 {
+		if !self.any_enabled() {
+			return 0;
+		}
+		self.active()
+			.into_iter()
+			.filter_map(|index| self.plugins[index].chunk_delay_ms())
+			.max()
+			.unwrap_or_default()
+	}
+
+	/// Let plugins rewrite an accepted message before the state owner sees it.
+	pub fn mutate_incoming(&mut self, message: &mut Message) {
+		if !self.any_enabled() {
+			return;
+		}
+		for index in self.active() {
+			self.plugins[index].mutate_incoming(message);
+		}
 	}
 
 	/// Replies whose delay has elapsed. Later ones stay queued for a later frame.
@@ -711,13 +772,15 @@ mod tests {
 			registry.observe(&inbound, InboundEvent::Created(&message)),
 			Verdict::Show
 		);
-		let mut content = "https://example.com/?utm_source=x".to_string();
-		assert!(
-			registry
-				.before_send(&SendContext::new(Id(7), Id(1)), &mut content)
-				.is_ok()
-		);
-		assert_eq!(content, "https://example.com/?utm_source=x");
+		let mut body = "https://example.com/?utm_source=x".to_string();
+		let mut outgoing = Outgoing {
+			channel: Id(7),
+			me: Id(1),
+			body: &mut body,
+			reply: None,
+		};
+		assert!(registry.before_send(&mut outgoing).is_ok());
+		assert_eq!(body, "https://example.com/?utm_source=x");
 	}
 
 	#[test]
