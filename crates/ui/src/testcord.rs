@@ -201,6 +201,14 @@ impl Default for TestCord {
 }
 
 impl TestCord {
+	/// A page over a live list of ports, which is what the app builds each frame.
+	pub fn with_entries(entries: Vec<Entry>) -> Self {
+		Self {
+			entries,
+			..Self::default()
+		}
+	}
+
 	pub fn request(&mut self, request: Request) {
 		if self.requests.len() < MAX_REQUESTS {
 			self.requests.push(request);

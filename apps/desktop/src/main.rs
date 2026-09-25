@@ -3906,6 +3906,7 @@ impl Desktop {
 
 	/// Keep the settings page, the import picker, the saved file and the send queue in step.
 	fn tesktop_tick(&mut self, ctx: &egui::Context) {
+		self.tesktop_presence();
 		// A body rewrite belongs to one plugin, and the formatter caches by owner.
 		let (owner, transform) = self
 			.tesktop
@@ -4073,6 +4074,40 @@ impl Desktop {
 		self.tesktop_compose();
 		self.tesktop_intent();
 		self.tesktop_open_url();
+	}
+
+	/// Apply the presence a port asks for, once, and only while the reason holds.
+	///
+	/// The status is the owner's own and goes back to what it was when the reason stops, so
+	/// a port cannot leave you set to do not disturb after the game is over. The app owns
+	/// the write; a port only names the intent.
+	fn tesktop_presence(&mut self) {
+		let wanted = self.tesktop.presence();
+		let playing = self.state.local_game_activity.is_some();
+		let status = match wanted {
+			tesktop_plugins::Presence::Keep => "online",
+			tesktop_plugins::Presence::DoNotDisturbWhilePlaying if playing => "dnd",
+			tesktop_plugins::Presence::DoNotDisturbWhilePlaying => "online",
+		};
+		if self.state.demo || self.fixture_only {
+			return;
+		}
+		// The owner's own presence is the one a port may write, and only when it differs, so
+		// the status goes back to what it was once the reason stops.
+		let wanted = match status {
+			"dnd" => model::PresenceStatus::DoNotDisturb,
+			_ => model::PresenceStatus::Online,
+		};
+		if self.messaging.own_presence.status == wanted {
+			return;
+		}
+		self.messaging.own_presence.status = wanted;
+		// The app's own path sends it; this only says what it should say.
+		self.messaging.own_presence_changed = true;
+		self.state.status = match status {
+			"dnd" => "Set to do not disturb while that game is running",
+			_ => "Back online",
+		};
 	}
 
 	/// Tell the ports what became of a send: the message that went out, or why it did not.
@@ -7416,6 +7451,117 @@ impl eframe::App for Desktop {
 #[cfg(test)]
 mod tests {
 	use super::*;
+
+	/// The page the owner actually sees, built from the live registry the way the app
+	/// builds it: every port, its own defaults, and the settings each one declares.
+	fn live_page(registry: &tesktop_plugins::Registry) -> Vec<ui::testcord::Entry> {
+		registry
+			.metas()
+			.iter()
+			.map(|meta| {
+				let mut entry = ui::testcord::Entry::new(
+					meta.id,
+					meta.name,
+					meta.description,
+					meta.authors,
+					meta.tags,
+					registry.enabled(meta.id),
+				);
+				entry.summary = registry.summary(meta.id).unwrap_or_default();
+				entry.log = registry.export(meta.id).is_some();
+				entry.log_tail = if entry.log {
+					registry.tail(meta.id, 40)
+				} else {
+					String::new()
+				};
+				entry.fields = registry
+					.settings_of(meta.id)
+					.iter()
+					.map(|setting| tesktop_field(registry, meta.id, setting))
+					.collect();
+				entry
+			})
+			.collect()
+	}
+
+	#[test]
+	fn every_bundled_port_has_a_page_that_draws() {
+		let registry = tesktop_plugins::Registry::new();
+		let mut page = ui::testcord::TestCord::with_entries(live_page(&registry));
+		let ctx = egui::Context::default();
+		ui::design::apply(&ctx);
+		let output = ctx.run_ui(egui::RawInput::default(), |ui| page.show(ui));
+		let mut painted = Vec::new();
+		fn texts(shape: &egui::Shape, out: &mut Vec<String>) {
+			match shape {
+				egui::Shape::Text(text) => out.push(text.galley.job.text.clone()),
+				egui::Shape::Vec(shapes) => {
+					for shape in shapes {
+						texts(shape, out);
+					}
+				}
+				_ => {}
+			}
+		}
+		for shape in &output.shapes {
+			texts(&shape.shape, &mut painted);
+		}
+		output.drop_without_applying_deltas();
+		assert!(
+			registry.metas().len() > 50,
+			"the bundled ports went missing: {}",
+			registry.metas().len()
+		);
+		assert!(
+			painted.iter().any(|line| line.contains("Search plugins")),
+			"the page did not draw its search field"
+		);
+		// Every port is listed, by its own id, so a port with a bad name would show here.
+		for meta in registry.metas() {
+			assert!(
+				painted.iter().any(|line| line == meta.name),
+				"{} is not on the page",
+				meta.name
+			);
+		}
+	}
+
+	#[test]
+	fn a_search_over_the_live_registry_finds_a_port_by_its_author_and_its_tag() {
+		let registry = tesktop_plugins::Registry::new();
+		let mut page = ui::testcord::TestCord::with_entries(live_page(&registry));
+		for needle in ["BlockKeywords", "tracking", "Chat"] {
+			page.search = needle.to_string();
+			page.listing_dirty = true;
+			assert!(
+				!page.visible().is_empty(),
+				"{needle} matched nothing in the live registry"
+			);
+		}
+		page.search = "zzz-nothing-is-called-this".to_string();
+		page.listing_dirty = true;
+		assert!(page.visible().is_empty());
+	}
+
+	#[test]
+	fn the_sort_choices_put_the_live_registry_in_a_stable_order() {
+		let registry = tesktop_plugins::Registry::new();
+		let mut page = ui::testcord::TestCord::with_entries(live_page(&registry));
+		page.sort = ui::testcord::Sort::Name;
+		page.listing_dirty = true;
+		let by_name = page.visible();
+		assert_eq!(by_name.len(), registry.metas().len());
+		page.sort = ui::testcord::Sort::Registry;
+		page.listing_dirty = true;
+		assert_eq!(
+			page.visible(),
+			(0..registry.metas().len()).collect::<Vec<_>>()
+		);
+		page.sort = ui::testcord::Sort::Name;
+		page.listing_dirty = true;
+		assert_eq!(page.visible(), by_name, "the same order comes back");
+	}
+
 	#[test]
 	fn the_settings_page_shows_stored_values_and_the_declared_default() {
 		let mut registry = tesktop_plugins::Registry::new();
