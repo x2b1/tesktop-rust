@@ -616,7 +616,7 @@ testcordplugins,dontLimitMe,DontLimitMe,removes the limit on message sending. sp
 testcordplugins,doubleEmoji,DoubleEmoji,Keeps the emoji picker open on click and highlights selected emojis with a blue border.,"{name:""Nightcord"",id:0n}",0,False,False,False,False,False,,portable-logic,
 testcordplugins,editUsers,EditUsers,Edit users,TestcordDevs.x2b,1,True,False,False,False,False,,rewrite,
 testcordplugins,embedBuilder,EmbedBuilder,"Default embed color (hex format, e.g. #5865F2).","{name:""Mifu"",id:1309909311618814005n},Te",2,False,False,False,False,False,,portable-ui,
-testcordplugins,embeddedURLs,EmbeddedURLs,,"{name:""Dadian1"",id:131825869302792192n}",0,False,False,False,False,False,,portable-logic,
+testcordplugins,embeddedURLs,EmbeddedURLs,,"{name:""Dadian1"",id:131825869302792192n}",0,False,False,False,False,False,,portable-logic,stamp
 testcordplugins,emojiOnMouseUp,EmojiOnMouseUp,Sends the emoji you are hovering when you take your mouse button up.,TestcordDevs.x2b,0,True,False,False,False,False,,rewrite,
 testcordplugins,encryptedMessage,EncryptedMessage,Where to show the button,"{name:""Nightcord"",id:0n},TestcordDevs.x2",2,False,False,False,False,True,,portable-ui,
 testcordplugins,eval,Eval,Adds a / command to evaluate JavaScript on your client,Devs.nin0dev,0,False,False,False,False,False,native.ts,native-feature,
@@ -782,7 +782,7 @@ testcordplugins,saveUserGifs,SaveUserGifs,Where to scan for GIFs,TestcordDevs.nn
 testcordplugins,selfDestruct,SelfDestruct,Where to show the button,"{name:""Nightcord"",id:0n}",5,False,False,False,True,True,,portable-hook,
 testcordplugins,selfForward,SelfForward,Adds the current channel to the forward list popup,"{name:""VillainsRule"",id:0n}",0,True,False,False,False,False,,excluded,
 testcordplugins,sendtoalldms,SendToAllDMs,Adds a command to send a message to all friends' DMs with blacklist/whitelist settings. WE CANNOT GUARANTEE TH,TestcordDevs.x2b,0,False,False,False,False,False,,excluded,
-testcordplugins,sentfrommyuname,SentFromMyUname,Add your uname/useragent to every single message you send,TestcordDevs.x2b,0,False,True,False,False,False,native.ts,native-feature,
+testcordplugins,sentfrommyuname,SentFromMyUname,Add your uname/useragent to every single message you send,TestcordDevs.x2b,0,False,True,False,False,False,native.ts,native-feature,stamp
 testcordplugins,serverBackup,ServerBackup,"Backs up and restores complete Discord server configuration (roles, channels, permissions) - No permissions re","
 {
 name:""Bash"",

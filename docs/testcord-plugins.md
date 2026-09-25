@@ -83,6 +83,8 @@ MessageLogger record is session memory and is never written to disk; copy it out
 | ProfanityFilter | Removes filtered whole words from what you send, tidies the spaces and punctuation it leaves, and either sends a duck or refuses the message | The keyboard shortcut that toggles it |
 | JsTextReplace | Applies your own find and replace rules, in order, each with an optional condition | The repeating rule editor widget: rules live in one multiline field, one per line, `find => replace` with an optional `\| if: text` |
 | Signature | Appends your signature under every message you send | The composer button and composer menu entry that toggle it |
+| EmbeddedURLs | Rewrites a recognised link to the form that embeds inline, leaving everything else alone | TestCord's per-origin map, which this port keeps short to the hosts it recognises |
+| SentFromMyUname | Stamps a "Sent from my" line under what you send, with a per-channel whitelist and a `nouname ` one-message opt-out | Reading your uname: the text is yours to set |
 | MessageBurst | A second message inside the window edits the one before it, with attachment, reply and group-message rules | Its keyboard shortcut |
 | PingNotifications | In servers, only ping on a direct mention, with friends and direct messages able to opt back in | The mention formatting it also rewrites, which this client renders itself |
 | OnePingPerDM | A run of unread direct messages pings once, at the oldest, with scope, mention and ignore-list rules | The desktop-type check, which this client answers from the channel's guild instead |

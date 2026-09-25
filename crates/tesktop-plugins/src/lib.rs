@@ -21,6 +21,7 @@ pub mod notify;
 pub mod sendtext;
 pub mod silenceusers;
 pub mod splitlarge;
+pub mod stamp;
 pub mod store;
 
 use model::{Id, Message};
@@ -410,6 +411,8 @@ impl Registry {
 			Box::new(notify::OnePingPerDm::default()),
 			Box::new(notify::MessageNotifier::default()),
 			Box::new(burst::MessageBurst::default()),
+			Box::new(stamp::EmbeddedUrls::default()),
+			Box::new(stamp::SentFromMyUname::default()),
 			Box::new(blockkeywords::BlockKeywords::default()),
 			Box::new(silenceusers::SilenceUsers::default()),
 			Box::new(splitlarge::SplitLargeMessages::default()),
