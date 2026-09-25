@@ -24,6 +24,7 @@ pub mod react;
 pub mod schedule;
 pub mod sendtext;
 pub mod silenceusers;
+pub mod speech;
 pub mod splitlarge;
 pub mod stamp;
 pub mod store;
@@ -284,6 +285,8 @@ pub struct Display {
 	pub hold_read_ack: bool,
 	/// Keep the body of a deleted message so it can still be read.
 	pub preserve_deleted: bool,
+	/// Count the words and characters under every message long enough to be worth counting.
+	pub word_count: bool,
 	/// The composer's counter, or `None` for the app's own near-limit counter.
 	pub counter: Option<display::Counter>,
 }
@@ -466,6 +469,10 @@ impl Registry {
 			Box::new(react::HopOn::default()),
 			Box::new(react::AskMeToMute),
 			Box::new(react::IRememberYou::default()),
+			Box::new(speech::AutoVaporwave::default()),
+			Box::new(speech::SpaceOut::default()),
+			Box::new(speech::AntiNameChange::default()),
+			Box::new(speech::WordCount::default()),
 			Box::new(blockkeywords::BlockKeywords::default()),
 			Box::new(silenceusers::SilenceUsers::default()),
 			Box::new(splitlarge::SplitLargeMessages::default()),
@@ -741,6 +748,7 @@ impl Registry {
 			display.hide_edited |= patch.hide_edited.unwrap_or(false);
 			display.hold_read_ack |= patch.hold_read_ack.unwrap_or(false);
 			display.preserve_deleted |= patch.preserve_deleted.unwrap_or(false);
+			display.word_count |= patch.word_count.unwrap_or(false);
 			if let Some(counter) = patch.counter {
 				display.counter = Some(counter);
 			}

@@ -16,6 +16,8 @@ pub struct Display {
 	pub preserve_deleted: bool,
 	/// The composer's counter, or `None` for the app's own near-limit counter.
 	pub counter: Option<Counter>,
+	/// Count the words and characters under every message long enough to be worth counting.
+	pub word_count: bool,
 }
 
 /// How the composer's character counter reads. Mirrors the runtime's own enum.

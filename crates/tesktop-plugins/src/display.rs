@@ -32,6 +32,8 @@ pub struct DisplayPatch {
 	pub hold_read_ack: Option<bool>,
 	/// Keep the body of a deleted message so it can still be read.
 	pub preserve_deleted: Option<bool>,
+	/// Count the words and characters under every message long enough to be worth counting.
+	pub word_count: Option<bool>,
 	pub counter: Option<Counter>,
 }
 

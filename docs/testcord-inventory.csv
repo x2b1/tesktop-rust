@@ -513,7 +513,7 @@ name:""Bash"",
 id:1327483363518582784n,",8,False,False,False,True,False,,portable-hook,
 testcordplugins,antiMod,AntiMod,Tools to avoid mods,TestcordDevs.dot,0,False,False,False,False,False,,portable-logic,
 testcordplugins,antiMoveDeco,AntiMoveDeco,Adds a button to prevent being moved or disconnected from a voice channel.,"{name:""Nightcord"",id:0n}",1,False,False,False,False,False,,portable-logic,
-testcordplugins,antiNameChange,AntiNameChange,User IDs of the friend (comma separated),Devs.nin0dev,4,False,True,True,True,False,,portable-hook,
+testcordplugins,antiNameChange,AntiNameChange,User IDs of the friend (comma separated),Devs.nin0dev,4,False,True,True,True,False,,portable-hook,speech
 testcordplugins,antiNickname,AntiNickname,Show a notification when a forced nickname is removed,"{name:""Nightcord"",id:0n}",2,False,False,False,True,False,,portable-hook,
 testcordplugins,antiSnitch,AntiSnitch,Alarm Volume,TestcordDevs.dot,2,False,False,False,False,False,,portable-logic,
 testcordplugins,antiStereo,AntiStereo,Force mono (disable stereo),"
@@ -547,7 +547,7 @@ testcordplugins,autoUnmute,AutoUnmute,Automatically unmutes and undeafens when s
 {
 name:""Bash"",
 id:1327483363518582784n,",1,False,False,False,True,False,,portable-hook,
-testcordplugins,autoVaporwave,AutoVaporwave,Turn every message you send into ｆｕｌｌｗｉｄｔｈ text automatically.,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-logic,
+testcordplugins,autoVaporwave,AutoVaporwave,Turn every message you send into ｆｕｌｌｗｉｄｔｈ text automatically.,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-logic,speech
 testcordplugins,autonickname,AutoNickname,Show a toast when AutoNickname restores a nickname.,TestcordDevs.x2b,3,False,False,False,True,False,,portable-hook,
 testcordplugins,avatarGrabber,AvatarGrabber,/avatar grabs the full-resolution avatar of any user (or yourself).,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-ui,
 testcordplugins,betterBios,BetterBios,Improves Discord's bio redesign,TestcordDevs.x2b,0,False,False,False,False,False,,portable-logic,
@@ -807,7 +807,7 @@ testcordplugins,soloaudio,SoloAudio,Re-clicking the same Solo target unmutes / r
 testcordplugins,soundTriggers,SoundTriggers,Chaotic plugin for mapping text/emojis to sound,TestcordDevs.x2b,2,False,False,False,True,False,,portable-hook,
 testcordplugins,soundboardPro,Bruh,Enable Soundboard Pro,TestcordDevs.x2b,6,True,False,False,False,False,,rewrite,
 testcordplugins,soundcloudRichPresence,SoundCloud,Your SoundCloud OAuth token. Get it from soundcloud.com → F12 DevTools → Application → Cookies → oauth_token.,"{name:""Sharp"",id:0n}",7,False,False,False,False,False,,portable-logic,
-testcordplugins,spaceOut,SpaceOut,/spaceout p u t s   s p a c e s   between every letter.,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-ui,
+testcordplugins,spaceOut,SpaceOut,/spaceout p u t s   s p a c e s   between every letter.,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-ui,speech
 testcordplugins,spoofmsgv2,Server Level,Spoof official Discord system messages with realistic embeds,TestcordDevs.x2b,0,False,False,False,False,False,,excluded,
 testcordplugins,spotifyAddToQueue.desktop,SpotifyAddToQueue,Adds a button in Spotify embeds to add the song to the queue,Devs.nin0dev,0,False,False,False,False,False,native.ts,native-feature,
 testcordplugins,staffScanner,StaffScanner,Alert volume when Staff is detected.,TestcordDevs.x2b,4,False,False,False,True,False,,portable-hook,
@@ -895,7 +895,7 @@ testcordplugins,webRtcLeakPrevent,WebRTCLeakPrevent,"ICE transport policy. Relay
 testcordplugins,webcamStartNotifier,WebcamStartNotifier,Play notification sound in private voice calls (DMs),TestcordDevs.x2b,2,False,False,False,False,False,,portable-logic,
 testcordplugins,wikiLookup,WikiLookup,/wiki pulls a short Wikipedia summary for anything (sent only to you).,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-ui,
 testcordplugins,wordBomb,WordBomb,"BombParty/WordBomb assistant with persistent overlay, integrated AI, and alphabet tracking.","{name:""Nightcord"",id:0n}",1,False,False,False,False,False,,portable-logic,
-testcordplugins,wordCount,WordCount,Shows the word count of a message below it,TestcordDevs.x2b,0,False,False,False,False,False,,portable-logic,
+testcordplugins,wordCount,WordCount,Shows the word count of a message below it,TestcordDevs.x2b,0,False,False,False,False,False,,portable-logic,speech
 testcordplugins,yMusicSync.desktop,YMusicSync,Control Yandex Music through Ynison and Discord RPC,"{name:""diram1x"",id:710580442180485120n}",1,False,False,False,False,False,native.ts;nativeBridge.ts,native-feature,
 testcordplugins,ytdownloader,⚪,Send a Clyde message with the download progress.,TestcordDevs.x2b,5,True,False,False,False,False,native.ts,native-feature,
 testcordplugins,yuri,PurrBot,Sends a random yuri picture via /yuri. Uses 5 APIs with random order and automatic fallback. (NSFW),TestcordDevs.x2b,0,False,False,False,False,False,,portable-ui,

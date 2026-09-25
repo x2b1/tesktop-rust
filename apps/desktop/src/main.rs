@@ -2183,6 +2183,8 @@ impl Desktop {
 		self.messaging.share_game_activity = self.game_activity.enabled;
 		ctx.memory_mut(|m| *m = egui::Memory::default());
 		let _ = ui::emoji::install(ctx);
+		// Publish before `apply`, which reads these while rebuilding the egui styles.
+		self.messaging.publish_accessibility();
 		ui::design::apply(ctx);
 		ctx.set_theme(self.appearance);
 		self.messaging
@@ -3809,6 +3811,7 @@ impl Desktop {
 			hide_edited: display.hide_edited,
 			hold_read_ack: display.hold_read_ack,
 			preserve_deleted: display.preserve_deleted,
+			word_count: display.word_count,
 			counter: display.counter.map(|counter| ui::Counter {
 				always: counter.always,
 				colors: counter.colors,

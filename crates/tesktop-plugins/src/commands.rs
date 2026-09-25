@@ -86,15 +86,8 @@ fn small_caps(text: &str) -> String {
 		.collect()
 }
 
-fn fullwidth(text: &str) -> String {
-	text.chars()
-		.map(|character| match (' '..='~').contains(&character) {
-			false => character,
-			true if character == ' ' => '\u{3000}',
-			true => char::from_u32(character as u32 + 0xFEE0).unwrap_or(character),
-		})
-		.collect()
-}
+/// The same table the automatic port uses, so `/vaporwave` and AutoVaporwave agree.
+use crate::speech::fullwidth;
 
 const LEET_SETTINGS: &[Setting] = &[Setting {
 	key: "enabled",

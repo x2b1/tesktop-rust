@@ -2433,6 +2433,14 @@ impl TimelineView {
 														.color(colors.muted),
 												);
 											}
+											if self.display.word_count {
+												if let Some(count) = word_and_characters(&message.content)
+												{
+													ui.label(
+														RichText::new(count).small().color(colors.muted),
+													);
+												}
+											}
 											if !message.components.is_empty() {
 												let shown = ui.scope(|ui| {
 													self.components.show(
@@ -8066,6 +8074,59 @@ mod tests {
 				.iter()
 				.all(|y| y.is_some_and(|y| (y - settled).abs() < 1.0)),
 			"opening onto loaded history walked the tail {arrived:?}, settled at {settled}"
+		);
+	}
+}
+
+/// The "N words, M characters" line under a message, or `None` when the message is too
+/// short for a count to be worth reading. Mirrors the port's own threshold.
+pub fn word_and_characters(content: &str) -> Option<String> {
+	let words = content.split(char::is_whitespace).filter(|word| !word.is_empty()).count();
+	if words <= 5 {
+		return None;
+	}
+	Some(format!(
+		"{words} words, {} characters",
+		content.chars().count()
+	))
+}
+
+#[cfg(test)]
+mod word_count_tests {
+	use super::word_and_characters;
+
+	#[test]
+	fn a_short_message_is_not_counted() {
+		assert_eq!(word_and_characters("one two three four five"), None);
+		assert_eq!(word_and_characters(""), None);
+		assert_eq!(word_and_characters("   
+  "), None);
+	}
+
+	#[test]
+	fn a_long_message_counts_words_and_characters() {
+		assert_eq!(
+			word_and_characters("one two three four five six"),
+			Some("6 words, 27 characters".to_string())
+		);
+	}
+
+	#[test]
+	fn runs_of_whitespace_do_not_become_words() {
+		assert_eq!(
+			word_and_characters("a  b
+c	d
+e f g h"),
+			Some("8 words, 16 characters".to_string())
+		);
+	}
+
+	#[test]
+	fn characters_are_counted_as_they_read() {
+		// A flag is one character to a reader and four bytes in a file.
+		assert_eq!(
+			word_and_characters("one two three four five flag"),
+			Some("6 words, 31 characters".to_string())
 		);
 	}
 }

@@ -88,6 +88,10 @@ MessageLogger record is session memory and is never written to disk; copy it out
 | Signature | Appends your signature under every message you send | The composer button and composer menu entry that toggle it |
 | EmbeddedURLs | Rewrites a recognised link to the form that embeds inline, leaving everything else alone | TestCord's per-origin map, which this port keeps short to the hosts it recognises |
 | SentFromMyUname | Stamps a "Sent from my" line under what you send, with a per-channel whitelist and a `nouname ` one-message opt-out | Reading your uname: the text is yours to set |
+| AutoVaporwave | Everything you send comes out fullwidth, code blocks included, exactly as the original does | Nothing; the port is complete |
+| SpaceOut | `/spaceout` separates every character, spaces included, so the gap between two words becomes three | Nothing; the port is complete |
+| AntiNameChange | A mention of someone you track keeps the alias you gave them, and an alias can never smuggle a mention of its own | Nothing; the port is complete |
+| WordCount | A count under every message of more than five words, counting characters as a reader sees them | Nothing; the port is complete |
 | HopOn | A message matching your pattern opens an address you choose, once per run, and the host refuses anything but web links and the launcher schemes a game needs | Nothing; the port is complete |
 | IRememberYou | Who you have talked to, oldest first, bounded and evicting the oldest, with servers optionally left out | The account-list export screen, which is yours |
 | AskMeToMute | A reminder entry, explaining the app owns muting | Muting, which the app owns |
