@@ -93,6 +93,7 @@ MessageLogger record is session memory and is never written to disk; copy it out
 | SpaceOut | `/spaceout` separates every character, spaces included, so the gap between two words becomes three | Nothing; the port is complete |
 | AntiNameChange | A mention of someone you track keeps the alias you gave them, and an alias can never smuggle a mention of its own | Nothing; the port is complete |
 | WordCount | A count under every message of more than five words, counting characters as a reader sees them | Nothing; the port is complete |
+| AntiRickroll | A line under a message whose link is one you would rather not follow: the original's 54 video ids and its two hosts, plus your own list, and a masked link is checked first because that is the one being hidden | Nothing; the port is complete |
 | FixFileExtensions | A file goes out under a name the service accepts, using the original's own mapping, with an exemption list; a name the upload path refuses is left as it was | Reading a file's bytes, so the plugins that compress or rewrite content still need an upload path |
 | DownloadAllAttachments | Every file on a message at once, with images optional, numbered when they share a name | Nothing; the app owns where the files land |
 | GoodPerson | The blocked words arrive as another word, from the original's own five categories and both replacement tables, with a category each switchable, matching whole words and the obfuscated spellings a slur also arrives as | `Math.random`; the replacement is chosen from the word instead, so a message always reads the same way |
@@ -165,9 +166,6 @@ not faked until the app can honour it:
 - **Text into the composer.** `QuickMention`, `QuickReply` and the canned-reply plugins all end
   in a cursor insertion. The registry can hand the host a line today, but the host has no way to
   put it where the caret is, and a port must not write into the field itself.
-- **A line under a message.** `AntiRickroll` and the other accessory plugins draw one warning
-  per message. The per-message count added for `WordCount` proves the position and the drawing;
-  what is missing is a per-message value rather than a flag on the whole timeline.
 - **An attachment and channel surface.** `DownloadAllAttachments`, `FastDeleteChannels` and
   `GuildPickerDumper` act on things other than a message body. The app owns the file picker and
   the confirmation dialogs, so a port should report intent the way `AskMeToMute` does.
@@ -176,6 +174,6 @@ not faked until the app can honour it:
 
 `cargo test -p tesktop-plugins` covers the registry, the bounds, settings persistence and
 TestCord import, and each port's matching rules. `cargo test -p ui --lib` renders the settings
-page. The host wiring in `apps/desktop/src/main.rs` is covered by `cargo check -p serein`; the
+page. The host wiring in `apps/desktop/src/main.rs` is covered by `cargo check -p tesktop2`; the
 desktop unit tests do not currently build because of an unrelated upstream fixture error in
 `apps/desktop/src/extension_member_details.rs`.

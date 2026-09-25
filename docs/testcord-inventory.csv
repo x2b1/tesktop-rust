@@ -870,7 +870,7 @@ testcordplugins,vcOwnerDetector,vcOwnerDetector,Guild detection data,TestcordDev
 testcordplugins,vcR,vcGrape,The tag configuration component,TestcordDevs.dot,5,False,False,False,False,False,,portable-logic,
 testcordplugins,vcpanelsettings,VCPanelSettings,Control voice settings right from the voice panel,TestcordDevs.x2b,0,True,False,False,False,False,,rewrite,
 testcordplugins,vencord-ExitSounds,ExitSounds,Guild ID of sound source,TestcordDevs.x2b,3,True,False,False,False,False,,rewrite,
-testcordplugins,vencord-antirickroll,AntiRickroll,Custom links to check for (separated by commas),TestcordDevs.x2b,2,False,False,False,False,False,,portable-logic,
+testcordplugins,vencord-antirickroll,AntiRickroll,Custom links to check for (separated by commas),TestcordDevs.x2b,2,False,False,False,False,False,,portable-logic,marker
 testcordplugins,vencord-gpubinder-main,GpuBinder,Choose which GPU Discord should prioritize. This fixes the issue where Windows 'forgets' your settings after a,"{name:""unclide"",id:395504896817758210n}",1,False,False,False,False,False,native.ts,native-feature,
 testcordplugins,vencord-perf-main,perf,[RISKY]Collection of small performance improvements[RISKY],"
 {
