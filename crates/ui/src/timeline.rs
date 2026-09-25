@@ -1356,6 +1356,8 @@ impl TimelineView {
 		if self.unread_jump || self.load_newer {
 			self.browse_away();
 		}
+		// A port may hold every read acknowledgement until the owner acts on it.
+		self.hold_read_ack |= self.display.hold_read_ack;
 		// Incoming messages being watched at the live edge are not a new unread section.
 		// Keep service read state unchanged while its acknowledgement is in flight.
 		let watching_latest = self.following

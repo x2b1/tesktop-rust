@@ -19,7 +19,7 @@ plugins,betterUploadButton,BetterUploadButton,"Upload with a single click, open 
 plugins,biggerStreamPreview,BiggerStreamPreview,This plugin allows you to enlarge stream previews,Devs.phil,3,False,False,False,False,False,,portable-logic,
 plugins,blurNsfw,BlurNSFW,Blur Amount (in pixels),Devs.Ven,2,True,False,False,False,False,,rewrite,
 plugins,callTimer,CallTimer,Compact or human readable format:,"Devs.Ven,EquicordDevs.MaxHerbold,Devs.D3",8,True,False,False,True,False,,rewrite,
-plugins,characterCounter,CharacterCounter,Enable yellow/red colouring as you get closer to the character limit,"Devs.thororen,Devs.creations",1,True,False,False,False,False,,rewrite,
+plugins,characterCounter,CharacterCounter,Enable yellow/red colouring as you get closer to the character limit,"Devs.thororen,Devs.creations",1,True,False,False,False,False,,rewrite,display
 plugins,clearURLs,ClearURLs,Automatically removes tracking elements from URLs you send,"Devs.adryd,Devs.thororen",0,False,False,False,False,False,,portable-logic,clearurls
 plugins,clientTheme,ClientTheme,Recreation of the old client theme experiment. Add a color to your Discord client theme,Devs.Nuckyz,2,False,False,False,False,False,,portable-logic,
 plugins,colorSighted,ColorSighted,"Removes the colorblind-friendly icons from statuses, just like 2015-2017 Discord",Devs.lewisakura,0,True,False,False,False,False,,rewrite,
@@ -337,7 +337,7 @@ equicordplugins,statusPresets,StatusPresets,Status Presets,EquicordDevs.iamme,1,
 equicordplugins,statusWhileActive.desktop,StatusWhileActive,Status to set while in a voice channel.,EquicordDevs.smuki,2,False,False,False,True,False,,portable-hook,
 equicordplugins,steamStatusSync,SteamStatusSync,Steam status when on Online,EquicordDevs.niko,7,False,False,False,True,False,,portable-hook,
 equicordplugins,stickerBlocker,StickerBlocker,Whether to show a snazzy cat gif,Devs.Samwich,5,True,False,False,False,False,,rewrite,
-equicordplugins,stopAutoUnread,StopAutoUnread,,EquicordDevs.SobakinTech,0,True,False,False,False,False,,rewrite,
+equicordplugins,stopAutoUnread,StopAutoUnread,,EquicordDevs.SobakinTech,0,True,False,False,False,False,,rewrite,display
 equicordplugins,streaks,Streaks,Shows a streak next to a user when you exchange DMs with them on consecutive days.,"EquicordDevs.Moowi,Devs.thororen",1,False,False,False,True,True,,portable-hook,
 equicordplugins,streamingCodecDisabler,StreamingCodecDisabler,Make Discord not consider using AV1 for streaming.,EquicordDevs.davidkra230,5,True,False,False,False,False,,rewrite,
 equicordplugins,talkInReverse,TalkInReverse,Reverses the message content before sending it.,EquicordDevs.Tolgchu,1,False,False,False,False,False,,portable-logic,

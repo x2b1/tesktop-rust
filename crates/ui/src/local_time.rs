@@ -10,6 +10,19 @@ pub struct Display {
 	/// Minutes to shift every clock by, within a real time zone.
 	pub offset_minutes: i32,
 	pub hide_edited: bool,
+	/// Keep messages from being marked as read while they are on screen.
+	pub hold_read_ack: bool,
+	/// The composer's counter, or `None` for the app's own near-limit counter.
+	pub counter: Option<Counter>,
+}
+
+/// How the composer's character counter reads. Mirrors the runtime's own enum.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Counter {
+	/// Show it from the first character instead of near the limit.
+	pub always: bool,
+	/// Follow the percentage thresholds TestCord uses.
+	pub colors: bool,
 }
 
 /// The clock a message row shows, with the owner's own format and offset applied.

@@ -29,7 +29,7 @@ remembered state.
 | `before_send` / `before_edit` | Every outgoing body and its reply mention | Rewrite either, or refuse it with a reason |
 | `split` | The same body, after the rewrite | Return several bodies, sent in order with `chunk_delay_ms` between them |
 | `message_actions` / `run_action` | A message's own menu, then the entry the owner picked | Offer a clipboard or notice action on that message |
-| `display` | Every frame, folded into one `Display` | Choose the clock format, an offset, relative rounding, and the edited marker |
+| `display` | Every frame, folded into one `Display` | Choose the clock format, an offset, relative rounding, the edited marker, the composer counter, and whether read state waits for you |
 
 A queued reply keeps its delay and is sent by the app through its own send path, so permission
 checks, the pending row and the service round trip behave exactly as for a typed message. A
@@ -76,6 +76,8 @@ MessageLogger record is session memory and is never written to disk; copy it out
 | CustomTimestamps | Message clocks follow a 12 or 24 hour choice with the owner's own offset | The composer timestamp picker and its modal |
 | DontRoundMyTimestamps | Relative phrases round down, so 7.6 years reads "7 years" | `moment`'s global rounding, which this client does not use |
 | NoEditedTimestamp | Hides the `(edited)` marker | Nothing; the port is complete |
+| CharacterCounter | A composer counter from the first character, coloured by percentage like TestCord | Nothing; the port is complete |
+| StopAutoUnread | Messages stay unread while you read them, until you mark them yourself | Nothing; the port is complete |
 | CopyUserURLs | Adds a Copy user link entry to a message's menu | The user context menu in the member list, which is a separate surface |
 | CopyUserMention | Adds a Copy mention entry to a message's menu | As above |
 | CopyStickerLinks | Adds a Copy sticker link entry to a message that carries stickers, with an option to copy an animated sticker as a still | The Open link entry and the sticker picker surface |

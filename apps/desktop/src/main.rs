@@ -3797,6 +3797,11 @@ impl Desktop {
 			},
 			offset_minutes: display.offset_minutes,
 			hide_edited: display.hide_edited,
+			hold_read_ack: display.hold_read_ack,
+			counter: display.counter.map(|counter| ui::Counter {
+				always: counter.always,
+				colors: counter.colors,
+			}),
 		};
 		// The message menu follows the enabled set, not the settings, so it only changes with
 		// one. Rebuilding it per frame would allocate for nothing on an idle client.

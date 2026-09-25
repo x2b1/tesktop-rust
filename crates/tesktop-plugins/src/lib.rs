@@ -235,6 +235,10 @@ pub struct Display {
 	/// Minutes to shift every clock by, within a real time zone.
 	pub offset_minutes: i32,
 	pub hide_edited: bool,
+	/// Keep messages from being marked as read while they are on screen.
+	pub hold_read_ack: bool,
+	/// The composer's counter, or `None` for the app's own near-limit counter.
+	pub counter: Option<display::Counter>,
 }
 
 pub enum InboundEvent<'a> {
@@ -352,6 +356,8 @@ impl Registry {
 			Box::new(display::CustomTimestamps::default()),
 			Box::new(display::DontRoundMyTimestamps),
 			Box::new(display::NoEditedTimestamp),
+			Box::new(display::CharacterCounter::default()),
+			Box::new(display::StopAutoUnread),
 			Box::new(blockkeywords::BlockKeywords::default()),
 			Box::new(silenceusers::SilenceUsers::default()),
 			Box::new(splitlarge::SplitLargeMessages::default()),
@@ -528,6 +534,10 @@ impl Registry {
 			let patch = self.plugins[index].display();
 			display.floor_relative |= patch.floor_relative.unwrap_or(false);
 			display.hide_edited |= patch.hide_edited.unwrap_or(false);
+			display.hold_read_ack |= patch.hold_read_ack.unwrap_or(false);
+			if let Some(counter) = patch.counter {
+				display.counter = Some(counter);
+			}
 			if let Some(hour) = patch.hour {
 				display.hour = hour;
 			}

@@ -12,12 +12,25 @@ pub enum HourFormat {
 }
 
 /// What one plugin wants changed about message display. `None` means "not my business".
+/// How the composer's character counter should read. `None` keeps the app's own, which
+/// appears only near the limit.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Counter {
+	/// Show it from the first character instead of near the limit.
+	pub always: bool,
+	/// Follow the percentage thresholds TestCord uses.
+	pub colors: bool,
+}
+
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct DisplayPatch {
 	pub floor_relative: Option<bool>,
 	pub hour: Option<HourFormat>,
 	pub offset_minutes: Option<i32>,
 	pub hide_edited: Option<bool>,
+	/// Keep messages from being marked as read while they are on screen.
+	pub hold_read_ack: Option<bool>,
+	pub counter: Option<Counter>,
 }
 
 const HOUR_SETTINGS: &[Setting] = &[
@@ -165,6 +178,92 @@ impl crate::Plugin for NoEditedTimestamp {
 	}
 }
 
+const COUNTER_SETTINGS: &[Setting] = &[Setting {
+	key: "colorEffects",
+	label: "Colour the counter as the limit approaches",
+	kind: SettingKind::Toggle,
+	default: Fallback::Flag(true),
+}];
+
+/// CharacterCounter: a counter in the composer, coloured as the limit approaches.
+pub struct CharacterCounter {
+	colors: Option<bool>,
+}
+
+impl Default for CharacterCounter {
+	fn default() -> Self {
+		Self { colors: Some(true) }
+	}
+}
+
+impl crate::Plugin for CharacterCounter {
+	fn meta(&self) -> Meta {
+		Meta {
+			id: "CharacterCounter",
+			name: "CharacterCounter",
+			description: "Shows a character counter in the composer.",
+			authors: "thororen, creations",
+			tags: &["Utility"],
+			aliases: &["characterCounter"],
+			default_enabled: false,
+		}
+	}
+
+	fn settings(&self) -> &'static [Setting] {
+		COUNTER_SETTINGS
+	}
+
+	fn configure(&mut self, values: &Values) {
+		self.colors = Some(crate::flag_or(values, COUNTER_SETTINGS, "colorEffects"));
+	}
+
+	fn display(&self) -> DisplayPatch {
+		DisplayPatch {
+			counter: Some(Counter {
+				always: true,
+				colors: self.colors.unwrap_or(true),
+			}),
+			..DisplayPatch::default()
+		}
+	}
+
+	fn summary(&self) -> Option<String> {
+		Some(if self.colors.unwrap_or(true) {
+			"Always shown, coloured by percentage".to_string()
+		} else {
+			"Always shown".to_string()
+		})
+	}
+}
+
+/// StopAutoUnread: messages stay unread until you say otherwise.
+pub struct StopAutoUnread;
+
+impl crate::Plugin for StopAutoUnread {
+	fn meta(&self) -> Meta {
+		Meta {
+			id: "StopAutoUnread",
+			name: "StopAutoUnread",
+			description: "Keeps messages from being marked as read while you read them.",
+			authors: "Vencord",
+			tags: &["Chat"],
+			aliases: &["stopAutoUnread"],
+			default_enabled: false,
+		}
+	}
+
+	fn display(&self) -> DisplayPatch {
+		DisplayPatch {
+			hold_read_ack: Some(true),
+			..DisplayPatch::default()
+		}
+	}
+
+	fn summary(&self) -> Option<String> {
+		Some("Read state waits for you".to_string())
+	}
+}
+
 #[cfg(test)]
 mod tests {
 	use super::*;
@@ -242,6 +341,38 @@ mod tests {
 		registry.set_enabled("NoEditedTimestamp", false);
 		assert!(!registry.display().hide_edited);
 		assert!(registry.display().floor_relative);
+	}
+
+	#[test]
+	fn the_counter_always_shows_and_follows_its_colour_setting() {
+		let mut plugin = CharacterCounter::default();
+		assert_eq!(
+			plugin.display().counter,
+			Some(Counter {
+				always: true,
+				colors: true
+			})
+		);
+		plugin.configure(&Values(
+			[("colorEffects".to_string(), serde_json::json!(false))]
+				.into_iter()
+				.collect(),
+		));
+		assert_eq!(
+			plugin.display().counter,
+			Some(Counter {
+				always: true,
+				colors: false
+			})
+		);
+		assert_eq!(plugin.summary().as_deref(), Some("Always shown"));
+	}
+
+	#[test]
+	fn the_read_ack_hold_is_its_own_concern() {
+		assert_eq!(StopAutoUnread.display().hold_read_ack, Some(true));
+		assert_eq!(StopAutoUnread.display().counter, None);
+		assert_eq!(CharacterCounter::default().display().hold_read_ack, None);
 	}
 
 	#[test]

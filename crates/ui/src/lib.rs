@@ -105,7 +105,7 @@ mod verification;
 mod voice;
 use client_core::{Command, MAX_CONTENT, MAX_DRAFT_BYTES, NavStep, State};
 use egui::{RichText, TextEdit};
-pub use local_time::Display;
+pub use local_time::{Counter, Display};
 use model::{Freshness, Id};
 pub use verification::VerificationUi;
 pub use voice::StageFocus;
