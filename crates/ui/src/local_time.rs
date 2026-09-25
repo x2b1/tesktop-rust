@@ -1,4 +1,31 @@
 //! Converts UTC instants to the user's local zone for display.
+use crate::testcord::HourFormat;
+
+/// What the bundled ports changed about clocks and markers. `Default` is the client's own look.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Display {
+	/// Round relative phrases down instead of to the nearest.
+	pub floor_relative: bool,
+	pub hour: HourFormat,
+	/// Minutes to shift every clock by, within a real time zone.
+	pub offset_minutes: i32,
+	pub hide_edited: bool,
+}
+
+/// The clock a message row shows, with the owner's own format and offset applied.
+pub fn clock(instant: time::OffsetDateTime, display: &Display) -> String {
+	let at = instant + time::Duration::minutes(i64::from(display.offset_minutes));
+	match display.hour {
+		HourFormat::Keep | HourFormat::TwentyFour => format!("{:02}:{:02}", at.hour(), at.minute()),
+		HourFormat::Twelve => {
+			let (suffix, twelve) = match at.hour() % 12 {
+				0 => ("AM", 12),
+				hour => ("PM", hour),
+			};
+			format!("{twelve}:{:02} {suffix}", at.minute())
+		}
+	}
+}
 
 /// Shifts `instant` to the local offset in effect at that moment; falls back to UTC.
 pub fn local(instant: time::OffsetDateTime) -> time::OffsetDateTime {
@@ -48,19 +75,35 @@ pub fn discord_timestamp(seconds: i64, style: u8) -> Option<String> {
 }
 /// "… ago" for a past instant, measured against the current clock.
 pub(crate) fn ago(instant: time::OffsetDateTime) -> String {
-	relative(instant - time::OffsetDateTime::now_utc())
+	ago_with(instant, &Display::default())
+}
+
+pub(crate) fn ago_with(instant: time::OffsetDateTime, display: &Display) -> String {
+	relative_with(instant - time::OffsetDateTime::now_utc(), display)
 }
 /// Coarse "in …"/"… ago" phrasing with the same thresholds the web client's relative times use.
 fn relative(delta: time::Duration) -> String {
+	relative_with(delta, &Display::default())
+}
+
+fn relative_with(delta: time::Duration, display: &Display) -> String {
 	let seconds = delta.whole_seconds();
 	let ahead = seconds > 0;
 	let seconds = seconds.unsigned_abs();
-	// Rounded like the web client: 47 hours reads "2 days", not "1 day".
-	let minutes = (seconds + 30) / 60;
-	let hours = (minutes + 30) / 60;
-	let days = (hours + 12) / 24;
-	let months = (days + 15) / 30;
-	let years = (days + 182) / 365;
+	// Rounded like the web client: 47 hours reads "2 days", not "1 day". A port may
+	// round down instead, so 7.6 years reads "7 years".
+	let round = |value: u64, unit: u64| {
+		if display.floor_relative {
+			value / unit
+		} else {
+			(value + unit / 2) / unit
+		}
+	};
+	let minutes = round(seconds, 60);
+	let hours = round(minutes, 60);
+	let days = round(hours, 24);
+	let months = round(days, 30);
+	let years = round(days, 365);
 	let amount = if seconds < 45 {
 		"a few seconds".to_owned()
 	} else if seconds < 90 {
@@ -131,6 +174,48 @@ mod tests {
 			);
 		}
 	}
+	#[test]
+	fn a_port_can_choose_the_hour_format_and_shift_the_clock() {
+		let instant = time::OffsetDateTime::from_unix_timestamp(1_700_000_000).unwrap();
+		let twelve = super::Display {
+			hour: super::HourFormat::Twelve,
+			..Default::default()
+		};
+		assert_eq!(super::clock(instant, &twelve), "10:13 PM");
+		let shifted = super::Display {
+			hour: super::HourFormat::TwentyFour,
+			offset_minutes: 120,
+			..Default::default()
+		};
+		assert_eq!(super::clock(instant, &shifted), "00:13");
+		assert_eq!(
+			super::clock(instant, &super::Display::default()),
+			"22:13",
+			"the default stays on the 24-hour clock"
+		);
+	}
+
+	#[test]
+	fn relative_phrases_round_down_when_a_port_asks() {
+		// 7.6 years: the default rounds up to "8 years", a floor keeps "7 years".
+		let delta = time::Duration::seconds(-(2_774 * 86_400));
+		assert_eq!(
+			super::relative_with(delta, &super::Display::default()),
+			"8 years ago"
+		);
+		let floored = super::Display {
+			floor_relative: true,
+			..Default::default()
+		};
+		assert_eq!(super::relative_with(delta, &floored), "7 years ago");
+		let more = time::Duration::seconds(-(3_504 * 86_400));
+		assert_eq!(
+			super::relative_with(more, &super::Display::default()),
+			"10 years ago"
+		);
+		assert_eq!(super::relative_with(more, &floored), "9 years ago");
+	}
+
 	#[test]
 	fn keeps_the_instant() {
 		let utc = time::OffsetDateTime::from_unix_timestamp(1_700_000_000).unwrap();

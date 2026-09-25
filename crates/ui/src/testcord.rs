@@ -11,6 +11,15 @@ pub enum Value {
 	Number(i64),
 }
 
+/// Whether a clock keeps 12- or 24-hour time. Mirrors the runtime's own enum.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum HourFormat {
+	#[default]
+	Keep,
+	Twelve,
+	TwentyFour,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Kind {
 	Toggle,

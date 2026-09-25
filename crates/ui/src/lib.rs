@@ -105,6 +105,7 @@ mod verification;
 mod voice;
 use client_core::{Command, MAX_CONTENT, MAX_DRAFT_BYTES, NavStep, State};
 use egui::{RichText, TextEdit};
+pub use local_time::Display;
 use model::{Freshness, Id};
 pub use verification::VerificationUi;
 pub use voice::StageFocus;
@@ -190,6 +191,8 @@ pub struct MessagingUi {
 	pub testcord: crate::testcord::TestCord,
 	/// Message-menu entries the bundled TestCord ports contribute, refreshed when they change.
 	pub testcord_message_actions: std::sync::Arc<Vec<MenuAction>>,
+	/// What the bundled ports changed about clocks and markers, refreshed each frame.
+	pub testcord_display: crate::local_time::Display,
 	friends: friends::Friends,
 	account_menu: account_menu::AccountMenu,
 	pub own_presence: model::OwnPresence,
@@ -3745,6 +3748,7 @@ impl MessagingUi {
 							!self.reading_preferences.smooth_scrolling;
 						self.timeline.extension_actions = self.extensions.message_actions();
 						self.timeline.plugin_actions = self.testcord_message_actions.clone();
+						self.timeline.display = self.testcord_display;
 						let mut seen = std::collections::BTreeSet::new();
 						let author_lookup: Vec<_> = state
 							.timeline

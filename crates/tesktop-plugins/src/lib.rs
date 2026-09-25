@@ -12,6 +12,7 @@ pub mod autoreply;
 pub mod blockkeywords;
 pub mod clearurls;
 pub mod copy;
+pub mod display;
 pub mod messagelogger;
 pub mod noreplymention;
 pub mod silenceusers;
@@ -225,6 +226,17 @@ pub struct PendingReply {
 	pub due: u64,
 }
 
+/// How the app should render clocks and markers, after every active plugin has had its say.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Display {
+	/// Round relative phrases down instead of to the nearest.
+	pub floor_relative: bool,
+	pub hour: display::HourFormat,
+	/// Minutes to shift every clock by, within a real time zone.
+	pub offset_minutes: i32,
+	pub hide_edited: bool,
+}
+
 pub enum InboundEvent<'a> {
 	Created(&'a Message),
 	Edited(&'a Edit<'a>),
@@ -290,6 +302,10 @@ pub trait Plugin {
 	}
 	/// Rewrite an accepted inbound message before it enters the timeline.
 	fn mutate_incoming(&mut self, _message: &mut Message) {}
+	/// What this plugin wants changed about message display.
+	fn display(&self) -> display::DisplayPatch {
+		display::DisplayPatch::default()
+	}
 	/// Entries this plugin adds to a message's menu.
 	fn message_actions(&self) -> &'static [MessageAction] {
 		&[]
@@ -333,6 +349,9 @@ impl Registry {
 			Box::new(copy::CopyUserUrls),
 			Box::new(copy::CopyUserMention),
 			Box::new(copy::CopyStickerLinks::default()),
+			Box::new(display::CustomTimestamps::default()),
+			Box::new(display::DontRoundMyTimestamps),
+			Box::new(display::NoEditedTimestamp),
 			Box::new(blockkeywords::BlockKeywords::default()),
 			Box::new(silenceusers::SilenceUsers::default()),
 			Box::new(splitlarge::SplitLargeMessages::default()),
@@ -500,6 +519,23 @@ impl Registry {
 				(!parts.is_empty()).then_some(parts)
 			})
 			.unwrap_or_default()
+	}
+
+	/// Fold every active plugin's display wishes into one resolved view.
+	pub fn display(&self) -> Display {
+		let mut display = Display::default();
+		for index in self.active() {
+			let patch = self.plugins[index].display();
+			display.floor_relative |= patch.floor_relative.unwrap_or(false);
+			display.hide_edited |= patch.hide_edited.unwrap_or(false);
+			if let Some(hour) = patch.hour {
+				display.hour = hour;
+			}
+			if let Some(offset) = patch.offset_minutes {
+				display.offset_minutes = offset;
+			}
+		}
+		display
 	}
 
 	/// Every message-menu entry the active plugins offer, with the plugin that owns it.

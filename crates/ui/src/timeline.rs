@@ -39,6 +39,8 @@ pub struct TimelineView {
 	pub(super) dismiss_ephemeral: Option<Id>,
 	pub(super) extension_actions: std::sync::Arc<Vec<crate::extensions_ui::MenuAction>>,
 	pub(super) plugin_actions: std::sync::Arc<Vec<crate::extensions_ui::MenuAction>>,
+	/// What the bundled ports changed about clocks and markers.
+	pub(super) display: crate::local_time::Display,
 	pub(super) extension_request: Option<(crate::extensions_ui::MenuAction, String)>,
 	pub(super) plugin_request: Option<crate::testcord::Picked>,
 	pub(super) user_action: Option<crate::user_menu::Action>,
@@ -479,6 +481,7 @@ fn starter_row(
 	state: &State,
 	avatars: &mut crate::avatars::Avatars,
 	width: f32,
+	display: crate::local_time::Display,
 ) {
 	let colors = crate::design::palette(ui);
 	egui::Frame::NONE
@@ -516,7 +519,7 @@ fn starter_row(
 							);
 							let time = timestamp(message.id);
 							ui.label(
-								RichText::new(format!("{:02}:{:02}", time.hour(), time.minute()))
+								RichText::new(crate::local_time::clock(time, &display))
 									.size(12.0)
 									.color(colors.muted),
 							)
@@ -1305,6 +1308,7 @@ impl TimelineView {
 			*self = Self {
 				extension_actions: self.extension_actions.clone(),
 				plugin_actions: self.plugin_actions.clone(),
+				display: self.display,
 				plugin_request: self.plugin_request.take(),
 				hide_media_links: self.hide_media_links,
 				instant_scrolling: self.instant_scrolling,
@@ -1831,7 +1835,7 @@ impl TimelineView {
 				{
 					let response = ui
 						.scope_builder(egui::UiBuilder::new().scope_id(row_id), |ui| {
-							starter_row(ui, starter, state, avatars, width);
+							starter_row(ui, starter, state, avatars, width, self.display);
 						})
 						.response;
 					measurements.push((
@@ -2420,7 +2424,7 @@ impl TimelineView {
 												self.heights.remove(&id);
 												ui.ctx().request_repaint();
 											}
-											if message.edited {
+											if message.edited && !self.display.hide_edited {
 												ui.label(
 													RichText::new("(edited)")
 														.small()

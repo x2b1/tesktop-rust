@@ -37,7 +37,7 @@ plugins,dearrow,Dearrow,Hides the Dearrow button from YouTube embeds,Devs.Ven,4,
 plugins,decor,Decor,"Create and use your own custom avatar decorations, or pick your favorite from the presets.",Devs.FieryFlames,1,False,False,False,True,False,,portable-hook,
 plugins,devCompanion.dev,DevCompanion,Whether to notify when Dev Companion has automatically connected.,"Devs.Ven,Devs.sadan",4,False,False,False,False,False,,portable-logic,
 plugins,disableCallIdle,DisableCallIdle,Disables automatically getting kicked from a DM voice call after 3 minutes and being moved to an AFK voice cha,Devs.Nuckyz,0,True,False,False,False,False,,rewrite,
-plugins,dontRoundMyTimestamps,DontRoundMyTimestamps,"Always rounds relative timestamps down, so 7.6y becomes 7y instead of 8y",Devs.Lexi,0,False,False,False,False,False,,portable-logic,
+plugins,dontRoundMyTimestamps,DontRoundMyTimestamps,"Always rounds relative timestamps down, so 7.6y becomes 7y instead of 8y",Devs.Lexi,0,False,False,False,False,False,,portable-logic,display
 plugins,experiments,Experiments,Enable Access to Experiments & other dev-only features in Discord!,"
 Devs.Megu,
 Devs.Ven,
@@ -207,7 +207,7 @@ equicordplugins,cursorBuddy,CursorBuddy,Pick a cursor buddy,"Devs.Ven,Devs.adryd
 equicordplugins,customFolderIcons,CustomFolderIcons,Customize folder icons with any png,EquicordDevs.sadan,1,True,False,False,False,False,,rewrite,
 equicordplugins,customSounds,CustomSounds,Customize Discord's sounds.,"Devs.ScattrdBlade,Devs.TheKodeToad",1,False,False,False,False,False,,portable-logic,
 equicordplugins,customStatusTimeouts,CustomStatusTimeouts,Show the Forever option at the top of the list instead of the bottom.,"EquicordDevs.Kiri,EquicordDevs.thororen",5,True,False,False,False,False,,rewrite,
-equicordplugins,customTimestamps,CustomTimestamps,Customize the timestamp formats,"Devs.Rini,EquicordDevs.nvhhr,EquicordDev",2,True,False,False,False,False,,rewrite,
+equicordplugins,customTimestamps,CustomTimestamps,Customize the timestamp formats,"Devs.Rini,EquicordDevs.nvhhr,EquicordDev",2,True,False,False,False,False,,rewrite,display
 equicordplugins,customUserColors,CustomUserColors,Users with custom colors defined will have their name in the dm list colored,EquicordDevs.mochienya,3,True,False,False,False,False,,rewrite,
 equicordplugins,declutter,Declutter,Remove avatar decorations. This is/will be disabled if Decor is enabled.,"EquicordDevs.Leon135,Devs.prism,Devs.Kyu",21,True,False,False,False,False,,rewrite,
 equicordplugins,disableCameras,DisableCameras,Disables cameras in a call by default,Devs.Joona,0,True,False,False,False,False,,rewrite,
@@ -722,7 +722,7 @@ testcordplugins,newUserIndicator,NewUserIndicator,Enable on badges.,TestcordDevs
 testcordplugins,noButtons,NoButtons,Hide the popout chat button,TestcordDevs.x2b,8,False,False,False,False,False,,portable-logic,
 testcordplugins,noDMWhileStreaming,NoDMWhileStreaming,Hide Group DMs too while streaming,"{name:""Unknown"",id:0n}",3,False,False,False,True,False,,portable-hook,
 testcordplugins,noDraftLengthLimit,NoDraftLengthLimit,Removes the 4500 character saved draft message truncation,TestcordDevs.x2b,0,True,False,False,False,False,,rewrite,
-testcordplugins,noEditedTimestamp,NoEditedTimestamp,"Removes the '(edited)' label from all messages globally, not just your own.",TestcordDevs.Sharp,0,True,False,False,False,False,,rewrite,
+testcordplugins,noEditedTimestamp,NoEditedTimestamp,"Removes the '(edited)' label from all messages globally, not just your own.",TestcordDevs.Sharp,0,True,False,False,False,False,,rewrite,display
 testcordplugins,noOnboarding,NoOnboarding,"Select a random option for every prompt instead of always the last one, mimicking manual clicks so strict serv","EquicordDevs.omaw,Devs.Glitch",1,True,False,False,False,False,,rewrite,
 testcordplugins,noTelemetry,NoTelemetry,Block Discord from reporting which A/B experiments your account is enrolled in.,"{name:""Sharp"",id:0n}",5,False,False,False,False,False,,excluded,
 testcordplugins,nocompress,Disable Compression,Disables the compression of attachments.,"{id:566409342161780747n,name:""zv_yz""}",0,True,False,False,False,False,,rewrite,

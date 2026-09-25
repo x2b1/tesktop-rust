@@ -3784,6 +3784,20 @@ impl Desktop {
 
 	/// Keep the settings page, the import picker, the saved file and the send queue in step.
 	fn tesktop_tick(&mut self, ctx: &egui::Context) {
+		// Clocks and markers come straight from the registry, so the fold is the only cost.
+		let display = self.tesktop.display();
+		self.messaging.testcord_display = ui::Display {
+			floor_relative: display.floor_relative,
+			hour: match display.hour {
+				tesktop_plugins::display::HourFormat::Keep => ui::testcord::HourFormat::Keep,
+				tesktop_plugins::display::HourFormat::Twelve => ui::testcord::HourFormat::Twelve,
+				tesktop_plugins::display::HourFormat::TwentyFour => {
+					ui::testcord::HourFormat::TwentyFour
+				}
+			},
+			offset_minutes: display.offset_minutes,
+			hide_edited: display.hide_edited,
+		};
 		// The message menu follows the enabled set, not the settings, so it only changes with
 		// one. Rebuilding it per frame would allocate for nothing on an idle client.
 		if self.tesktop_dirty || self.messaging.testcord_message_actions.is_empty() {
