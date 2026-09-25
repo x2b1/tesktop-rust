@@ -251,6 +251,21 @@ impl crate::Plugin for TalkInReverse {
 		self.reversed = flag_or(values, self.settings(), "reversed");
 	}
 
+	fn composer_button(&self) -> Option<crate::ComposerButton> {
+		Some(crate::ComposerButton {
+			id: "talk-in-reverse",
+			label: "Reverse",
+			tooltip: "Send your message with its characters in reverse order.",
+			active: Some(self.reversed),
+		})
+	}
+
+	fn press_composer(&mut self, id: &str) {
+		if id == "talk-in-reverse" {
+			self.reversed = !self.reversed;
+		}
+	}
+
 	fn before_send(&mut self, outgoing: &mut Outgoing<'_>) -> Result<(), &'static str> {
 		if !self.reversed {
 			return Ok(());
@@ -267,84 +282,6 @@ impl crate::Plugin for TalkInReverse {
 		} else {
 			"Sending as typed".to_string()
 		})
-	}
-}
-
-const SILENT_SETTINGS: &[Setting] = &[
-	Setting {
-		key: "prefix",
-		label: "Prefix to add",
-		kind: SettingKind::Text { multiline: false },
-		default: Fallback::Text("@silent "),
-	},
-	Setting {
-		key: "reversed",
-		label: "The prefix goes after the message",
-		kind: SettingKind::Toggle,
-		default: Fallback::Flag(false),
-	},
-];
-
-/// SilentMessageToggle: a marker at the start of the message, which is how a silent message
-/// has always been asked for. The service decides what it does with the word.
-pub struct SilentMessageToggle {
-	prefix: String,
-	reversed: bool,
-}
-
-impl Default for SilentMessageToggle {
-	fn default() -> Self {
-		Self {
-			prefix: String::from("@silent "),
-			reversed: false,
-		}
-	}
-}
-
-impl crate::Plugin for SilentMessageToggle {
-	fn meta(&self) -> Meta {
-		Meta {
-			id: "SilentMessageToggle",
-			name: "SilentMessageToggle",
-			description: "Marks your message silent without typing the marker.",
-			authors: "Vencord",
-			tags: &["Chat", "Utility"],
-			aliases: &["silentMessageToggle"],
-			default_enabled: false,
-		}
-	}
-
-	fn settings(&self) -> &'static [Setting] {
-		SILENT_SETTINGS
-	}
-
-	fn configure(&mut self, values: &Values) {
-		let prefix = crate::text_or(values, SILENT_SETTINGS, "prefix");
-		// A marker is one short line of plain text; anything longer is a mistake.
-		self.prefix = prefix
-			.trim()
-			.chars()
-			.filter(|character| !character.is_control() && *character != '\n')
-			.take(64)
-			.collect();
-		self.reversed = flag_or(values, SILENT_SETTINGS, "reversed");
-	}
-
-	fn before_send(&mut self, outgoing: &mut Outgoing<'_>) -> Result<(), &'static str> {
-		if self.prefix.is_empty() || outgoing.body.starts_with(&self.prefix) {
-			return Ok(());
-		}
-		let body = std::mem::take(outgoing.body);
-		*outgoing.body = if self.reversed {
-			format!("{body} {}", self.prefix)
-		} else {
-			format!("{}{body}", self.prefix)
-		};
-		Ok(())
-	}
-
-	fn summary(&self) -> Option<String> {
-		(!self.prefix.is_empty()).then(|| format!("Marks with {:?}", self.prefix))
 	}
 }
 
@@ -469,36 +406,6 @@ mod tests {
 				.collect(),
 		));
 		assert_eq!(send(&mut plugin, "stressed"), "stressed");
-	}
-
-	#[test]
-	fn the_silent_marker_is_added_once() {
-		let mut plugin = SilentMessageToggle::default();
-		assert_eq!(send(&mut plugin, "hello"), "@silent hello");
-		assert_eq!(send(&mut plugin, "@silent hello"), "@silent hello");
-	}
-
-	#[test]
-	fn the_marker_can_go_at_the_end() {
-		let mut plugin = SilentMessageToggle::default();
-		plugin.configure(&Values(
-			[("reversed".to_string(), serde_json::json!(true))]
-				.into_iter()
-				.collect(),
-		));
-		assert_eq!(send(&mut plugin, "hello"), "hello @silent");
-	}
-
-	#[test]
-	fn an_empty_marker_changes_nothing() {
-		let mut plugin = SilentMessageToggle::default();
-		plugin.configure(&Values(
-			[("prefix".to_string(), serde_json::json!("  "))]
-				.into_iter()
-				.collect(),
-		));
-		assert_eq!(send(&mut plugin, "hello"), "hello");
-		assert!(plugin.summary().is_none());
 	}
 
 	#[test]

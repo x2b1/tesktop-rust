@@ -2452,16 +2452,15 @@ impl TimelineView {
 														.color(colors.danger),
 												);
 											}
-											if self.display.word_count {
-												if let Some(count) =
+											if self.display.word_count
+												&& let Some(count) =
 													word_and_characters(&message.content)
-												{
-													ui.label(
-														RichText::new(count)
-															.small()
-															.color(colors.muted),
-													);
-												}
+											{
+												ui.label(
+													RichText::new(count)
+														.small()
+														.color(colors.muted),
+												);
 											}
 											if !message.components.is_empty() {
 												let shown = ui.scope(|ui| {

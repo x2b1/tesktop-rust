@@ -104,6 +104,7 @@ mod user_menu;
 mod verification;
 mod voice;
 use client_core::{Command, MAX_CONTENT, MAX_DRAFT_BYTES, NavStep, State};
+use design::LazyHover;
 use egui::{RichText, TextEdit};
 pub use local_time::{Counter, Display};
 use model::{Freshness, Id};
@@ -2711,6 +2712,39 @@ impl MessagingUi {
                             .on_hover_text("Choose, drop, or paste files (Ctrl/Cmd/Option+V). Up to 10 files and 500 MB total; account limits may be lower. Send starts the upload."))
                     };
                     if !editing_here { self.extensions.composer_menu(ui, state); }
+                    // The bundled ports' own buttons, which is where the original puts its
+                    // chat bar buttons: next to the attach button, before the send button.
+                    if !editing_here {
+                        // The list is shared and short-lived, so it is cloned rather than
+                        // borrowed across the request the press queues.
+                        let buttons = self.testcord.composer_buttons.clone();
+                        for button in buttons.iter() {
+                            let tooltip = button.tooltip.clone();
+                            let pressed: bool = if let Some(active) = button.active {
+                                ui.add_enabled(
+                                    !self.upload_busy && state.can_send(channel),
+                                    egui::Button::new(RichText::new(&button.label).strong())
+                                        .selected(active),
+                                )
+                                .on_hover_text_with(move || tooltip.clone())
+                                .clicked()
+                            } else {
+                                let tooltip = button.tooltip.clone();
+                                ui.add_enabled(
+                                    !self.upload_busy && state.can_send(channel),
+                                    egui::Button::new(&button.label),
+                                )
+                                .on_hover_text_with(move || tooltip.clone())
+                                .clicked()
+                            };
+                            if pressed {
+                                self.testcord
+                                    .request(crate::testcord::Request::ComposerButton {
+                                        id: button.id.clone(),
+                                    });
+                            }
+                        }
+                    }
                     if attach.is_some_and(|attach| attach.clicked()) {
                         self.attach_requested = true;
                     }

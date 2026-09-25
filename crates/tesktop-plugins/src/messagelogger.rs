@@ -15,6 +15,8 @@ pub const MAX_ENTRIES: usize = 2000;
 pub const MAX_BYTES: usize = 4 * 1024 * 1024;
 /// Body characters kept per entry; Discord's own ceiling.
 const MAX_BODY_CHARS: usize = 2000;
+/// Ids remembered as recorded, so the echo of your own send is not logged twice.
+const MAX_SEEN: usize = 4096;
 /// Bytes handed to the clipboard in one export.
 pub const MAX_EXPORT_BYTES: usize = 256 * 1024;
 
@@ -92,6 +94,8 @@ pub struct MessageLogger {
 	ignore_users: Vec<Id>,
 	ignore_channels: Vec<Id>,
 	ignore_guilds: Vec<Id>,
+	/// Ids already recorded, so a message that arrives twice is logged once.
+	seen: std::collections::BTreeSet<Id>,
 }
 
 impl MessageLogger {
@@ -175,6 +179,7 @@ impl crate::Plugin for MessageLogger {
 	}
 
 	fn reset(&mut self) {
+		self.seen.clear();
 		self.entries.clear();
 		self.bytes = 0;
 		self.edited = 0;
@@ -200,6 +205,40 @@ impl crate::Plugin for MessageLogger {
 		self.record(
 			Kind::Created,
 			inbound.channel,
+			message.id,
+			&message.author.name,
+			message.content.clone(),
+		);
+	}
+
+	fn delivered(&mut self, event: &crate::Delivery<'_>) {
+		// The service usually echoes your own message back, and then the created hook has
+		// it already. Where it does not, this is the only place the record can come from.
+		let crate::Delivery::Sent {
+			channel,
+			message,
+			me,
+		} = event
+		else {
+			return;
+		};
+		if self.seen.contains(&message.id) {
+			return;
+		}
+		if self.ignores_author(&message.author, *me) {
+			return;
+		}
+		self.seen.insert(message.id);
+		while self.seen.len() > MAX_SEEN {
+			if let Some(oldest) = self.seen.iter().next().copied() {
+				self.seen.remove(&oldest);
+			} else {
+				break;
+			}
+		}
+		self.record(
+			Kind::Created,
+			*channel,
 			message.id,
 			&message.author.name,
 			message.content.clone(),
@@ -432,5 +471,76 @@ mod tests {
 		let plugin = configured(&[]);
 		assert!(plugin.ignores_author(&author(Id(5), true), Id(1)));
 		assert!(!plugin.ignores_author(&author(Id(5), false), Id(1)));
+	}
+}
+
+#[cfg(test)]
+mod delivery_tests {
+	use super::*;
+	use crate::{Delivery, Plugin, Registry};
+
+	fn mine(id: u64, content: &str) -> model::Message {
+		let mut message = test_support::message(id, model::Id(7));
+		message.author.id = model::Id(1);
+		message.content = content.to_string();
+		message
+	}
+
+	#[test]
+	fn a_send_is_recorded_even_without_an_echo() {
+		let mut plugin = MessageLogger::default();
+		let message = mine(1, "mine");
+		plugin.delivered(&Delivery::Sent {
+			channel: model::Id(7),
+			message: &message,
+			me: model::Id(1),
+		});
+		let log = plugin.export().expect("a log");
+		assert!(log.contains("mine"), "{log}");
+	}
+
+	#[test]
+	fn the_echo_of_a_send_is_not_recorded_twice() {
+		let mut plugin = MessageLogger::default();
+		let message = mine(1, "mine");
+		let event = Delivery::Sent {
+			channel: model::Id(7),
+			message: &message,
+			me: model::Id(1),
+		};
+		plugin.delivered(&event);
+		plugin.delivered(&event);
+		let log = plugin.export().expect("a log");
+		assert_eq!(log.matches("mine").count(), 1, "{log}");
+	}
+
+	#[test]
+	fn a_failure_is_not_a_record() {
+		let mut plugin = MessageLogger::default();
+		plugin.delivered(&Delivery::Failed {
+			channel: model::Id(7),
+			me: model::Id(1),
+			content: "never sent",
+			failure: "Connection failed",
+		});
+		assert!(plugin.export().unwrap().contains("Nothing logged"));
+	}
+
+	#[test]
+	fn the_registry_hands_back_the_tail_the_page_shows() {
+		let mut registry = Registry::new();
+		registry.set_enabled("MessageLogger", true);
+		for id in 1..5 {
+			let message = mine(id, &format!("line {id}"));
+			registry.delivered(&Delivery::Sent {
+				channel: model::Id(7),
+				message: &message,
+				me: model::Id(1),
+			});
+		}
+		let tail = registry.tail("MessageLogger", 2);
+		assert_eq!(tail.lines().count(), 2);
+		assert!(tail.contains("line 4"), "{tail}");
+		assert!(!tail.contains("line 1"), "{tail}");
 	}
 }

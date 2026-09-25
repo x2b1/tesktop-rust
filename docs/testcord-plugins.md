@@ -93,6 +93,7 @@ MessageLogger record is session memory and is never written to disk; copy it out
 | SpaceOut | `/spaceout` separates every character, spaces included, so the gap between two words becomes three | Nothing; the port is complete |
 | AntiNameChange | A mention of someone you track keeps the alias you gave them, and an alias can never smuggle a mention of its own | Nothing; the port is complete |
 | WordCount | A count under every message of more than five words, counting characters as a reader sees them | Nothing; the port is complete |
+| MessageLogger | The record is on the settings page, not only on the clipboard, and a send of your own is recorded even where the service does not echo it back | The history window and the inline diffs, which are the app's own message cache |
 | QuickMention | A mention of the author is written in the composer from the message menu | Nothing; the port is complete |
 | QuickReply | Your own reply, kept to hand, written in the composer | The keybinds that pick which message you are replying to |
 | AntiRickroll | A line under a message whose link is one you would rather not follow: the original's 54 video ids and its two hosts, plus your own list, and a masked link is checked first because that is the one being hidden | Nothing; the port is complete |
@@ -106,7 +107,13 @@ MessageLogger record is session memory and is never written to disk; copy it out
 | ZeroWidthSanitizer | Strips the invisible characters out of what you send and out of your edits, and says how many it removed | Nothing; the port is complete |
 | SafeNumbers | Digits become mathematical figures, while a mention still mentions and an address still opens | Nothing; the port is complete |
 | TalkInReverse | Your message arrives with its characters reversed, reversed by character so nothing comes out as mojibake | The composer button, which is yours |
-| SilentMessageToggle | The silent marker is added once, at the front or the back as you choose | The composer button, which is yours |
+## Ports that were removed
+
+`SilentMessageToggle` was ported and then taken back out. The service removed silent
+messages years ago, so prefixing a message with `@silent ` does not make it silent; it makes
+it a message about a word. A port that is faithful to a removed feature is not compatible,
+it is just wrong, so it is gone rather than off by default.
+
 | HopOn | A message matching your pattern opens an address you choose, once per run, and the host refuses anything but web links and the launcher schemes a game needs | Nothing; the port is complete |
 | IRememberYou | Who you have talked to, oldest first, bounded and evicting the oldest, with servers optionally left out | The account-list export screen, which is yours |
 | AskMeToMute | A reminder entry, explaining the app owns muting | Muting, which the app owns |

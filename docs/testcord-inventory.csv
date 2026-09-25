@@ -130,7 +130,7 @@ plugins,showHiddenChannels,ShowHiddenChannels,The style used to display hidden c
 plugins,showHiddenThings,ShowHiddenThings,Displays various hidden & moderator-only things regardless of permissions.,Devs.Dolfies,0,True,False,False,False,False,,rewrite,
 plugins,showMeYourName,ShowMeYourName,Display custom name format in messages.,"EquicordDevs.Etorix,Devs.Rini,Devs.TheKo",35,True,False,False,True,False,,rewrite,
 plugins,showTimeoutDuration,ShowTimeoutDuration,How to display the timeout duration,"Devs.Ven,Devs.Sqaaakoi",1,True,False,False,False,False,,rewrite,
-plugins,silentMessageToggle,SilentMessageToggle,How to persist the silent message toggle state,"Devs.Nuckyz,Devs.CatNoir,EquicordDevs.Z1",3,False,False,False,False,False,,portable-logic,clean
+plugins,silentMessageToggle,SilentMessageToggle,How to persist the silent message toggle state,"Devs.Nuckyz,Devs.CatNoir,EquicordDevs.Z1",3,False,False,False,False,False,,portable-logic,
 plugins,silentTyping,SilentTyping,Toggle functionality of your own typing indicator globally.,"Devs.Ven,Devs.Rini,Devs.ImBanana,Equicor",17,True,False,False,True,False,,rewrite,
 plugins,sortFriendRequests,SortFriends,Show dates on friend requests,"Devs.Megu,EquicordDevs.CallMeGii",1,True,False,False,False,False,,rewrite,
 plugins,spotifyCrack,SpotifyCrack,Disable Spotify auto-pause,"Devs.Cyn,Devs.Nuckyz",2,True,False,False,False,False,,rewrite,
@@ -608,7 +608,7 @@ testcordplugins,deepsearch,DeepSearch,Maximum number of search results to return
 testcordplugins,defaultStatusForever,DefaultStatusForever,Make statuses default to last forever,TestcordDevs.x2b,0,False,False,False,False,False,,portable-logic,
 testcordplugins,define,Define,/define looks up a word's dictionary definition (sent only to you).,"{name:""Sharp"",id:0n}",1,False,False,False,False,False,,portable-ui,
 testcordplugins,detectBlock,DetectBlock,Detects users who have blocked you and warns when they appear in voice channels or group DMs.,"
-{name:""justjxke"",id:852558183087472640n",1,False,False,False,True,True,,portable-hook,
+{name:""justjxke"",id:852558183087472640n",1,False,False,False,True,True,,portable-hook,aftermath
 testcordplugins,disconnect,DisconnectUser,Target user ID to auto-disconnect,TestcordDevs.x2b,3,True,False,False,True,False,,rewrite,
 testcordplugins,dmAway,DMAway,Auto-reply message sent to DMs while you're away,"{name:""Sharp"",id:0n}",3,False,False,False,False,False,,portable-logic,
 testcordplugins,dmReadReceipt,DmReadReceipt,Shows a Seen indicator on your messages in DMs when the other person has read them.,"{name:""Sharp"",id:0n}",0,False,False,False,False,True,,portable-ui,
@@ -648,7 +648,7 @@ testcordplugins,gatewayLogger,GatewayLogger,logs gateway events to the console,"
 {id:253302259696271360n,name:""zastix""},",0,True,False,False,False,False,,rewrite,
 testcordplugins,getMyToken,getMyToken,Get your token with a slash command.,"{name:""Sami"",id:1403404140461297816n}",0,False,False,False,False,False,,excluded,
 testcordplugins,ghostClient,GhostClient,"Discord ghost accounts — left-click to enable/disable, right-click to configure.","{name:""Nightcord"",id:0n}",1,False,False,False,False,False,native.ts,excluded,
-testcordplugins,ghostPingAlert,GhostPingAlert,Also alert when @everyone / @here messages are deleted,"{name:""Sharp"",id:0n}",1,False,False,False,False,False,,portable-logic,
+testcordplugins,ghostPingAlert,GhostPingAlert,Also alert when @everyone / @here messages are deleted,"{name:""Sharp"",id:0n}",1,False,False,False,False,False,,portable-logic,aftermath
 testcordplugins,gifCaptioner,GifCaptioner,Add captions to GIFs in the GIF picker.,EquicordDevs.benjii,0,True,False,False,False,False,,rewrite,
 testcordplugins,gifSpammer,GifSpammer,Send all your favorite GIFs to the current channel with a 2 second delay between each.,TestcordDevs.nnenaza,0,False,False,False,False,False,,portable-ui,
 testcordplugins,gifTransfer,GifTransfer,Skip GIFs that are already in your favorites when importing,"TestcordDevs.nnenaza,TestcordDevs.x2b",5,True,False,False,False,False,,rewrite,
@@ -753,7 +753,7 @@ testcordplugins,profileCommand,ProfileCommand,Adds a /profile command to open so
 testcordplugins,profileCopyButton,ProfileCopyButton,"Also copy the target user's profile game widgets (favourite game, currently playing, want to play, played, gam","TestcordDevs.x2b,TestcordDevs.nnenaza",2,True,False,False,False,False,,rewrite,
 testcordplugins,punishmentcommands,PunishmentCommands,"Allows you to send a command in chat to punish someone, right from the context menu",Devs.nin0dev,1,False,False,False,False,False,,portable-logic,
 testcordplugins,purgeMessages,PurgeMessages,Purges messages from a channel,TestcordDevs.x2b,0,False,False,False,False,False,,excluded,
-testcordplugins,quickDelete,QuickDelete,Keyboard shortcut to delete your last message in the current channel.,TestcordDevs.Sharp,2,False,False,False,False,False,,portable-logic,
+testcordplugins,quickDelete,QuickDelete,Keyboard shortcut to delete your last message in the current channel.,TestcordDevs.Sharp,2,False,False,False,False,False,,portable-logic,aftermath
 testcordplugins,quickSnippet,QuickSnippet,list of channel IDs to whitelist,TestcordDevs.x2b,2,True,False,False,False,False,,rewrite,
 testcordplugins,quickmsg,QuickMsg,"Delay in milliseconds between sending and deleting the message (lower = harder to catch, but may fail if the s",TestcordDevs.x2b,3,False,False,False,False,False,,portable-logic,
 testcordplugins,quietHours,QuietHours,"Quiet hours start (24h hour, 0-23)","{name:""Sharp"",id:0n}",2,False,False,False,False,False,,portable-logic,schedule

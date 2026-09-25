@@ -743,6 +743,9 @@ struct Desktop {
 	/// The channel the lines under its messages were last built for, so they are rebuilt
 	/// when the enabled set changes or the conversation does, and not every frame.
 	tesktop_markers_channel: Option<model::Id>,
+	/// How many ports were enabled when the composer's buttons were last built, so the row
+	/// is rebuilt when the set changes and not on every frame.
+	tesktop_buttons_built: usize,
 	login: Option<platform::LoginView>,
 	captcha: captcha::Captcha,
 	connection: Option<connection::Connection>,
@@ -1941,6 +1944,7 @@ impl Desktop {
 			tesktop_epoch: Instant::now(),
 			tesktop_chunks: Default::default(),
 			tesktop_markers_channel: None,
+			tesktop_buttons_built: usize::MAX,
 			login: None,
 			captcha: captcha::Captcha::default(),
 			connection: None,
@@ -3824,6 +3828,22 @@ impl Desktop {
 				colors: counter.colors,
 			}),
 		};
+		// The composer's own buttons follow the enabled set too, for the same reason.
+		if self.tesktop_dirty || self.tesktop_buttons_built != self.tesktop.enabled_count() {
+			self.tesktop_buttons_built = self.tesktop.enabled_count();
+			self.messaging.testcord.composer_buttons = std::sync::Arc::new(
+				self.tesktop
+					.composer_buttons()
+					.into_iter()
+					.map(|button| ui::testcord::ComposerButton {
+						id: button.id.to_string(),
+						label: button.label.to_string(),
+						tooltip: button.tooltip.to_string(),
+						active: button.active,
+					})
+					.collect(),
+			);
+		}
 		// The message menu follows the enabled set, not the settings, so it only changes with
 		// one. Rebuilding it per frame would allocate for nothing on an idle client.
 		if self.tesktop_dirty || self.messaging.testcord_message_actions.is_empty() {
@@ -3870,6 +3890,10 @@ impl Desktop {
 					);
 					entry.summary = self.tesktop.summary(meta.id).unwrap_or_default();
 					entry.log = self.tesktop.export(meta.id).is_some();
+					entry.log_tail = entry
+						.log
+						.then(|| self.tesktop.tail(meta.id, 40))
+						.unwrap_or_default();
 					entry.fields = self
 						.tesktop
 						.settings_of(meta.id)
@@ -3906,6 +3930,10 @@ impl Desktop {
 							.report("Copied the log to the clipboard.");
 					}
 				}
+				ui::testcord::Request::ComposerButton { id } => {
+					self.tesktop.press_composer(&id);
+					self.tesktop_dirty = true;
+				}
 				ui::testcord::Request::Import if self.tesktop_picker.is_none() => {
 					let (send, receive) = mpsc::sync_channel(1);
 					let future = platform::save::testcord_settings_source(self.window.clone());
@@ -3935,6 +3963,51 @@ impl Desktop {
 		self.tesktop_toast();
 		self.tesktop_compose();
 		self.tesktop_open_url();
+	}
+
+	/// Tell the ports what became of a send: the message that went out, or why it did not.
+	///
+	/// Only the owner's own sends are reported, and only once the service has answered, so
+	/// a port never sees a send that is still in flight.
+	fn tesktop_delivered(&mut self, event: &Event) {
+		let Some(me) = self.state.user.as_ref().map(|user| user.id) else {
+			return;
+		};
+		match event {
+			Event::SendResult {
+				result: Ok(message),
+				..
+			} if message.author.id == me => {
+				self.tesktop.delivered(&tesktop_plugins::Delivery::Sent {
+					channel: message.channel,
+					message,
+					me,
+				});
+			}
+			Event::SendResult {
+				result: Err(failure),
+				nonce,
+			} => {
+				// The label is a fixed local string; nothing from the service reaches a port.
+				let reason = failure.label();
+				let Some(pending) = self
+					.state
+					.pending
+					.iter()
+					.find(|pending| &pending.nonce == nonce)
+					.map(|pending| (pending.channel, pending.content.clone()))
+				else {
+					return;
+				};
+				self.tesktop.delivered(&tesktop_plugins::Delivery::Failed {
+					channel: pending.0,
+					me,
+					content: &pending.1,
+					failure: &reason,
+				});
+			}
+			_ => {}
+		}
 	}
 
 	/// Text a port asked to put in the composer, which the composer inserts at the caret.
@@ -5657,6 +5730,7 @@ impl Desktop {
 			let ready = event.event.ready_navigation().is_some();
 			let resumed = matches!(event.event, Event::Resumed);
 			let confirmed_channel = confirmed_recovery_channel(&self.state, &event.event);
+			self.tesktop_delivered(&event.event);
 			let deleted_shortcut = match &event.event {
 				Event::Unavailable(channel)
 				| Event::ThreadRemoved { id: channel, .. }

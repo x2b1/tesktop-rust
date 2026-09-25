@@ -413,6 +413,21 @@ impl crate::Plugin for Ingtoninator {
 		self.enabled = flag_or(values, INGTON_SETTINGS, "isEnabled");
 	}
 
+	fn composer_button(&self) -> Option<crate::ComposerButton> {
+		Some(crate::ComposerButton {
+			id: "ingtoninator",
+			label: "Ington",
+			tooltip: "Add the Ington suffix to one word of every message you send.",
+			active: Some(self.enabled),
+		})
+	}
+
+	fn press_composer(&mut self, id: &str) {
+		if id == "ingtoninator" {
+			self.enabled = !self.enabled;
+		}
+	}
+
 	fn before_send(&mut self, outgoing: &mut Outgoing<'_>) -> Result<(), &'static str> {
 		let body = std::mem::take(outgoing.body);
 		*outgoing.body = self.rewrite(&body);
@@ -591,5 +606,64 @@ mod tests {
 		let words = ington_words("héllo wörld");
 		assert_eq!(words.len(), 2);
 		assert_eq!(words[1].0, "héllo ".len());
+	}
+}
+
+#[cfg(test)]
+mod button_tests {
+	use super::*;
+	use crate::Registry;
+
+	#[test]
+	fn a_port_with_a_button_offers_it_only_while_it_is_on() {
+		let mut registry = Registry::new();
+		assert!(registry.composer_buttons().is_empty());
+		registry.set_enabled("Ingtoninator", true);
+		let buttons = registry.composer_buttons();
+		assert_eq!(buttons.len(), 1);
+		assert_eq!(buttons[0].id, "ingtoninator");
+		assert_eq!(buttons[0].active, Some(true));
+	}
+
+	#[test]
+	fn a_press_reaches_the_port_that_owns_the_button() {
+		let mut registry = Registry::new();
+		registry.set_enabled("TalkInReverse", true);
+		assert_eq!(
+			registry.composer_buttons()[0].active,
+			Some(true),
+			"the port starts the way it declares"
+		);
+		registry.press_composer("talk-in-reverse");
+		assert_eq!(registry.composer_buttons()[0].active, Some(false));
+		registry.press_composer("talk-in-reverse");
+		assert_eq!(registry.composer_buttons()[0].active, Some(true));
+	}
+
+	#[test]
+	fn a_press_for_a_button_nobody_offers_goes_nowhere() {
+		let mut registry = Registry::new();
+		registry.set_enabled("Ingtoninator", true);
+		registry.press_composer("talk-in-reverse");
+		assert_eq!(registry.composer_buttons().len(), 1);
+		assert_eq!(registry.composer_buttons()[0].id, "ingtoninator");
+	}
+
+	#[test]
+	fn the_button_and_the_send_path_agree() {
+		let mut registry = Registry::new();
+		registry.set_enabled("TalkInReverse", true);
+		registry.press_composer("talk-in-reverse");
+		let mut text = "stressed".to_string();
+		let mut outgoing = Outgoing {
+			channel: model::Id(7),
+			me: model::Id(1),
+			body: &mut text,
+			reply: None,
+			previous: None,
+			route: crate::Route::Send,
+		};
+		registry.before_send(&mut outgoing).expect("no veto");
+		assert_eq!(outgoing.body, "stressed", "the toggle really turned it off");
 	}
 }
