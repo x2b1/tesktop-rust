@@ -10,6 +10,7 @@
 
 pub mod autoreply;
 pub mod blockkeywords;
+pub mod body;
 pub mod clearurls;
 pub mod copy;
 pub mod display;
@@ -306,6 +307,10 @@ pub trait Plugin {
 	}
 	/// Rewrite an accepted inbound message before it enters the timeline.
 	fn mutate_incoming(&mut self, _message: &mut Message) {}
+	/// A rewrite applied while a message is formatted, never to the stored message.
+	fn body_transform(&self) -> Option<body::BodyTransform> {
+		None
+	}
 	/// What this plugin wants changed about message display.
 	fn display(&self) -> display::DisplayPatch {
 		display::DisplayPatch::default()
@@ -358,6 +363,7 @@ impl Registry {
 			Box::new(display::NoEditedTimestamp),
 			Box::new(display::CharacterCounter::default()),
 			Box::new(display::StopAutoUnread),
+			Box::new(body::Unindent),
 			Box::new(blockkeywords::BlockKeywords::default()),
 			Box::new(silenceusers::SilenceUsers::default()),
 			Box::new(splitlarge::SplitLargeMessages::default()),
@@ -525,6 +531,21 @@ impl Registry {
 				(!parts.is_empty()).then_some(parts)
 			})
 			.unwrap_or_default()
+	}
+
+	/// The first active plugin that wants bodies rewritten before they are formatted, with the
+	/// id that owns it, so a host can tell one rewrite from another.
+	pub fn body_transform(&self) -> Option<(&'static str, body::BodyTransform)> {
+		if !self.any_enabled() {
+			return None;
+		}
+		self.active()
+			.into_iter()
+			.find_map(|index| {
+				self.plugins[index]
+					.body_transform()
+					.map(|transform| (self.plugins[index].meta().id, transform))
+			})
 	}
 
 	/// Fold every active plugin's display wishes into one resolved view.

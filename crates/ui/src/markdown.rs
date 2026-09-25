@@ -204,6 +204,12 @@ pub struct FormatCache {
 	entries: HashMap<(Id, u16), (String, Formatted, u64)>,
 	bytes: usize,
 	clock: u64,
+	/// The plugin that owns the current body rewrite, named because function pointers cannot
+	/// be compared; a change of owner invalidates every entry.
+	body_owner: Option<&'static str>,
+	/// A body rewrite the bundled ports asked for, applied while formatting and never to the
+	/// stored message, so copying a message still yields what its author wrote.
+	transform: Option<fn(&str) -> String>,
 }
 impl FormatCache {
 	pub fn retain(&mut self, mut keep: impl FnMut(Id) -> bool) {
@@ -219,6 +225,21 @@ impl FormatCache {
 	pub fn get(&mut self, id: Id, source: &str) -> &Formatted {
 		self.get_part(id, 0, source)
 	}
+	/// Set the body rewrite the ports want. `None` keeps the stored body exactly as it is.
+	pub fn set_transform(
+		&mut self,
+		owner: Option<&'static str>,
+		transform: Option<fn(&str) -> String>,
+	) {
+		if self.body_owner == owner {
+			return;
+		}
+		self.body_owner = owner;
+		self.transform = transform;
+		// Every entry was formatted under the old rule, so none of it can be reused.
+		self.entries.clear();
+		self.bytes = 0;
+	}
 	pub fn get_part(&mut self, message: Id, part: u16, source: &str) -> &Formatted {
 		let id = (message, part);
 		self.clock += 1;
@@ -233,12 +254,20 @@ impl FormatCache {
 			if let Some((source, parsed, _)) = self.entries.remove(&id) {
 				self.bytes -= source.capacity() + parsed.bytes();
 			}
-			let mut end = source.len().min(64 * 1024);
-			while !source.is_char_boundary(end) {
+			let rewritten;
+			let body = match self.transform {
+				Some(transform) => {
+					rewritten = transform(source);
+					rewritten.as_str()
+				}
+				None => source,
+			};
+			let mut end = body.len().min(64 * 1024);
+			while !body.is_char_boundary(end) {
 				end -= 1;
 			}
-			let parsed = Formatted::parse(source);
-			let source = source[..end].to_owned();
+			let parsed = Formatted::parse(body);
+			let source = body[..end].to_owned();
 			self.bytes += source.capacity() + parsed.bytes();
 			self.entries.insert(id, (source, parsed, self.clock));
 			while self.entries.len() > 512 || self.bytes > 1024 * 1024 {

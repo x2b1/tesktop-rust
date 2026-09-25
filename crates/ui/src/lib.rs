@@ -193,6 +193,10 @@ pub struct MessagingUi {
 	pub testcord_message_actions: std::sync::Arc<Vec<MenuAction>>,
 	/// What the bundled ports changed about clocks and markers, refreshed each frame.
 	pub testcord_display: crate::local_time::Display,
+	/// The body rewrite the bundled ports want while formatting, if any.
+	pub testcord_body: Option<fn(&str) -> String>,
+	/// Which plugin owns that rewrite, so the formatter knows when to drop its cache.
+	pub tesktop_body: Option<&'static str>,
 	friends: friends::Friends,
 	account_menu: account_menu::AccountMenu,
 	pub own_presence: model::OwnPresence,
@@ -3749,6 +3753,9 @@ impl MessagingUi {
 						self.timeline.extension_actions = self.extensions.message_actions();
 						self.timeline.plugin_actions = self.testcord_message_actions.clone();
 						self.timeline.display = self.testcord_display;
+						self.timeline
+							.formatted
+							.set_transform(self.tesktop_body, self.testcord_body);
 						let mut seen = std::collections::BTreeSet::new();
 						let author_lookup: Vec<_> = state
 							.timeline

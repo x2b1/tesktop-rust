@@ -115,7 +115,7 @@ pub struct TimelineView {
 	anchor: Option<(Id, f32)>,
 	scroll_offset: f32,
 	following: bool,
-	formatted: FormatCache,
+	pub(crate) formatted: FormatCache,
 	pending_formatted: FormatCache,
 	// A fingerprint of the revealed content prevents a reload that resets model revisions from
 	// revealing edits, without cloning payloads. Pruned with the active window: at most 500 records.
