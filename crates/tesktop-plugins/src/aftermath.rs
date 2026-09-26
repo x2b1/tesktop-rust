@@ -342,6 +342,9 @@ impl crate::Plugin for QuickDelete {
 	fn composer_button(&self) -> Option<crate::ComposerButton> {
 		Some(crate::ComposerButton {
 			id: "quick-delete",
+			// TestCord binds this to a chord rather than painting a button, and the app's
+			// own trash glyph stands in until the port gets a real chord.
+			icon: Some("trash"),
 			label: "Delete",
 			tooltip: "Delete your last message in this conversation.",
 			active: Some(self.armed),

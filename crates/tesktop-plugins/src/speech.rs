@@ -416,8 +416,13 @@ impl crate::Plugin for Ingtoninator {
 	fn composer_button(&self) -> Option<crate::ComposerButton> {
 		Some(crate::ComposerButton {
 			id: "ingtoninator",
-			label: "Ington",
-			tooltip: "Add the Ington suffix to one word of every message you send.",
+			icon: Some("ingtoninator"),
+			label: "Ingtoninator",
+			tooltip: if self.enabled {
+				"Disable Ingtoninator"
+			} else {
+				"Enable Ingtoninator"
+			},
 			active: Some(self.enabled),
 		})
 	}

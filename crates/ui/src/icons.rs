@@ -57,6 +57,11 @@ pub enum Icon {
 	External,
 	GitHub,
 	Twitch,
+	/// The bundled ports' own chat-bar glyphs, rendered from the plugin that owns them by
+	/// `tools/make-testcord-button-icons.py`.
+	Ingtoninator,
+	ReverseMessage,
+	Signature,
 	Steam,
 	Spotify,
 	YouTube,
@@ -129,7 +134,7 @@ pub enum Icon {
 
 impl Icon {
 	/// Canonical atlas cells; Forward reuses the mirrored Reply cell.
-	pub const ALL: [Icon; 105] = [
+	pub const ALL: [Icon; 108] = [
 		Icon::ChevronDown,
 		Icon::ChevronRight,
 		Icon::Gear,
@@ -180,6 +185,9 @@ impl Icon {
 		Icon::PayPal,
 		Icon::Amazon,
 		Icon::Bluesky,
+		Icon::Ingtoninator,
+		Icon::ReverseMessage,
+		Icon::Signature,
 		Icon::Mastodon,
 		Icon::Skype,
 		Icon::GameController,
@@ -292,6 +300,9 @@ impl Icon {
 			Icon::PayPal => "paypal-logo",
 			Icon::Amazon => "amazon-logo",
 			Icon::Bluesky => "bluesky",
+			Icon::Ingtoninator => "ingtoninator",
+			Icon::ReverseMessage => "reverse-message",
+			Icon::Signature => "signature",
 			Icon::Mastodon => "mastodon-logo",
 			Icon::Skype => "skype-logo",
 			Icon::GameController => "game-controller",
@@ -346,6 +357,12 @@ impl Icon {
 			Icon::DeviceMobile => "device-mobile",
 		}
 	}
+	/// The icon the bundled index calls `name`, if there is one. A port names its glyph the
+	/// way the sheet names it, so a port with no glyph of its own is not a runtime error.
+	pub fn from_name(name: &str) -> Option<Icon> {
+		Icon::ALL.into_iter().find(|icon| icon.asset() == name)
+	}
+
 	fn cell(self) -> usize {
 		if self == Self::Forward {
 			return Self::Reply.cell();
@@ -447,6 +464,53 @@ pub fn paint(painter: &egui::Painter, icon: Icon, rect: Rect, color: Color32) {
 	// Glyphs occupy 56 of every 64 cell pixels; draw the cell slightly larger so the visible
 	// glyph fills `rect` like the previous painted icons did.
 	painter.image(texture.id(), rect.expand(size * 4.0 / 56.0), uv, color);
+}
+
+/// A bundled port's chat-bar button, drawn the way the original draws it.
+///
+/// The original's buttons are icons rather than words: a square button, a tooltip, and a
+/// state shown in the colour rather than in the label. A toggle that is on is drawn in the
+/// danger colour, and the ports that mask their glyph and draw a slash across it get the
+/// slash instead.
+pub fn plugin_button(
+	ui: &mut egui::Ui,
+	icon: Icon,
+	size: f32,
+	state: Option<bool>,
+	slash_when_active: bool,
+	label: &str,
+) -> Response {
+	let colors = design::palette(ui);
+	let (rect, response) = ui.allocate_exact_size(Vec2::splat(size), Sense::click());
+	if response.hovered() || response.has_focus() {
+		ui.painter().rect_filled(rect, 6, colors.hover);
+	}
+	let on = state == Some(true);
+	let enabled = ui.is_enabled();
+	let color = if !enabled {
+		colors.muted.gamma_multiply(0.5)
+	} else if on {
+		// The original tints a switched-on button with its danger colour, which is how the
+		// row reads at a glance: colour means on.
+		colors.danger
+	} else if response.hovered() || response.has_focus() {
+		colors.text_strong
+	} else {
+		colors.muted
+	};
+	let glyph = rect.shrink(size * 0.2);
+	paint(ui.painter(), icon, glyph, color);
+	if on && slash_when_active {
+		// TestCord's slash: a red bar from one corner to the other, drawn over the glyph.
+		let from = egui::pos2(glyph.left() - 2.0, glyph.bottom() + 2.0);
+		let to = egui::pos2(glyph.right() + 2.0, glyph.top() - 2.0);
+		ui.painter().add(egui::Shape::line_segment(
+			[from, to],
+			egui::Stroke::new(2.0, colors.danger),
+		));
+	}
+	response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, enabled, label));
+	response.on_hover_text(label)
 }
 
 /// `icon` as an atom, so widgets built from atoms (buttons, combo boxes) can show it beside text.

@@ -90,10 +90,17 @@ impl Sort {
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct ComposerButton {
 	pub id: String,
+	/// The glyph, as `crate::icons::Icon`. TestCord's chat-bar buttons are icons and this
+	/// client draws every icon from one sheet, so a port names one and it is drawn like the
+	/// rest of the app's.
+	pub icon: Option<crate::icons::Icon>,
 	pub label: String,
 	pub tooltip: String,
 	/// A toggle shows whether it is on; a plain button has no state.
 	pub active: Option<bool>,
+	/// TestCord masks the glyph and draws a slash across it when the toggle is on, for the
+	/// ports that do that rather than tint it.
+	pub slash_when_active: bool,
 }
 
 /// A message-menu entry the owner picked, waiting for the app to run it.
@@ -141,8 +148,8 @@ pub struct TestCord {
 	pub search: String,
 	/// How the list is ordered.
 	pub sort: Sort,
-	/// Set while a search or a sort is being typed, so the list is rebuilt while it changes
-	/// and not on every frame.
+	/// Set while a search or a sort is being typed, and whenever the ports themselves are
+	/// replaced, so the list is rebuilt while it changes and not on every frame.
 	pub listing_dirty: bool,
 
 	/// The entry the owner picked on a message.
@@ -150,6 +157,9 @@ pub struct TestCord {
 	pub(super) expanded: Option<String>,
 	/// The order the list is shown in, and the order the owner picked.
 	listing: Vec<usize>,
+	/// How many ports the cached order was built for, so a list that arrived after the
+	/// first frame is not answered out of a cache that predates it.
+	listing_for: usize,
 	buffers: BTreeMap<(String, String), String>,
 }
 
@@ -192,6 +202,7 @@ impl Default for TestCord {
 			// A list that has never been built is dirty by definition, so the first frame
 			// after the page opens shows something.
 			listing_dirty: true,
+			listing_for: 0,
 			picked: None,
 			expanded: None,
 			listing: Vec::new(),
@@ -317,7 +328,9 @@ impl TestCord {
 
 	/// The order the list is drawn in: the search first, then the sort.
 	pub fn visible(&mut self) -> Vec<usize> {
-		if !self.listing_dirty {
+		// The ports are the input to this answer, so a cache built for a different number
+		// of them is not an answer at all.
+		if !self.listing_dirty && self.listing_for == self.entries.len() {
 			return self.listing.clone();
 		}
 		let needle = self.search.trim().to_lowercase();
@@ -350,6 +363,7 @@ impl TestCord {
 			}),
 		}
 		self.listing = order;
+		self.listing_for = self.entries.len();
 		self.listing_dirty = false;
 		self.listing.clone()
 	}
@@ -628,6 +642,40 @@ mod tests {
 				assert_eq!(shown, vec![1], "{needle} matched the wrong entry");
 			}
 		}
+	}
+
+	/// The page is drawn before the app has built the list, so it caches an empty answer to
+	/// an empty list; the ports then arrive. That is the sequence a real launch has, and it
+	/// is why the page used to say nothing matches "" with nothing in the search box.
+	#[test]
+	fn ports_arriving_after_the_first_draw_still_get_shown() {
+		let mut page = TestCord::default();
+		assert!(
+			page.visible().is_empty(),
+			"there is nothing to show before the ports arrive"
+		);
+		page.entries = three();
+		page.listing_dirty = true;
+		assert_eq!(
+			page.visible().len(),
+			3,
+			"the ports that arrived must be shown, not answered out of the empty cache"
+		);
+	}
+
+	/// A search that is emptied has to bring the whole list back, not leave it empty.
+	#[test]
+	fn clearing_the_search_brings_the_whole_list_back() {
+		let mut page = TestCord {
+			entries: three(),
+			search: "zzz".to_string(),
+			listing_dirty: true,
+			..TestCord::default()
+		};
+		assert!(page.visible().is_empty());
+		page.search.clear();
+		page.listing_dirty = true;
+		assert_eq!(page.visible().len(), 3);
 	}
 
 	#[test]

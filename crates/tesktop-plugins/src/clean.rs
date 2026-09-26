@@ -254,8 +254,13 @@ impl crate::Plugin for TalkInReverse {
 	fn composer_button(&self) -> Option<crate::ComposerButton> {
 		Some(crate::ComposerButton {
 			id: "talk-in-reverse",
-			label: "Reverse",
-			tooltip: "Send your message with its characters in reverse order.",
+			icon: Some("reverse-message"),
+			label: "Reverse message",
+			tooltip: if self.reversed {
+				"Disable Reverse Message"
+			} else {
+				"Enable Reverse Message"
+			},
 			active: Some(self.reversed),
 		})
 	}

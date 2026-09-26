@@ -2,7 +2,7 @@
 
 use crate::{
 	Delivery, Fallback, Inbound, Intent, IntentContext, Meta, Setting, SettingKind, Values,
-	number_or, text_or,
+	flag_or, number_or, text_or,
 };
 use model::Id;
 use std::collections::VecDeque;
@@ -14,6 +14,23 @@ pub const MAX_PENDING: usize = 256;
 pub const MAX_DELAY_MS: u64 = 24 * 60 * 60 * 1000;
 
 const SETTINGS: &[Setting] = &[
+	Setting {
+		key: "enabled",
+		label: "Enable automatic message deletion",
+		kind: SettingKind::Toggle,
+		// Off until asked for, as TestCord has it: a port that is switched on but has not
+		// been told to delete anything must not take your messages away on its own.
+		default: Fallback::Flag(false),
+	},
+	Setting {
+		key: "deletionMode",
+		label: "Deletion mode",
+		kind: SettingKind::Choice(&[
+			("normal", "Normal deletion"),
+			("antiLog", "Anti-log deletion"),
+		]),
+		default: Fallback::Text("normal"),
+	},
 	Setting {
 		key: "defaultDelay",
 		label: "How long a message stays",
@@ -46,10 +63,40 @@ const SETTINGS: &[Setting] = &[
 		default: Fallback::Text(""),
 	},
 	Setting {
+		key: "minChars",
+		label: "Only messages of at least this many characters",
+		kind: SettingKind::Number { min: 0, max: 4_000 },
+		default: Fallback::Number(0),
+	},
+	Setting {
 		key: "maxChars",
 		label: "Only messages up to this many characters",
 		kind: SettingKind::Number { min: 0, max: 4_000 },
 		default: Fallback::Number(0),
+	},
+	Setting {
+		key: "deleteKeywords",
+		label: "Only messages containing one of these",
+		kind: SettingKind::Text { multiline: true },
+		default: Fallback::Text(""),
+	},
+	Setting {
+		key: "guilds",
+		label: "Only these servers (ids; empty means all)",
+		kind: SettingKind::Text { multiline: true },
+		default: Fallback::Text(""),
+	},
+	Setting {
+		key: "preserveEmbeds",
+		label: "Keep messages that carry an embed",
+		kind: SettingKind::Toggle,
+		default: Fallback::Flag(true),
+	},
+	Setting {
+		key: "preserveAttachments",
+		label: "Keep messages that carry a file",
+		kind: SettingKind::Toggle,
+		default: Fallback::Flag(true),
 	},
 ];
 
@@ -64,10 +111,18 @@ pub struct Due {
 /// AutoDeleter: a message of yours goes away on its own, which is a privacy switch.
 #[derive(Default)]
 pub struct AutoDeleter {
+	enabled: bool,
+	/// Anti-log deletion leaves a note in its place instead of taking the message away.
+	anti_log: bool,
 	delay_ms: u64,
 	channels: Vec<Id>,
+	guilds: Vec<Id>,
 	keep: Vec<String>,
+	only: Vec<String>,
+	min_chars: usize,
 	max_chars: usize,
+	preserve_embeds: bool,
+	preserve_attachments: bool,
 	pending: VecDeque<Due>,
 	outstanding: std::collections::BTreeSet<Id>,
 	/// The deletes waiting to be handed over, which is what the host carries out.
@@ -80,21 +135,36 @@ pub struct AutoDeleter {
 
 impl AutoDeleter {
 	/// Whether a message of yours should be taken back at all.
-	fn should_delete(&self, content: &str) -> bool {
-		if self.delay_ms == 0 {
+	fn should_delete(&self, content: &str, message: &model::Message) -> bool {
+		// The switch the owner has to turn, and the delay that is still zero until they set
+		// one, are the two things that stand between a port that is on and a message that is
+		// gone.
+		if !self.enabled || self.delay_ms == 0 {
 			return false;
 		}
-		if self.max_chars > 0 && content.chars().count() > self.max_chars {
+		if self.preserve_embeds && !message.embeds.is_empty() {
 			return false;
 		}
+		if self.preserve_attachments && !message.attachments.is_empty() {
+			return false;
+		}
+		let length = content.chars().count();
+		if self.min_chars > 0 && length < self.min_chars {
+			return false;
+		}
+		if self.max_chars > 0 && length > self.max_chars {
+			return false;
+		}
+		let lowered = content.to_lowercase();
 		if self
 			.keep
 			.iter()
-			.any(|word| !word.is_empty() && content.to_lowercase().contains(word))
+			.any(|word| !word.is_empty() && lowered.contains(word))
 		{
 			return false;
 		}
-		true
+		// An empty `only` list means every message, as it does in the original.
+		self.only.is_empty() || self.only.iter().any(|word| lowered.contains(word))
 	}
 
 	/// Remember a message, dropping the oldest when the list is full.
@@ -133,6 +203,8 @@ impl crate::Plugin for AutoDeleter {
 	}
 
 	fn configure(&mut self, values: &Values) {
+		self.enabled = flag_or(values, SETTINGS, "enabled");
+		self.anti_log = text_or(values, SETTINGS, "deletionMode") == "antiLog";
 		let amount = number_or(values, SETTINGS, "defaultDelay").clamp(5, 86_400) as u64;
 		let unit = match text_or(values, SETTINGS, "delayUnit").as_str() {
 			"minutes" => 60_000,
@@ -145,14 +217,26 @@ impl crate::Plugin for AutoDeleter {
 			.filter_map(|part| Id::from_str(part.trim()).ok())
 			.take(256)
 			.collect();
-		self.keep = text_or(values, SETTINGS, "keep")
-			.split(['\n', ','])
-			.map(str::trim)
-			.filter(|part| !part.is_empty())
-			.map(str::to_lowercase)
-			.take(64)
+		self.guilds = text_or(values, SETTINGS, "guilds")
+			.split([' ', ',', '\n', '\t', '\r'])
+			.filter_map(|part| Id::from_str(part.trim()).ok())
+			.take(256)
 			.collect();
+		let words = |key: &str| -> Vec<String> {
+			text_or(values, SETTINGS, key)
+				.split(['\n', ','])
+				.map(str::trim)
+				.filter(|part| !part.is_empty())
+				.map(str::to_lowercase)
+				.take(64)
+				.collect()
+		};
+		self.keep = words("keep");
+		self.only = words("deleteKeywords");
+		self.min_chars = number_or(values, SETTINGS, "minChars").clamp(0, 4_000) as usize;
 		self.max_chars = number_or(values, SETTINGS, "maxChars").clamp(0, 4_000) as usize;
+		self.preserve_embeds = flag_or(values, SETTINGS, "preserveEmbeds");
+		self.preserve_attachments = flag_or(values, SETTINGS, "preserveAttachments");
 		self.pending.clear();
 		self.outstanding.clear();
 		self.ready.clear();
@@ -178,7 +262,14 @@ impl crate::Plugin for AutoDeleter {
 		if !self.channels.is_empty() && !self.channels.contains(&inbound.channel) {
 			return;
 		}
-		if !self.should_delete(&message.content) {
+		if !self.guilds.is_empty()
+			&& !inbound
+				.guild
+				.is_some_and(|guild| self.guilds.contains(&guild))
+		{
+			return;
+		}
+		if !self.should_delete(&message.content, message) {
 			return;
 		}
 		self.remember(inbound.channel, message.id, inbound.now);
@@ -201,7 +292,7 @@ impl crate::Plugin for AutoDeleter {
 		let Delivery::Sent { message, .. } = event else {
 			return;
 		};
-		if !self.should_delete(&message.content) {
+		if !self.should_delete(&message.content, message) {
 			return;
 		}
 		// The echo of your own send arrives as a created message, which already remembered
@@ -282,10 +373,13 @@ mod tests {
 		}
 	}
 
+	/// A deleter that is switched on and set to a delay, which is the state the owner has to
+	/// put it in before anything of theirs goes away.
 	fn configured(delay: &str, unit: &str) -> AutoDeleter {
 		let mut plugin = AutoDeleter::default();
 		plugin.configure(&Values(
 			[
+				("enabled".to_string(), serde_json::json!(true)),
 				("defaultDelay".to_string(), serde_json::json!(delay)),
 				("delayUnit".to_string(), serde_json::json!(unit)),
 			]
@@ -293,6 +387,39 @@ mod tests {
 			.collect(),
 		));
 		plugin
+	}
+
+	/// A port that is switched on but not told to delete anything, which is what a fresh
+	/// install of this plugin looks like: TestCord's own `enabled` defaults to false.
+	fn off() -> AutoDeleter {
+		let mut plugin = AutoDeleter::default();
+		plugin.configure(&Values(
+			[("defaultDelay".to_string(), serde_json::json!("300"))]
+				.into_iter()
+				.collect(),
+		));
+		plugin
+	}
+
+	/// The report this fixes: switching the port on deleted messages without being asked to.
+	#[test]
+	fn switching_the_port_on_does_not_delete_anything_until_it_is_told_to() {
+		let mut plugin = off();
+		let message = test_support::message(5, Id(7));
+		let inbound = Inbound::new(Id(7), None, Id(1), 1_000);
+		plugin.on_created(&inbound, &message, &mut Vec::new());
+		for _ in 0..10 {
+			plugin.tick(1_000 + 86_400_000);
+		}
+		let context = crate::IntentContext {
+			channel: Id(7),
+			me: Id(1),
+			previous: None,
+		};
+		assert!(
+			plugin.take_intent(&context).is_none(),
+			"a port that is on but not told to delete must not take a message back"
+		);
 	}
 
 	#[test]
@@ -489,6 +616,7 @@ mod tests {
 	fn turning_it_off_forgets_what_it_was_waiting_for() {
 		let mut registry = Registry::new();
 		registry.set_enabled("AutoDeleter", true);
+		registry.set_value("AutoDeleter", "enabled", true.into());
 		registry.set_value("AutoDeleter", "defaultDelay", 5.into());
 		registry.set_value("AutoDeleter", "delayUnit", "seconds".into());
 		let mut replies: Vec<crate::PendingReply> = Vec::new();

@@ -756,15 +756,35 @@ impl MessagingUi {
 		self.testcord.composer_buttons = std::sync::Arc::new(vec![
 			crate::testcord::ComposerButton {
 				id: "ingtoninator".to_string(),
-				label: "Ington".to_string(),
-				tooltip: "Add the Ington suffix to one word of every message you send.".to_string(),
+				icon: Some(crate::icons::Icon::Ingtoninator),
+				label: "Ingtoninator".to_string(),
+				tooltip: "Disable Ingtoninator".to_string(),
 				active: Some(true),
+				slash_when_active: false,
 			},
 			crate::testcord::ComposerButton {
 				id: "talk-in-reverse".to_string(),
-				label: "Reverse".to_string(),
-				tooltip: "Send your message with its characters in reverse order.".to_string(),
+				icon: Some(crate::icons::Icon::ReverseMessage),
+				label: "Reverse message".to_string(),
+				tooltip: "Enable Reverse Message".to_string(),
 				active: Some(false),
+				slash_when_active: false,
+			},
+			crate::testcord::ComposerButton {
+				id: "signature".to_string(),
+				icon: Some(crate::icons::Icon::Signature),
+				label: "Signature".to_string(),
+				tooltip: "Disable Signature".to_string(),
+				active: Some(true),
+				slash_when_active: true,
+			},
+			crate::testcord::ComposerButton {
+				id: "quick-delete".to_string(),
+				icon: Some(crate::icons::Icon::Trash),
+				label: "Delete".to_string(),
+				tooltip: "Delete your last message in this conversation.".to_string(),
+				active: Some(false),
+				slash_when_active: false,
 			},
 		]);
 	}
@@ -2762,6 +2782,51 @@ impl MessagingUi {
                 }
                 ui.horizontal(|ui| {
                     ui.spacing_mut().item_spacing.x = 8.0;
+                    // The bundled ports' own chat-bar buttons come first, which is where
+                    // the original puts them: it injects them at the front of the row, so
+                    // they sit ahead of the attach and emoji buttons rather than after.
+                    if !editing_here {
+                        // The list is shared and short-lived, so it is cloned rather than
+                        // borrowed across the request the press queues.
+                        let buttons = self.testcord.composer_buttons.clone();
+                        for button in buttons.iter() {
+                            let tooltip = button.tooltip.clone();
+                            let enabled = !self.upload_busy && state.can_send(channel);
+                            let pressed = match button.icon {
+                                Some(icon) => icons::plugin_button(
+                                    ui,
+                                    icon,
+                                    28.0,
+                                    button.active,
+                                    button.slash_when_active,
+                                    &button.label,
+                                )
+                                .on_hover_text_with(move || tooltip.clone())
+                                .clicked(),
+                                // A port with no glyph of its own still gets a button, in
+                                // the app's own style rather than a picture of someone
+                                // else's.
+                                None if button.active.is_some() => ui
+                                    .add_enabled(
+                                        enabled,
+                                        egui::Button::new(RichText::new(&button.label).strong())
+                                            .selected(button.active == Some(true)),
+                                    )
+                                    .on_hover_text_with(move || tooltip.clone())
+                                    .clicked(),
+                                None => ui
+                                    .add_enabled(enabled, egui::Button::new(&button.label))
+                                    .on_hover_text_with(move || tooltip.clone())
+                                    .clicked(),
+                            };
+                            if pressed {
+                                self.testcord
+                                    .request(crate::testcord::Request::ComposerButton {
+                                        id: button.id.clone(),
+                                    });
+                            }
+                        }
+                    }
                     // An active application command shows its app in place of the attach button.
                     let attach = if !editing_here && self.slash_commands.composer_badge(ui, state, &mut self.avatars) {
                         None
@@ -2774,39 +2839,6 @@ impl MessagingUi {
                             .on_hover_text("Choose, drop, or paste files (Ctrl/Cmd/Option+V). Up to 10 files and 500 MB total; account limits may be lower. Send starts the upload."))
                     };
                     if !editing_here { self.extensions.composer_menu(ui, state); }
-                    // The bundled ports' own buttons, which is where the original puts its
-                    // chat bar buttons: next to the attach button, before the send button.
-                    if !editing_here {
-                        // The list is shared and short-lived, so it is cloned rather than
-                        // borrowed across the request the press queues.
-                        let buttons = self.testcord.composer_buttons.clone();
-                        for button in buttons.iter() {
-                            let tooltip = button.tooltip.clone();
-                            let pressed: bool = if let Some(active) = button.active {
-                                ui.add_enabled(
-                                    !self.upload_busy && state.can_send(channel),
-                                    egui::Button::new(RichText::new(&button.label).strong())
-                                        .selected(active),
-                                )
-                                .on_hover_text_with(move || tooltip.clone())
-                                .clicked()
-                            } else {
-                                let tooltip = button.tooltip.clone();
-                                ui.add_enabled(
-                                    !self.upload_busy && state.can_send(channel),
-                                    egui::Button::new(&button.label),
-                                )
-                                .on_hover_text_with(move || tooltip.clone())
-                                .clicked()
-                            };
-                            if pressed {
-                                self.testcord
-                                    .request(crate::testcord::Request::ComposerButton {
-                                        id: button.id.clone(),
-                                    });
-                            }
-                        }
-                    }
                     if attach.is_some_and(|attach| attach.clicked()) {
                         self.attach_requested = true;
                     }
@@ -7398,17 +7430,49 @@ mod composer_tests {
 		messaging.testcord.composer_buttons =
 			std::sync::Arc::new(vec![crate::testcord::ComposerButton {
 				id: "ingtoninator".to_string(),
-				label: "Ington".to_string(),
-				tooltip: "Add the Ington suffix".to_string(),
+				icon: Some(crate::icons::Icon::Ingtoninator),
+				label: "Ingtoninator".to_string(),
+				tooltip: "Disable Ingtoninator".to_string(),
 				active: Some(true),
+				slash_when_active: false,
 			}]);
-		let mut painted = Vec::new();
-		let mut editor = egui::Id::NULL;
-		let mut commands = Vec::new();
-		let output = ctx.run_ui(Default::default(), |ui| {
-			editor = ui.make_persistent_id("message-input");
-			messaging.composer(ui, &mut state, channel, &ctx, &mut commands);
-		});
+		// The original's chat-bar buttons are glyphs rather than words, so this one is too:
+		// what is painted is a piece of the icon sheet, and no text.
+		//
+		// The sheet is 512 by 896 with 64-pixel cells, eight across, and the Ingtoninator
+		// glyph is cell 105: column 1 of row 13. A glyph is painted as a mesh over exactly
+		// that cell, so its texture coordinates say which picture it is.
+		const ATLAS: [f32; 2] = [512.0, 896.0];
+		const CELL: f32 = 64.0;
+		const COLUMNS: usize = 8;
+		const INGTONINATOR: usize = 105;
+		let column = (INGTONINATOR % COLUMNS) as f32 * CELL / ATLAS[0];
+		let row = (INGTONINATOR / COLUMNS) as f32 * CELL / ATLAS[1];
+		let expected = egui::Rect::from_min_max(
+			egui::pos2(column, row),
+			egui::pos2(column + CELL / ATLAS[0], row + CELL / ATLAS[1]),
+		);
+		fn painted_cells(shape: &egui::Shape, out: &mut Vec<egui::Rect>) {
+			match shape {
+				egui::Shape::Mesh(mesh) => {
+					let mut low = egui::pos2(f32::MAX, f32::MAX);
+					let mut high = egui::pos2(f32::MIN, f32::MIN);
+					for vertex in &mesh.vertices {
+						low = low.min(vertex.uv);
+						high = high.max(vertex.uv);
+					}
+					if low.x < high.x {
+						out.push(egui::Rect::from_min_max(low, high));
+					}
+				}
+				egui::Shape::Vec(shapes) => {
+					for shape in shapes {
+						painted_cells(shape, out);
+					}
+				}
+				_ => {}
+			}
+		}
 		fn texts(shape: &egui::Shape, out: &mut Vec<String>) {
 			match shape {
 				egui::Shape::Text(text) => out.push(text.galley.job.text.clone()),
@@ -7420,13 +7484,26 @@ mod composer_tests {
 				_ => {}
 			}
 		}
+		let mut cells = Vec::new();
+		let mut painted = Vec::new();
+		let mut editor = egui::Id::NULL;
+		let mut commands = Vec::new();
+		let output = ctx.run_ui(Default::default(), |ui| {
+			editor = ui.make_persistent_id("message-input");
+			messaging.composer(ui, &mut state, channel, &ctx, &mut commands);
+		});
 		for shape in &output.shapes {
+			painted_cells(&shape.shape, &mut cells);
 			texts(&shape.shape, &mut painted);
 		}
 		output.drop_without_applying_deltas();
 		assert!(
-			painted.iter().any(|line| line == "Ington"),
-			"the port's button is not in the composer: {painted:?}"
+			cells.iter().any(|cell| cell == &expected),
+			"the port's own glyph is not in the composer: {cells:?}"
+		);
+		assert!(
+			!painted.iter().any(|line| line == "Ingtoninator"),
+			"the original draws a glyph rather than a word: {painted:?}"
 		);
 		assert!(
 			commands.is_empty(),

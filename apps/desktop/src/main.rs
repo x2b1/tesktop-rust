@@ -770,6 +770,8 @@ struct Desktop {
 	/// How many ports were enabled when the composer's buttons were last built, so the row
 	/// is rebuilt when the set changes and not on every frame.
 	tesktop_buttons_built: usize,
+	/// The registry revision the page was last built from, so a record that grew is shown.
+	tesktop_page_revision: u64,
 	/// Fixture-only latch: the demo flags are applied once, not every frame.
 	#[cfg(feature = "demo")]
 	demo_fixtures_done: bool,
@@ -1952,6 +1954,7 @@ impl Desktop {
 			tesktop_chunks: Default::default(),
 			tesktop_markers_channel: None,
 			tesktop_buttons_built: usize::MAX,
+			tesktop_page_revision: 0,
 			#[cfg(feature = "demo")]
 			demo_fixtures_done: false,
 			login: None,
@@ -3971,9 +3974,16 @@ impl Desktop {
 					.into_iter()
 					.map(|button| ui::testcord::ComposerButton {
 						id: button.id.to_string(),
+						// A port names a glyph the way it is written in the bundled index; a
+						// name that is not in the sheet is a port that gets no icon rather
+						// than a row of question marks.
+						icon: button.icon.and_then(ui::icons::Icon::from_name),
 						label: button.label.to_string(),
 						tooltip: button.tooltip.to_string(),
 						active: button.active,
+						// Signature is the one port whose original masks its glyph and
+						// slashes it, rather than only tinting it.
+						slash_when_active: button.id == "signature",
 					})
 					.collect(),
 			);
@@ -4008,8 +4018,18 @@ impl Desktop {
 		if preserve != self.state.preserve_deleted_messages {
 			self.state.set_preserve_deleted_messages(preserve);
 		}
-		if self.messaging.testcord_settings_open() || self.tesktop_dirty {
+		// A port that records, counts or summarises holds something the page shows, so the
+		// page is rebuilt when a message has been through a port as well as when a setting
+		// changed. Without this the record is a snapshot from whenever the page was last
+		// opened, which is the same as a record that never arrives.
+		if self.messaging.testcord_settings_open()
+			|| self.tesktop_dirty
+			|| self.tesktop_page_revision != self.tesktop.revision()
+		{
+			// A new list of ports is a new list to search and sort, not the old answer.
 			self.messaging.testcord.entries = plugins_page::page(&self.tesktop);
+			self.messaging.testcord.listing_dirty = true;
+			self.tesktop_page_revision = self.tesktop.revision();
 		}
 		if let Some(picker) = &self.tesktop_picker {
 			match picker.try_recv() {
@@ -7466,6 +7486,34 @@ mod tests {
 	/// The page the owner actually sees, built by the same code the app uses.
 	fn live_page(registry: &tesktop_plugins::Registry) -> Vec<ui::testcord::Entry> {
 		plugins_page::page(registry)
+	}
+
+	/// The record has to survive the whole way a real message travels: in through the
+	/// inbound hook, and out onto the page the owner opens to read it.
+	#[test]
+	fn a_record_travels_from_an_inbound_message_to_the_page() {
+		let mut registry = tesktop_plugins::Registry::new();
+		registry.set_enabled("MessageLogger", true);
+		let mut message = test_support::message(77, model::Id(7));
+		message.author.name = "Someone".to_string();
+		message.content = "a message worth recording".to_string();
+		let inbound =
+			tesktop_plugins::Inbound::new(model::Id(7), None, model::Id(1), 1_700_000_000);
+		registry.observe(&inbound, tesktop_plugins::InboundEvent::Created(&message));
+		let page = live_page(&registry);
+		let entry = page
+			.iter()
+			.find(|entry| entry.id == "MessageLogger")
+			.expect("the logger is on the page");
+		assert!(
+			entry.log,
+			"a port that keeps something has to say it can be copied"
+		);
+		assert!(
+			entry.log_tail.contains("a message worth recording"),
+			"the record is not on the page: {:?}",
+			entry.log_tail
+		);
 	}
 
 	#[test]

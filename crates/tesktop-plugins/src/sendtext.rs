@@ -602,6 +602,12 @@ const SIGNATURE_SETTINGS: &[Setting] = &[
 		default: Fallback::Text(">"),
 	},
 	Setting {
+		key: "showIcon",
+		label: "Show a chat-bar button to toggle it",
+		kind: SettingKind::Toggle,
+		default: Fallback::Flag(true),
+	},
+	Setting {
 		key: "isEnabled",
 		label: "Add the signature",
 		kind: SettingKind::Toggle,
@@ -615,6 +621,7 @@ pub struct Signature {
 	name: Option<String>,
 	header: Option<String>,
 	enabled: Option<bool>,
+	show_icon: Option<bool>,
 }
 
 impl crate::Plugin for Signature {
@@ -638,6 +645,35 @@ impl crate::Plugin for Signature {
 		self.name = Some(text_or(values, SIGNATURE_SETTINGS, "name"));
 		self.header = Some(text_or(values, SIGNATURE_SETTINGS, "textHeader"));
 		self.enabled = Some(flag_or(values, SIGNATURE_SETTINGS, "isEnabled"));
+		self.show_icon = Some(flag_or(values, SIGNATURE_SETTINGS, "showIcon"));
+	}
+
+	/// TestCord's own button, with its own tooltip wording and the slash it draws across the
+	/// glyph when the signature is on.
+	fn composer_button(&self) -> Option<crate::ComposerButton> {
+		if !self.show_icon.unwrap_or(true) {
+			return None;
+		}
+		let enabled = self.enabled.unwrap_or(true);
+		Some(crate::ComposerButton {
+			id: "signature",
+			icon: Some("signature"),
+			label: "Signature",
+			tooltip: if enabled {
+				"Disable Signature"
+			} else {
+				"Enable Signature"
+			},
+			active: Some(enabled),
+		})
+	}
+
+	fn press_composer(&mut self, id: &str) {
+		if id != "signature" {
+			return;
+		}
+		let enabled = self.enabled.unwrap_or(true);
+		self.enabled = Some(!enabled);
 	}
 
 	fn before_send(&mut self, outgoing: &mut Outgoing<'_>) -> Result<(), &'static str> {

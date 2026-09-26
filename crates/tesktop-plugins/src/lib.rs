@@ -263,8 +263,14 @@ pub struct Previous {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ComposerButton {
 	pub id: &'static str,
+	/// The glyph to draw, named as it is in `assets/icons/index.tsv`. TestCord's chat-bar
+	/// buttons are icons rather than words, and this client draws every icon from one sheet.
+	pub icon: Option<&'static str>,
+	/// The accessible name, and what a port with no glyph of its own draws instead.
 	pub label: &'static str,
 	pub tooltip: &'static str,
+	/// `Some(true)` or `Some(false)` for a toggle whose state is shown, `None` for a button
+	/// that is only ever pressed.
 	pub active: Option<bool>,
 }
 
@@ -558,6 +564,10 @@ pub struct Registry {
 	pending: Vec<PendingReply>,
 	/// How many ports are on, kept as it changes so the host can watch it cheaply.
 	enabled_count: usize,
+	/// Bumped whenever a port is handed a message. A port that records, counts or summarises
+	/// holds something the page shows, and the host has to know to go and read it again
+	/// rather than showing whatever it read last.
+	revision: u64,
 }
 
 impl Default for Registry {
@@ -664,6 +674,7 @@ impl Registry {
 			entries,
 			pending: Vec::new(),
 			enabled_count,
+			revision: 0,
 		};
 		// Every port starts from the defaults it declares, as TestCord does on a fresh install.
 		registry.reconfigure();
@@ -750,6 +761,7 @@ impl Registry {
 		if !self.any_enabled() {
 			return Verdict::Show;
 		}
+		self.revision += 1;
 		let active = self.active();
 		match event {
 			InboundEvent::Created(message) => {
@@ -969,6 +981,7 @@ impl Registry {
 		if !self.any_enabled() {
 			return;
 		}
+		self.revision += 1;
 		for index in self.active() {
 			self.plugins[index].delivered(event);
 		}
@@ -1193,6 +1206,12 @@ impl Registry {
 					.iter()
 					.any(|alias| alias.eq_ignore_ascii_case(id))
 		})
+	}
+
+	/// How many times a port has been handed a message. The host compares it with the value
+	/// it last built the page from, so a record that grew is shown rather than a snapshot.
+	pub fn revision(&self) -> u64 {
+		self.revision
 	}
 
 	/// Keeps the message path allocation-free while every plugin is off, which is the default.
