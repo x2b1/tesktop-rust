@@ -372,11 +372,69 @@ pub struct ReactRule {
 	pub reactions: Vec<String>,
 }
 
-/// Parse the rules, which are written as lines of `id emoji emoji`.
+/// Parse the rules, in either of the two forms they arrive in.
 ///
-/// The original takes JSON. A flat list is the same information without a parser in front
-/// of it, and it cannot be made to allocate by what it is handed.
+/// The original keeps them as a JSON string, so a settings file imported from it hands over
+/// `[{"channelId":"7","reactions":[{"name":"👀"}]}]`, and reading that as lines would find
+/// nothing at all. Both are therefore read: the original's JSON, and the flat `id emoji
+/// emoji` lines this port writes, which is the same information without a parser in front of
+/// it.
 pub fn parse_rules(text: &str) -> Vec<ReactRule> {
+	let trimmed = text.trim_start();
+	if trimmed.starts_with('[') {
+		return parse_json_rules(trimmed);
+	}
+	parse_line_rules(text)
+}
+
+/// The original's own form: a JSON array of rules, each with a conversation and its
+/// reactions. Anything that does not fit is skipped rather than guessed at, and the list is
+/// bounded before it is walked so a large file cannot cost an allocation.
+fn parse_json_rules(text: &str) -> Vec<ReactRule> {
+	let mut rules: Vec<ReactRule> = Vec::new();
+	let Ok(value) = serde_json::from_str::<serde_json::Value>(text) else {
+		return rules;
+	};
+	let Some(entries) = value.as_array() else {
+		return rules;
+	};
+	for entry in entries.iter().take(MAX_RULES) {
+		let Some(channel) = entry
+			.get("channelId")
+			.and_then(serde_json::Value::as_str)
+			.and_then(|id| Id::from_str(id).ok())
+		else {
+			continue;
+		};
+		let Some(reactions) = entry.get("reactions").and_then(serde_json::Value::as_array) else {
+			continue;
+		};
+		let cleaned: Vec<String> = reactions
+			.iter()
+			.take(MAX_REACTIONS)
+			.filter_map(|reaction| match reaction {
+				// A custom emoji carries its id; a unicode one only has a name.
+				serde_json::Value::String(name) => clean_reaction(name),
+				serde_json::Value::Object(_) => reaction
+					.get("id")
+					.or_else(|| reaction.get("name"))
+					.and_then(serde_json::Value::as_str)
+					.and_then(clean_reaction),
+				_ => None,
+			})
+			.collect();
+		if !cleaned.is_empty() {
+			rules.push(ReactRule {
+				channel,
+				reactions: cleaned,
+			});
+		}
+	}
+	rules
+}
+
+/// The form this port writes: one conversation per line, then its reactions.
+fn parse_line_rules(text: &str) -> Vec<ReactRule> {
 	let mut rules: Vec<ReactRule> = Vec::new();
 	for line in text.lines() {
 		let line = line.trim();
@@ -387,17 +445,8 @@ pub fn parse_rules(text: &str) -> Vec<ReactRule> {
 		let Some(channel) = parts.next().and_then(|id| Id::from_str(id).ok()) else {
 			continue;
 		};
-		// One emoji each, no whitespace and no control characters, so a rule cannot smuggle
-		// anything into a reaction the service is asked to accept.
 		let reactions: Vec<String> = parts
-			.filter_map(|emoji| {
-				let emoji: String = emoji
-					.chars()
-					.filter(|character| !character.is_whitespace() && !character.is_control())
-					.take(16)
-					.collect();
-				(!emoji.is_empty()).then_some(emoji)
-			})
+			.filter_map(clean_reaction)
 			.take(MAX_REACTIONS)
 			.collect();
 		if reactions.is_empty() {
@@ -407,6 +456,16 @@ pub fn parse_rules(text: &str) -> Vec<ReactRule> {
 	}
 	rules.truncate(MAX_RULES);
 	rules
+}
+
+/// One emoji, with nothing in it that the service would not accept in a reaction.
+fn clean_reaction(emoji: &str) -> Option<String> {
+	let emoji: String = emoji
+		.chars()
+		.filter(|character| !character.is_whitespace() && !character.is_control())
+		.take(16)
+		.collect();
+	(!emoji.is_empty()).then_some(emoji)
 }
 
 /// Rules kept, so a long list cannot cost a scan per message.

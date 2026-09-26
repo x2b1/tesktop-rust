@@ -19,8 +19,49 @@ const MAX_BODY_CHARS: usize = 2000;
 const MAX_SEEN: usize = 4096;
 /// Bytes handed to the clipboard in one export.
 pub const MAX_EXPORT_BYTES: usize = 256 * 1024;
+/// Files named on a deletion before the list is cut, so one message cannot fill the record.
+const MAX_LISTED_FILES: usize = 10;
+
+/// The changed lines of an edit, as text: what went and what replaced it.
+///
+/// A removal is always marked. An addition is marked too when `separated` is on, which is the
+/// original's more readable differential; with it off an addition is just the new line, so a
+/// record reads as the message with its old lines taken out.
+fn diff_text(before: &str, after: &str, separated: bool) -> String {
+	let mut out = String::new();
+	let mut line = |marker: &str, text: &str| {
+		out.push_str(marker);
+		out.push_str(text);
+		out.push('\n');
+	};
+	for gone in before.lines().filter(|line| !after.contains(line)) {
+		line("- ", gone);
+	}
+	for added in after.lines().filter(|line| !before.contains(line)) {
+		line(if separated { "+ " } else { "" }, added);
+	}
+	let trimmed = out.trim_end_matches('\n');
+	if trimmed.is_empty() {
+		// Nothing line-shaped differs, so the whole change is one line of both.
+		format!("- {before}\n+ {after}")
+	} else {
+		trimmed.to_string()
+	}
+}
+
+/// The first line of `text`, which is what a collapsed record keeps.
+fn first_line(text: &str) -> String {
+	let line = text.lines().next().unwrap_or_default().trim();
+	line.chars().take(MAX_BODY_CHARS).collect()
+}
 
 const SETTINGS: &[Setting] = &[
+	Setting {
+		key: "deleteStyle",
+		label: "How a deletion is shown",
+		kind: SettingKind::Choice(&[("text", "Red text"), ("overlay", "Red overlay")]),
+		default: Fallback::Text("text"),
+	},
 	Setting {
 		key: "logEdits",
 		label: "Record edits",
@@ -32,6 +73,36 @@ const SETTINGS: &[Setting] = &[
 		label: "Record deletions",
 		kind: SettingKind::Toggle,
 		default: Fallback::Flag(true),
+	},
+	Setting {
+		key: "logDeletedAttachments",
+		label: "Record the files on a message that is deleted",
+		kind: SettingKind::Toggle,
+		default: Fallback::Flag(true),
+	},
+	Setting {
+		key: "ignoreSelfEdits",
+		label: "Ignore my own edits",
+		kind: SettingKind::Toggle,
+		default: Fallback::Flag(false),
+	},
+	Setting {
+		key: "collapseDeleted",
+		label: "Collapse a deleted message to a single line",
+		kind: SettingKind::Toggle,
+		default: Fallback::Flag(false),
+	},
+	Setting {
+		key: "showEditDiffs",
+		label: "Show what an edit changed",
+		kind: SettingKind::Toggle,
+		default: Fallback::Flag(false),
+	},
+	Setting {
+		key: "separatedDiffs",
+		label: "Separate additions from removals in a diff",
+		kind: SettingKind::Toggle,
+		default: Fallback::Flag(false),
 	},
 	Setting {
 		key: "ignoreBots",
@@ -88,6 +159,11 @@ pub struct MessageLogger {
 	deleted: usize,
 	edited: usize,
 	log_edits: bool,
+	log_deleted_attachments: bool,
+	ignore_self_edits: bool,
+	collapse_deleted: bool,
+	show_edit_diffs: bool,
+	separated_diffs: bool,
 	log_deletes: bool,
 	ignore_bots: bool,
 	ignore_self: bool,
@@ -179,6 +255,11 @@ impl crate::Plugin for MessageLogger {
 	fn configure(&mut self, values: &Values) {
 		self.log_edits = flag_or(values, SETTINGS, "logEdits");
 		self.log_deletes = flag_or(values, SETTINGS, "logDeletes");
+		self.log_deleted_attachments = flag_or(values, SETTINGS, "logDeletedAttachments");
+		self.ignore_self_edits = flag_or(values, SETTINGS, "ignoreSelfEdits");
+		self.collapse_deleted = flag_or(values, SETTINGS, "collapseDeleted");
+		self.show_edit_diffs = flag_or(values, SETTINGS, "showEditDiffs");
+		self.separated_diffs = flag_or(values, SETTINGS, "separatedDiffs");
 		self.ignore_bots = flag_or(values, SETTINGS, "ignoreBots");
 		self.ignore_self = flag_or(values, SETTINGS, "ignoreSelf");
 		self.ignore_users = ids(&text_or(values, SETTINGS, "ignoreUsers"));
@@ -257,17 +338,28 @@ impl crate::Plugin for MessageLogger {
 		if !self.log_edits || edit.before == edit.after {
 			return;
 		}
+		if self.ignore_self_edits && edit.author.id == inbound.me {
+			return;
+		}
 		if self.ignores_author(edit.author, inbound.me)
 			|| self.ignore_channels.contains(&edit.channel)
 		{
 			return;
 		}
+		// What the original shows as a diff, the record keeps as text: the line before and the
+		// line after, with the removals and the additions marked so a diff can be read in a
+		// plain record. Without the setting it is just the new text, as before.
+		let content = if self.show_edit_diffs {
+			diff_text(edit.before, edit.after, self.separated_diffs)
+		} else {
+			edit.after.to_string()
+		};
 		self.record(
 			Kind::Edited,
 			edit.channel,
 			edit.id,
 			&edit.author.name,
-			edit.after.to_string(),
+			content,
 		);
 	}
 
@@ -284,13 +376,23 @@ impl crate::Plugin for MessageLogger {
 		if self.ignores_author(&last.author, inbound.me) {
 			return;
 		}
-		self.record(
-			Kind::Deleted,
-			channel,
-			id,
-			&last.author.name,
-			last.content.clone(),
-		);
+		let mut content = last.content.clone();
+		if self.log_deleted_attachments && !last.attachments.is_empty() {
+			let files: Vec<&str> = last
+				.attachments
+				.iter()
+				.map(|attachment| attachment.filename.as_str())
+				.take(MAX_LISTED_FILES)
+				.collect();
+			content.push('\n');
+			content.push_str(&files.join(", "));
+		}
+		// A collapsed deletion is one line, the way a blocked message is, so the record stays
+		// readable when something is deleted often.
+		if self.collapse_deleted {
+			content = first_line(&content);
+		}
+		self.record(Kind::Deleted, channel, id, &last.author.name, content);
 	}
 
 	fn summary(&self) -> Option<String> {
@@ -554,6 +656,101 @@ mod delivery_tests {
 
 	/// Two records must not run into one another: every header starts a line of its own,
 	/// or the text of one message ends up with the next one's header glued to it.
+	/// The settings the original has and this had not: a deletion names the files that went
+	/// with it, a collapsed one is a single line, your own edits can be left out, and an edit
+	/// can be kept as what changed rather than as the new text.
+	#[test]
+	fn the_settings_the_original_has_change_what_is_recorded() {
+		fn logger(settings: &[(&str, serde_json::Value)]) -> MessageLogger {
+			let mut plugin = MessageLogger::default();
+			plugin.configure(&crate::Values(
+				settings
+					.iter()
+					.map(|(key, value)| ((*key).to_string(), value.clone()))
+					.collect(),
+			));
+			plugin
+		}
+		let mut with_file = test_support::message(9, Id(7));
+		with_file.attachments = vec![model::Attachment {
+			id: Id(90),
+			filename: "notes.txt".to_string(),
+			description: None,
+			content_type: None,
+			size: 12,
+			media: model::EmbedMedia::default(),
+			spoiler: false,
+			duration_ms: None,
+			waveform: Vec::new(),
+		}];
+		let inbound = Inbound::new(Id(7), None, Id(1), 1_000);
+
+		// A file that went with the message is named, because losing it is the point. The
+		// original has this on by default, so the test turns it off to see the difference.
+		let mut plain = logger(&[("logDeletedAttachments", serde_json::json!(false))]);
+		plain.on_deleted(&inbound, Id(7), Id(9), Some(&with_file));
+		let mut named = logger(&[("logDeletedAttachments", serde_json::json!(true))]);
+		named.on_deleted(&inbound, Id(7), Id(9), Some(&with_file));
+		assert!(
+			!plain.export().unwrap().contains("notes.txt"),
+			"with the setting off the files are not named"
+		);
+		assert!(
+			named.export().unwrap().contains("notes.txt"),
+			"a deletion that took a file has to say which: {:?}",
+			named.export()
+		);
+
+		// A collapsed deletion is one line, however long the message was.
+		let mut tall = logger(&[("collapseDeleted", serde_json::json!(true))]);
+		tall.on_deleted(&inbound, Id(7), Id(9), Some(&with_file));
+		let record = tall.export().unwrap();
+		assert_eq!(
+			record.lines().count(),
+			2,
+			"a header and one line: {record:?}"
+		);
+
+		// Your own edits can be left out.
+		let mine = model::User {
+			id: Id(1),
+			name: "You".into(),
+			..test_support::message(1, Id(7)).author
+		};
+		let edit = crate::Edit {
+			channel: Id(7),
+			id: Id(9),
+			author: &mine,
+			before: "one",
+			after: "two",
+		};
+		let mut all = logger(&[]);
+		all.on_edited(&inbound, &edit);
+		let mut not_mine = logger(&[("ignoreSelfEdits", serde_json::json!(true))]);
+		not_mine.on_edited(&inbound, &edit);
+		assert_eq!(all.edited, 1);
+		assert_eq!(not_mine.edited, 0, "your own edit was left out");
+
+		// An edit kept as a diff says what changed.
+		let mut diff = logger(&[("showEditDiffs", serde_json::json!(true))]);
+		diff.on_edited(&inbound, &edit);
+		let record = diff.export().unwrap();
+		assert!(record.contains("- one"), "{record:?}");
+		assert!(record.contains("two"), "{record:?}");
+
+		// And the separated form marks the addition as well.
+		let mut separated = logger(&[
+			("showEditDiffs", serde_json::json!(true)),
+			("separatedDiffs", serde_json::json!(true)),
+		]);
+		separated.on_edited(&inbound, &edit);
+		assert!(
+			separated.export().unwrap().contains("+ two"),
+			"a separated diff marks what was added: {:?}",
+			separated.export()
+		);
+	}
+
 	#[test]
 	fn one_record_never_runs_into_the_next() {
 		let mut registry = Registry::new();

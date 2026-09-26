@@ -1,7 +1,7 @@
 //! Outgoing text ports: what a message says on its way out, without touching the draft the
 //! owner is still editing.
 
-use crate::{Fallback, Meta, Outgoing, Setting, SettingKind, Values, flag_or, text_or};
+use crate::{Fallback, Meta, Outgoing, Setting, SettingKind, Values, flag_or, number_or, text_or};
 use regex::Regex;
 
 /// A body a port would send that the owner did not write is refused with this reason.
@@ -176,16 +176,22 @@ const POLISH_SETTINGS: &[Setting] = &[
 		default: Fallback::Flag(false),
 	},
 	Setting {
-		key: "capitalize",
+		key: "fixCapitalization",
 		label: "Capitalize sentences",
 		kind: SettingKind::Toggle,
 		default: Fallback::Flag(false),
 	},
 	Setting {
-		key: "addPeriods",
-		label: "End sentences with a period",
+		key: "fixPunctuation",
+		label: "Tidy the punctuation",
 		kind: SettingKind::Toggle,
 		default: Fallback::Flag(false),
+	},
+	Setting {
+		key: "fixPunctuationFrequency",
+		label: "How often to tidy the punctuation, as a percentage",
+		kind: SettingKind::Number { min: 0, max: 100 },
+		default: Fallback::Number(100),
 	},
 ];
 
@@ -216,8 +222,11 @@ impl crate::Plugin for PolishWording {
 			.collect();
 		self.fix_apostrophes = flag_or(values, POLISH_SETTINGS, "fixApostrophes");
 		self.expand_contractions = flag_or(values, POLISH_SETTINGS, "expandContractions");
-		self.capitalize = flag_or(values, POLISH_SETTINGS, "capitalize");
-		self.add_periods = flag_or(values, POLISH_SETTINGS, "addPeriods");
+		self.capitalize = flag_or(values, POLISH_SETTINGS, "fixCapitalization");
+		// The original tidies punctuation on a slider rather than a switch, and tidying
+		// nothing is what a slider at zero means.
+		let frequency = number_or(values, POLISH_SETTINGS, "fixPunctuationFrequency").clamp(0, 100);
+		self.add_periods = flag_or(values, POLISH_SETTINGS, "fixPunctuation") && frequency > 0;
 		self.contractions = CONTRACTIONS.to_vec();
 		self.missing = CONTRACTIONS
 			.iter()
@@ -760,7 +769,7 @@ mod tests {
 	#[test]
 	fn capitalization_skips_blocked_words_and_links() {
 		let mut polish = plugin::<PolishWording>(&[
-			("capitalize", true.into()),
+			("fixCapitalization", true.into()),
 			("blockedWords", "i, discord".into()),
 		]);
 		assert_eq!(
@@ -789,7 +798,7 @@ mod tests {
 
 	#[test]
 	fn periods_land_only_after_words() {
-		let mut polish = plugin::<PolishWording>(&[("addPeriods", true.into())]);
+		let mut polish = plugin::<PolishWording>(&[("fixPunctuation", true.into())]);
 		assert_eq!(send(&mut polish, "done").unwrap(), "done.");
 		assert_eq!(send(&mut polish, "what!").unwrap(), "what!");
 		assert_eq!(send(&mut polish, "one\ntwo").unwrap(), "one.\ntwo.");
