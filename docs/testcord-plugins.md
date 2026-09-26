@@ -72,6 +72,14 @@ MessageLogger record is session memory and is never written to disk; copy it out
 
 ## Ported so far
 
+70 of the 790, counted from the sources rather than estimated. `python3
+tools/generate-testcord-inventory.py <TestCord checkout> --check` is what keeps that number
+honest: besides rewriting `docs/testcord-inventory.csv` it fails when a port the inventory
+counts as ported is not reachable by the key TestCord writes into its own settings file,
+which is `meta.name` with whitespace turned into underscores and everything else that is not
+a letter, a digit or an underscore removed. Two ports were wrong about that and are fixed
+below; the check is what will catch the next one.
+
 | Plugin | What the port does | TestCord behaviour not ported |
 |---|---|---|
 | ClearURLs | Removes tracking parameters from links in outgoing bodies and edits | TestCord downloads the full rule database at startup; this port ships a bundled provider table for the widely used services, so uncommon providers are not covered |
@@ -95,7 +103,7 @@ MessageLogger record is session memory and is never written to disk; copy it out
 | NoEditedTimestamp | Hides the `(edited)` marker | Nothing; the port is complete |
 | PolishWording | Puts missing apostrophes back, expands contractions, capitalizes sentences and adds final periods, with a lowercase word list | The full rule set is TestCord's 43-entry contraction table, used as-is |
 | ProfanityFilter | Removes filtered whole words from what you send, tidies the spaces and punctuation it leaves, and either sends a duck or refuses the message | The keyboard shortcut that toggles it |
-| JsTextReplace | Applies your own find and replace rules, in order, each with an optional condition | The repeating rule editor widget: rules live in one multiline field, one per line, `find => replace` with an optional `\| if: text` |
+| JsTextReplace | Applies your own find and replace rules, in order, each with an optional condition | The repeating rule editor widget: rules live in one multiline field, one rule per line. TestCord's replacement half is JavaScript run through `new Function`; this client does not evaluate the owner's JavaScript, so a replacement is literal text, or a regular expression when `useRegex` is on. A rule whose replacement was an expression is imported and then matched as plain text |
 | Signature | Appends your signature under every message you send | The composer button and composer menu entry that toggle it |
 | EmbeddedURLs | Rewrites a recognised link to the form that embeds inline, leaving everything else alone | TestCord's per-origin map, which this port keeps short to the hosts it recognises |
 | SentFromMyUname | Stamps a "Sent from my" line under what you send, with a per-channel whitelist and a `nouname ` one-message opt-out | Reading your uname: the text is yours to set |
@@ -113,7 +121,7 @@ MessageLogger record is session memory and is never written to disk; copy it out
 | Ingtoninator | One word of every message grows the Ington suffix, never a word inside a link and never one that cannot take it, chosen from the body itself so the same text always gets the same word | The composer button, which is yours |
 | ClientSideBlock | Nobody on your list reaches your screen | Hiding a voice channel, and hiding your own messages from yourself, because the filter sees the author and not you |
 | ReplaceGoogleSearch | A Google link in a message opens in the engine you read, with the query copied exactly as it was, and a custom engine only when it is a real web address | Nothing; the port is complete |
-| BaseDecoder | A decode entry in the message menu reads the base64 in a message, and only accepts it when the bytes are readable text | Nothing; the port is complete |
+| DecodeBase64 | A decode entry in the message menu reads the base64 in a message, and only accepts it when the bytes are readable text | The button TestCord paints on the message itself. It reaches the same action from the message menu rather than by patching the message component, which is the one thing this client does not do |
 | ZeroWidthSanitizer | Strips the invisible characters out of what you send and out of your edits, and says how many it removed | Nothing; the port is complete |
 | SafeNumbers | Digits become mathematical figures, while a mention still mentions and an address still opens | Nothing; the port is complete |
 | TalkInReverse | Your message arrives with its characters reversed, reversed by character so nothing comes out as mojibake | The composer button, which is yours |

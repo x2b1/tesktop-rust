@@ -487,6 +487,11 @@ const REPLACE_SETTINGS: &[Setting] = &[
 ///
 /// TestCord keeps these in a repeating settings component; a native client has no such widget
 /// yet, so they live in one multiline field, one rule per line.
+///
+/// The divergence, stated plainly: TestCord's replacement half is JavaScript, run through
+/// `new Function` on every match. A native client does not evaluate the owner's JavaScript,
+/// so the replacement is literal text, or a regular expression when `useRegex` is on, and a
+/// rule whose replacement was an expression is imported and then matched as plain text.
 #[derive(Default)]
 pub struct JsTextReplace {
 	rules: Vec<ReplaceRule>,
@@ -507,7 +512,10 @@ impl crate::Plugin for JsTextReplace {
 			description: "Applies your own find and replace rules to messages you send.",
 			authors: "nin0",
 			tags: &["Utility"],
-			aliases: &["jstextreplace", "textReplace"],
+			// TestCord's own plugin is `testcordplugins/jstextreplace`. Its `textReplace`
+			// neighbour in `plugins/` is a different plugin with two rule lists, and is not
+			// what this port is, so it is not claimed as an alias here.
+			aliases: &["jstextreplace"],
 			default_enabled: false,
 		}
 	}

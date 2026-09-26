@@ -247,26 +247,28 @@ const DECODE_SETTINGS: &[Setting] = &[Setting {
 	default: Fallback::Flag(true),
 }];
 
-/// BaseDecoder: reads the base64 in a message and hands you the text inside it.
-pub struct BaseDecoder {
+/// DecodeBase64: reads the base64 in a message and hands you the text inside it.
+pub struct DecodeBase64 {
 	show_action: bool,
 }
 
-impl Default for BaseDecoder {
+impl Default for DecodeBase64 {
 	fn default() -> Self {
 		Self { show_action: true }
 	}
 }
 
-impl crate::Plugin for BaseDecoder {
+impl crate::Plugin for DecodeBase64 {
 	fn meta(&self) -> Meta {
 		Meta {
-			id: "BaseDecoder",
-			name: "BaseDecoder",
+			id: "DecodeBase64",
+			name: "DecodeBase64",
 			description: "Decodes the base64 in a message so you can read it.",
 			authors: "Equicord",
 			tags: &["Utility", "Chat"],
-			aliases: &["baseDecoder"],
+			// TestCord's folder is `baseDecoder`; both spellings, and the id this port
+			// used to have, are accepted so a settings file from either finds it.
+			aliases: &["baseDecoder", "BaseDecoder", "base-decoder"],
 			default_enabled: false,
 		}
 	}
@@ -492,7 +494,7 @@ mod tests {
 	#[test]
 	fn base64_in_a_message_decodes() {
 		assert_eq!(decode_base64("aGVsbG8=").as_deref(), Some("hello"));
-		let plugin = BaseDecoder::default();
+		let plugin = DecodeBase64::default();
 		assert_eq!(
 			plugin.run_action("decode-base64", &message("look: aGVsbG8=")),
 			Some(crate::ActionResult::Clipboard("hello".to_string()))
@@ -511,7 +513,7 @@ mod tests {
 			Some("hello".to_string()),
 			"padding is optional"
 		);
-		let plugin = BaseDecoder::default();
+		let plugin = DecodeBase64::default();
 		assert_eq!(
 			plugin.run_action("decode-base64", &message("just words here")),
 			Some(crate::ActionResult::Notice(
@@ -522,7 +524,7 @@ mod tests {
 
 	#[test]
 	fn the_decode_entry_can_be_turned_off() {
-		let mut plugin = BaseDecoder::default();
+		let mut plugin = DecodeBase64::default();
 		plugin.configure(&Values(
 			[("showAction".to_string(), serde_json::json!(false))]
 				.into_iter()

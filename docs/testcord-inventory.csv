@@ -7,7 +7,7 @@ plugins,alwaysTrust,AlwaysTrust,Remove the untrusted domain popup when opening l
 plugins,anonymiseFileNames,AnonymiseFileNames,Whether to anonymise file names by default,Devs.fawn,9,True,False,False,False,False,,rewrite,
 plugins,appleMusic.desktop,AppleMusicRichPresence,Which type of activity,Devs.RyanCaoDev,16,False,False,False,False,False,native.ts,native-feature,
 plugins,arRPC.web,WebRichPresence,Client plugin for arRPC to enable RPC on Discord Web (experimental),Devs.Ducko,0,False,False,False,False,False,,portable-logic,
-plugins,autoDndWhilePlaying.discordDesktop,AutoDNDWhilePlaying,Status to set while playing a game,Devs.thororen,2,False,False,False,True,False,,portable-hook,schedule
+plugins,autoDndWhilePlaying.discordDesktop,AutoDNDWhilePlaying,Status to set while playing a game,Devs.thororen,2,False,False,False,True,False,,portable-hook,AutoDNDWhilePlaying
 plugins,betterFolders,BetterFolders,Display servers from folder on dedicated sidebar,"Devs.juby,Devs.AutumnVN,Devs.Nuckyz",11,True,False,False,True,False,,rewrite,
 plugins,betterGifAltText,BetterGifAltText,Change GIF alt text from simply being 'GIF' to containing the gif tags / filename,Devs.Ven,0,True,False,False,False,False,,rewrite,
 plugins,betterGifPicker,BetterGifPicker,Makes the gif picker open the favourite category by default,Devs.Samwich,0,True,False,False,False,False,,rewrite,
@@ -19,16 +19,16 @@ plugins,betterUploadButton,BetterUploadButton,"Upload with a single click, open 
 plugins,biggerStreamPreview,BiggerStreamPreview,This plugin allows you to enlarge stream previews,Devs.phil,3,False,False,False,False,False,,portable-logic,
 plugins,blurNsfw,BlurNSFW,Blur Amount (in pixels),Devs.Ven,2,True,False,False,False,False,,rewrite,
 plugins,callTimer,CallTimer,Compact or human readable format:,"Devs.Ven,EquicordDevs.MaxHerbold,Devs.D3",8,True,False,False,True,False,,rewrite,
-plugins,characterCounter,CharacterCounter,Enable yellow/red colouring as you get closer to the character limit,"Devs.thororen,Devs.creations",1,True,False,False,False,False,,rewrite,display
-plugins,clearURLs,ClearURLs,Automatically removes tracking elements from URLs you send,"Devs.adryd,Devs.thororen",0,False,False,False,False,False,,portable-logic,clearurls
+plugins,characterCounter,CharacterCounter,Enable yellow/red colouring as you get closer to the character limit,"Devs.thororen,Devs.creations",1,True,False,False,False,False,,rewrite,CharacterCounter
+plugins,clearURLs,ClearURLs,Automatically removes tracking elements from URLs you send,"Devs.adryd,Devs.thororen",0,False,False,False,False,False,,portable-logic,ClearURLs
 plugins,clientTheme,ClientTheme,Recreation of the old client theme experiment. Add a color to your Discord client theme,Devs.Nuckyz,2,False,False,False,False,False,,portable-logic,
 plugins,colorSighted,ColorSighted,"Removes the colorblind-friendly icons from statuses, just like 2015-2017 Discord",Devs.lewisakura,0,True,False,False,False,False,,rewrite,
 plugins,consoleJanitor,ConsoleJanitor,Disables Discords loggers,"Devs.Nuckyz,Devs.sadan",4,True,False,False,False,False,,rewrite,
 plugins,consoleShortcuts,ConsoleShortcuts,Adds shorter Aliases for many things on the window. Run `shortcutList` for a list.,Devs.Ven,0,True,False,False,False,False,native.ts,native-feature,
 plugins,copyEmojiMarkdown,CopyEmojiMarkdown,Copy the raw unicode character instead of :name: for default emojis (👽),"Devs.HappyEnderman,Devs.Vishnya",2,False,False,False,False,False,,portable-logic,
 plugins,copyFileContents,CopyFileContents,Adds a button to text file attachments to copy their contents,"Devs.Obsidian,Devs.Nuckyz",0,True,False,False,False,False,,rewrite,
-plugins,copyStickerLinks,CopyStickerLinks,Adds the ability to copy & open Sticker links,"Devs.Ven,Devs.Byeoon",1,False,False,False,False,False,,portable-logic,copy
-plugins,copyUserURLs,CopyUserURLs,Adds a 'Copy User URL' option to the user context menu.,Devs.castdrian,1,False,False,False,False,False,,portable-logic,copy
+plugins,copyStickerLinks,CopyStickerLinks,Adds the ability to copy & open Sticker links,"Devs.Ven,Devs.Byeoon",1,False,False,False,False,False,,portable-logic,CopyStickerLinks
+plugins,copyUserURLs,CopyUserURLs,Adds a 'Copy User URL' option to the user context menu.,Devs.castdrian,1,False,False,False,False,False,,portable-logic,CopyUserURLs
 plugins,crashHandler,CrashHandler,Whether to attempt to prevent Discord crashes.,Devs.Nuckyz,2,True,False,False,False,False,,rewrite,
 plugins,customCommands,ephemeral,Whether the response should only be visible to you,"Devs.Ven,Devs.Luna,",0,False,False,False,False,False,,portable-ui,
 plugins,customIdle,CustomIdle,Minutes before Discord goes idle (0 to disable auto-idle),Devs.newwares,2,True,False,False,False,False,,rewrite,
@@ -37,7 +37,7 @@ plugins,dearrow,Dearrow,Hides the Dearrow button from YouTube embeds,Devs.Ven,4,
 plugins,decor,Decor,"Create and use your own custom avatar decorations, or pick your favorite from the presets.",Devs.FieryFlames,1,False,False,False,True,False,,portable-hook,
 plugins,devCompanion.dev,DevCompanion,Whether to notify when Dev Companion has automatically connected.,"Devs.Ven,Devs.sadan",4,False,False,False,False,False,,portable-logic,
 plugins,disableCallIdle,DisableCallIdle,Disables automatically getting kicked from a DM voice call after 3 minutes and being moved to an AFK voice cha,Devs.Nuckyz,0,True,False,False,False,False,,rewrite,
-plugins,dontRoundMyTimestamps,DontRoundMyTimestamps,"Always rounds relative timestamps down, so 7.6y becomes 7y instead of 8y",Devs.Lexi,0,False,False,False,False,False,,portable-logic,display
+plugins,dontRoundMyTimestamps,DontRoundMyTimestamps,"Always rounds relative timestamps down, so 7.6y becomes 7y instead of 8y",Devs.Lexi,0,False,False,False,False,False,,portable-logic,DontRoundMyTimestamps
 plugins,experiments,Experiments,Enable Access to Experiments & other dev-only features in Discord!,"
 Devs.Megu,
 Devs.Ven,
@@ -48,7 +48,7 @@ plugins,f8break,F8Break,Pause the client when you press F8 with DevTools (+ brea
 plugins,fakeNitro,FakeNitro,Allows sending fake emojis (also bypasses missing permission to use custom emojis),"Devs.Arjix,Devs.D3SOX,Devs.Ven,Devs.fawn",12,True,False,False,False,False,,rewrite,
 plugins,fakeProfileThemes,FakeProfileThemes,Default color source if both are present,"Devs.Alyxia,Devs.Remty",1,True,False,False,False,False,,rewrite,
 plugins,favEmojiFirst,FavoriteEmojiFirst,Manage your emoji aliases.,"Devs.Aria,Devs.Ven,EquicordDevs.justjxke",3,True,True,False,False,False,,rewrite,
-plugins,fixCodeblockGap,FixCodeblockGap,Removes the gap between codeblocks and text below it,Devs.Grzesiek11,0,True,False,False,False,False,,rewrite,casing
+plugins,fixCodeblockGap,FixCodeblockGap,Removes the gap between codeblocks and text below it,Devs.Grzesiek11,0,True,False,False,False,False,,rewrite,FixCodeblockGap
 plugins,fixImagesQuality,FixImagesQuality,Also load the original image in Chat. WARNING: Read the caveats above,"Devs.Nuckyz,Devs.Ven",1,True,False,False,False,False,,rewrite,
 plugins,fixSpotifyEmbeds.desktop,FixSpotifyEmbeds,The volume % to set for spotify embeds. Anything above 10% is veeeery loud,Devs.Ven,1,False,False,False,False,False,native.ts,native-feature,
 plugins,fixYoutubeEmbeds.desktop,FixYoutubeEmbeds,Adds descriptions to youtube video embeds,"Devs.coolelectronics,Devs.arHSM",1,True,False,False,False,False,native.ts,native-feature,
@@ -74,7 +74,7 @@ plugins,mentionAvatars,MentionAvatars,Whether the the @ symbol should be display
 plugins,messageClickActions,MessageClickActions,Action on single click (your messages),"Devs.Ven,EquicordDevs.keircn,EquicordDev",20,False,False,False,False,False,,portable-logic,
 plugins,messageLatency,MessageLatency,Displays an indicator for messages that took ≥n seconds to send,Devs.arHSM,0,True,False,False,False,False,,rewrite,
 plugins,messageLinkEmbeds,MessageLinkEmbeds,Background color for messages in rich embeds,"Devs.TheSun,Devs.Ven,Devs.RyanCaoDev",5,True,False,False,False,False,,rewrite,
-plugins,messageLogger,MessageLogger,The style of deleted messages,"Devs.rushii,Devs.Ven,Devs.AutumnVN,Devs.",18,True,False,False,False,False,,rewrite,messagelogger
+plugins,messageLogger,MessageLogger,The style of deleted messages,"Devs.rushii,Devs.Ven,Devs.AutumnVN,Devs.",18,True,False,False,False,False,,rewrite,MessageLogger
 plugins,moreQuickReactions,MoreQuickReactions,Number of reactions (0-42),"Devs.Ven,Devs.Sqaaakoi,Devs.iamme",6,True,False,False,False,False,,rewrite,
 plugins,musicRichPresence,MusicRichPresence,The scrobbler backend to use.,"Devs.Rini,Devs.Ven,Devs.angelcube,Devs.R",19,False,False,False,False,False,,portable-logic,
 plugins,mutualGroupDMs,MutualGroupDMs,Shows mutual group dms in profiles,Devs.amia,0,False,False,False,False,False,,portable-ui,
@@ -89,13 +89,13 @@ plugins,noMosaic,NoMosaic,Play videos without carousel modal,Devs.AutumnVN,1,Tru
 plugins,noOnboardingDelay,NoOnboardingDelay,Skips the slow and annoying onboarding delay,Devs.nekohaxx,0,True,False,False,False,False,,rewrite,
 plugins,noPendingCount,NoPendingCount,Hide incoming friend requests count,Devs.amia,3,True,False,False,False,False,,rewrite,
 plugins,noProfileThemes,NoProfileThemes,Completely removes Nitro profile themes from everyone but yourself,Devs.TheKodeToad,0,True,False,False,False,False,,rewrite,
-plugins,noReplyMention,NoReplyMention,List of user ids to allow or exempt pings for (separated by commas or spaces),"Devs.DustyAngel47,Devs.rae,Devs.pylix,De",4,True,False,False,False,False,,rewrite,noreplymention
+plugins,noReplyMention,NoReplyMention,List of user ids to allow or exempt pings for (separated by commas or spaces),"Devs.DustyAngel47,Devs.rae,Devs.pylix,De",4,True,False,False,False,False,,rewrite,NoReplyMention
 plugins,noServerEmojis,NoServerEmojis,The types of emojis to show in the autocomplete menu.,Devs.UlyssesZhan,1,True,False,False,False,False,,rewrite,
 plugins,noSystemBadge.discordDesktop,NoSystemBadge,Disables the taskbar and system tray unread count badge.,Devs.rushii,0,True,False,False,False,False,,rewrite,
 plugins,noTypingAnimation,NoTypingAnimation,Disables the CPU-intensive typing dots animation,Devs.AutumnVN,0,True,False,False,False,False,,rewrite,
 plugins,noUnblockToJump,NoUnblockToJump,Allows you to jump to messages of blocked or ignored users and likely spammers without unblocking them,Devs.Rini,0,True,False,False,False,False,,rewrite,
 plugins,notificationVolume,NotificationVolume,Notification volume,Devs.philipbry,1,True,False,False,False,False,,rewrite,
-plugins,onePingPerDM,OnePingPerDM,Select the type of DM for the plugin to affect,Devs.ProffDea,5,True,False,False,False,False,,rewrite,notify
+plugins,onePingPerDM,OnePingPerDM,Select the type of DM for the plugin to affect,Devs.ProffDea,5,True,False,False,False,False,,rewrite,OnePingPerDM
 plugins,openInApp,OpenInApp,Open Spotify links in the Spotify app,"Devs.Ven,Devs.surgedevs",7,True,False,False,False,False,native.ts,native-feature,
 plugins,overrideForumDefaults,OverrideForumDefaults,Which layout to use as default,Devs.Inbestigator,2,True,False,False,False,False,,rewrite,
 plugins,pauseInvitesForever,PauseInvitesForever,Brings back the option to pause invites indefinitely that stupit Discord removed.,"Devs.Dolfies,Devs.amia",0,True,False,False,False,False,,rewrite,
@@ -107,12 +107,12 @@ plugins,pinDms,PinDMs,Which order should pinned DMs be displayed in?,"Devs.Ven,D
 plugins,plainFolderIcon,PlainFolderIcon,Dont show the small guild icons in folders,Devs.botato,0,True,False,False,False,False,,rewrite,
 plugins,platformIndicators,PlatformIndicators,Show indicators in the member list,"Devs.kemo,Devs.TheSun,Devs.Nuckyz,Devs.V",6,True,False,False,False,True,,rewrite,
 plugins,previewMessage,PreviewMessage,Lets you preview your message before sending it.,Devs.Aria,2,False,False,False,True,False,,portable-hook,
-plugins,quickMention,QuickMention,Adds a quick mention button to the message actions bar,Devs.kemo,1,False,False,False,False,False,,portable-logic,files
-plugins,quickReply,QuickReply,Ping reply by default,"Devs.fawn,Devs.Ven,Devs.pylix",3,False,False,False,True,False,,portable-hook,files
+plugins,quickMention,QuickMention,Adds a quick mention button to the message actions bar,Devs.kemo,1,False,False,False,False,False,,portable-logic,QuickMention
+plugins,quickReply,QuickReply,Ping reply by default,"Devs.fawn,Devs.Ven,Devs.pylix",3,False,False,False,True,False,,portable-hook,QuickReply
 plugins,reactErrorDecoder,ReactErrorDecoder,,"Devs.Cyn,Devs.maisymoe",0,True,False,False,False,False,,rewrite,
 plugins,readAllNotificationsButton,ReadAllNotificationsButton,Read all server notifications with a single button click!,"Devs.kemo,EquicordDevs.KrystalSkull",0,False,False,False,False,False,,portable-ui,
 plugins,relationshipNotifier,RelationshipNotifier,"Notifies you when a friend, group chat, or server removes you.",Devs.nick,1,True,False,False,True,False,,rewrite,
-plugins,replaceGoogleSearch,ReplaceGoogleSearch,Name of the custom search engine,"Devs.Moxxie,Devs.Ethan",4,False,False,False,False,False,,portable-logic,inspect
+plugins,replaceGoogleSearch,ReplaceGoogleSearch,Name of the custom search engine,"Devs.Moxxie,Devs.Ethan",4,False,False,False,False,False,,portable-logic,ReplaceGoogleSearch
 plugins,replyTimestamp,ReplyTimestamp,Shows a timestamp on replied-message previews,Devs.Kyuuhachi,0,True,False,False,False,False,,rewrite,
 plugins,revealAllSpoilers,RevealAllSpoilers,Automatically reveal all spoilers without needing to hold Ctrl. No spoilers at all when enabled.,"Devs.whqwert,TestcordDevs.x2b",1,True,False,False,False,False,,rewrite,
 plugins,reverseImageSearch,ReverseImageSearch,Adds ImageSearch to image context menus,"Devs.Ven,Devs.Nuckyz",1,True,False,False,False,False,,rewrite,
@@ -135,7 +135,7 @@ plugins,silentTyping,SilentTyping,Toggle functionality of your own typing indica
 plugins,sortFriendRequests,SortFriends,Show dates on friend requests,"Devs.Megu,EquicordDevs.CallMeGii",1,True,False,False,False,False,,rewrite,
 plugins,spotifyCrack,SpotifyCrack,Disable Spotify auto-pause,"Devs.Cyn,Devs.Nuckyz",2,True,False,False,False,False,,rewrite,
 plugins,spotifyShareCommands,SpotifyShareCommands,"Share your current Spotify track, album or artist via slash command (/track, /album, /artist)",Devs.katlyn,1,False,False,False,False,False,,portable-ui,
-plugins,startupTimings,StartupTimings,Adds Startup Timings to the Settings menu,Devs.Megu,0,False,False,False,False,False,,portable-logic,quiet
+plugins,startupTimings,StartupTimings,Adds Startup Timings to the Settings menu,Devs.Megu,0,False,False,False,False,False,,portable-logic,StartupTimings
 plugins,stickerPaste,StickerPaste,Makes picking a sticker in the sticker picker insert it into the chatbox instead of instantly sending,Devs.ImBanana,0,True,False,False,False,False,,rewrite,
 plugins,streamerModeOnStream,StreamerModeOn,Automatically enables streamer mode when you start streaming in Discord,Devs.IcedMarina,1,False,False,False,True,False,,portable-hook,
 plugins,superReactionTweaks,SuperReactionTweaks,Reaction picker will default to Super Reactions,"Devs.FieryFlames,Devs.ant0n",4,True,False,False,False,False,,rewrite,
@@ -145,7 +145,7 @@ plugins,themeAttributes,ThemeAttributes,Adds data attributes to various elements
 plugins,translate,Translate,"Translate messages with Google Translate, DeepL or Kagi.","Devs.Ven,Devs.AshtonMemer,Devs.koish1",3,False,False,False,False,True,native.ts,native-feature,
 plugins,typingIndicator,TypingIndicator,Whether to show the typing indicator for the currently selected channel,"Devs.Nuckyz,Devs.fawn,Devs.Sqaaakoi",5,True,False,False,False,False,,rewrite,
 plugins,typingTweaks,TypingTweaks,Show avatars in the typing indicator,"Devs.zt,Devs.sadan,EquicordDevs.MrDiamon",4,True,False,False,False,False,,rewrite,
-plugins,unindent,Unindent,Trims leading indentation from codeblocks,Devs.Ven,0,True,False,False,False,False,,rewrite,body
+plugins,unindent,Unindent,Trims leading indentation from codeblocks,Devs.Ven,0,True,False,False,False,False,,rewrite,Unindent
 plugins,unlockedAvatarZoom,UnlockedAvatarZoom,Zoom multiplier,Devs.nakoyasha,1,True,False,False,False,False,,rewrite,
 plugins,unsuppressEmbeds,UnsuppressEmbeds,Allows you to unsuppress embeds in messages,"Devs.rad,Devs.HypedDomi",1,False,False,False,False,False,,portable-logic,
 plugins,userMessagesPronouns,UserMessagesPronouns,Adds pronouns to chat user messages,"Devs.Tyman,Devs.TheKodeToad,Devs.Ven,Dev",0,True,False,False,False,False,,rewrite,
@@ -176,7 +176,7 @@ equicordplugins,atSomeone,AtSomeone,Mention someone randomly,Devs.Joona,0,True,F
 equicordplugins,autoJumpToMessage,AutoJumpToMessage,Only automatically jump to messages when Discord's window is unfocused.,EquicordDevs.k304,2,False,False,False,True,False,,portable-hook,
 equicordplugins,autoZipper,AutoZipper,"Comma-separated list of file extensions to auto-zip (e.g., .psd,.blend,.exe,.dmg)",EquicordDevs.SSnowly,1,False,False,False,False,False,,portable-logic,
 equicordplugins,bannersEverywhere,BannersEverywhere,Animate banners,"Devs.ImLvna,Devs.AutumnVN",4,True,False,False,False,False,,rewrite,
-equicordplugins,baseDecoder,DecodeBase64,Change the button to decode base64 content of any message.,EquicordDevs.ThePirateStoner,2,False,False,False,False,False,,portable-logic,
+equicordplugins,baseDecoder,DecodeBase64,Change the button to decode base64 content of any message.,EquicordDevs.ThePirateStoner,2,False,False,False,False,False,,portable-logic,DecodeBase64
 equicordplugins,betterActivities,BetterActivities,Shows activity icons in the member list and allows showing all activities,"Devs.D3SOX,Devs.Arjix,Devs.AutumnVN,Devs",0,True,False,False,False,False,,rewrite,
 equicordplugins,betterAudioPlayer,BetterAudioPlayer,Enable oscilloscope visualizer.,EquicordDevs.creations,7,True,False,False,False,False,,rewrite,
 equicordplugins,betterBanReasons,BetterBanReasons,Your custom reasons,"Devs.Inbestigator,EquicordDevs.yonn2222",2,True,False,False,False,False,,rewrite,
@@ -185,7 +185,7 @@ equicordplugins,betterCommands,BetterCommands,Automatically fill command with al
 equicordplugins,betterForwards,BetterForwards,This will attempt to resend a forwarded message if the forward fails. Could cause unintentional pings or text ,"Devs.thororen,Devs.sadan,Devs.nin0dev,Eq",4,True,False,False,False,False,,rewrite,
 equicordplugins,betterInvites,BetterInvites,"See invites expiration date, view inviter profile and preview servers before joining by clicking the name","EquicordDevs.iamme,Devs.thororen",0,True,False,False,False,False,,rewrite,
 equicordplugins,betterPlusReacts,BetterPlusReacts,The amount of plus before :emoji: is the message to add it to,Devs.Joona,0,True,False,False,False,False,,rewrite,
-equicordplugins,blockKeywords,BlockKeywords,Comma-separated list of words to block,"EquicordDevs.catcraft,EquicordDevs.secp1",6,True,False,False,False,False,,rewrite,blockkeywords
+equicordplugins,blockKeywords,BlockKeywords,Comma-separated list of words to block,"EquicordDevs.catcraft,EquicordDevs.secp1",6,True,False,False,False,False,,rewrite,BlockKeywords
 equicordplugins,blockKrisp,BlockKrisp,Prevent Krisp from loading,Devs.D3SOX,0,False,False,False,False,False,,portable-logic,
 equicordplugins,bypassPinPrompt,BypassPinPrompt,Bypass the pin prompt when using the pin functions,Devs.thororen,0,False,False,False,False,False,,portable-logic,
 equicordplugins,bypassStatus,BypassStatus,Guilds to let bypass (notified when pinged anywhere in guild),Devs.Inbestigator,9,False,False,False,True,False,,portable-hook,
@@ -194,7 +194,7 @@ equicordplugins,channelTabs,ChannelTabs,"Group your commonly visited channels in
 equicordplugins,cleanChannelName,CleanChannelName,Remove emoji and decoration from channel names. Reverts to the original while you're editing the channel.,Devs.AutumnVN,1,True,False,False,True,False,,rewrite,
 equicordplugins,cleanerChannelGroups,CleanerChannelGroups,"Hides all channels in collapsed categories, even if they have unread messages.",EquicordDevs.justjxke,0,True,False,False,False,False,,rewrite,
 equicordplugins,clickableRoles,ClickableRoles,Click on roles in user profiles and the member list to see which members have them.,Devs.prism,0,True,False,False,False,False,,rewrite,
-equicordplugins,clientSideBlock,ClientSideBlock,Hide voice channels containing blocked users.,"Devs.Samwich,EquicordDevs.KamiRu",8,False,False,False,False,False,,portable-logic,inspect
+equicordplugins,clientSideBlock,ClientSideBlock,Hide voice channels containing blocked users.,"Devs.Samwich,EquicordDevs.KamiRu",8,False,False,False,False,False,,portable-logic,ClientSideBlock
 equicordplugins,clipUpload.desktop,ClipUpload,Adds a button to upload a local video file as a Discord clip.,"EquicordDevs.qdnx,EquicordDevs.BachLe200",1,True,False,False,False,False,native.ts,native-feature,
 equicordplugins,clipsEnhancements.discordDesktop,ClipsEnhancements,When should clips be tagged with the current Rich Presence?,"Devs.niko,Devs.Joona,EquicordDevs.keircn",2,True,False,False,False,False,,rewrite,
 equicordplugins,collapsibleUi,CollapsibleUI,"Native collapsible channel, member, chat button, and user area surfaces.",EquicordDevs.benjii,2,False,False,False,False,False,,portable-logic,
@@ -202,16 +202,16 @@ equicordplugins,commandPalette,CommandPalette,Raycast style command palette for 
 equicordplugins,contentWarning,ContentWarning,Only show trigger content on click instead of hover,EquicordDevs.camila314,2,True,False,False,False,False,,rewrite,
 equicordplugins,copyProfileColors,CopyProfileColors,A plugin to copy people's profile gradient colors to clipboard.,"EquicordDevs.Crxa,EquicordDevs.Cortex,Eq",1,False,False,False,False,False,,portable-logic,
 equicordplugins,copyStatusUrls,CopyStatusUrls,Copy the users status url when you right-click it,Devs.sadan,0,True,False,False,False,False,,rewrite,
-equicordplugins,copyUserMention,CopyUserMention,"Adds a button to copy user's mention on the user context menu, works best with ValidUser.","EquicordDevs.Cortex,Devs.castdrian",1,False,False,False,False,False,,portable-logic,copy
+equicordplugins,copyUserMention,CopyUserMention,"Adds a button to copy user's mention on the user context menu, works best with ValidUser.","EquicordDevs.Cortex,Devs.castdrian",1,False,False,False,False,False,,portable-logic,CopyUserMention
 equicordplugins,cursorBuddy,CursorBuddy,Pick a cursor buddy,"Devs.Ven,Devs.adryd,EquicordDevs.nexpid,",18,False,False,False,False,False,,portable-logic,
 equicordplugins,customFolderIcons,CustomFolderIcons,Customize folder icons with any png,EquicordDevs.sadan,1,True,False,False,False,False,,rewrite,
 equicordplugins,customSounds,CustomSounds,Customize Discord's sounds.,"Devs.ScattrdBlade,Devs.TheKodeToad",1,False,False,False,False,False,,portable-logic,
 equicordplugins,customStatusTimeouts,CustomStatusTimeouts,Show the Forever option at the top of the list instead of the bottom.,"EquicordDevs.Kiri,EquicordDevs.thororen",5,True,False,False,False,False,,rewrite,
-equicordplugins,customTimestamps,CustomTimestamps,Customize the timestamp formats,"Devs.Rini,EquicordDevs.nvhhr,EquicordDev",2,True,False,False,False,False,,rewrite,display
+equicordplugins,customTimestamps,CustomTimestamps,Customize the timestamp formats,"Devs.Rini,EquicordDevs.nvhhr,EquicordDev",2,True,False,False,False,False,,rewrite,CustomTimestamps
 equicordplugins,customUserColors,CustomUserColors,Users with custom colors defined will have their name in the dm list colored,EquicordDevs.mochienya,3,True,False,False,False,False,,rewrite,
 equicordplugins,declutter,Declutter,Remove avatar decorations. This is/will be disabled if Decor is enabled.,"EquicordDevs.Leon135,Devs.prism,Devs.Kyu",21,True,False,False,False,False,,rewrite,
 equicordplugins,disableCameras,DisableCameras,Disables cameras in a call by default,Devs.Joona,0,True,False,False,False,False,,rewrite,
-equicordplugins,downloadAllAttachments,DownloadAllAttachments,Adds a popover button to download all attachments in a message at once.,EquicordDevs.dhopcs,1,False,False,False,False,False,,portable-logic,files
+equicordplugins,downloadAllAttachments,DownloadAllAttachments,Adds a popover button to download all attachments in a message at once.,EquicordDevs.dhopcs,1,False,False,False,False,False,,portable-logic,DownloadAllAttachments
 equicordplugins,dragFavoriteEmotes,DragFavoriteEmotes,Adds the ability to change the order of your favourite emotes,EquicordDevs.PWall,0,True,False,False,False,False,,rewrite,
 equicordplugins,dragify,Dragify,User drop output.,EquicordDevs.justjxke,7,False,False,False,False,False,,portable-ui,
 equicordplugins,elementHighlighter.dev,ElementHighlighter,Toggle Highlighter,Devs.prism,9,False,False,False,False,False,,portable-logic,
@@ -227,7 +227,7 @@ equicordplugins,fastDeleteChannels,FastDeleteChannels,The key to toggle trash wh
 equicordplugins,favouriteAnything,FavouriteAnything,Generate file thumbnails locally instead of using an external service (placeholder.nin0.dev). Not compatible w,"Devs.Davri,Devs.nin0dev",1,False,False,False,False,False,native.ts,native-feature,
 equicordplugins,fileUpload,FileUpload,"Upload files to hosting services like Zipline, Nest, S3, and WebDAV","EquicordDevs.creations,EquicordDevs.keir",1,True,False,False,False,False,native.ts,native-feature,
 equicordplugins,findReply,FindReply,Will also search for messages that @ the author directly,Devs.newwares,4,False,False,False,False,False,,portable-logic,
-equicordplugins,fixFileExtensions,FixFileExtensions,Fixes file extensions by renaming them to a compatible supported format if possible,Devs.thororen,0,False,False,False,False,False,,portable-logic,files
+equicordplugins,fixFileExtensions,FixFileExtensions,Fixes file extensions by renaming them to a compatible supported format if possible,Devs.thororen,0,False,False,False,False,False,,portable-logic,FixFileExtensions
 equicordplugins,followVoiceUser,FollowVoiceUser,Only follow the user when you are in a voice channel,EquicordDevs.TheArmagan,4,False,False,False,True,False,,portable-hook,
 equicordplugins,fontLoader,FontLoader,Currently selected font,EquicordDevs.vmohammad,3,False,False,False,False,False,,portable-logic,
 equicordplugins,frequentQuickSwitcher,FrequentQuickSwitcher,Rewrites and filters the quick switcher results to be your most frequent channels,Devs.Samwich,0,True,False,False,False,False,,rewrite,
@@ -243,17 +243,17 @@ equicordplugins,globalBadges,GlobalBadges,Adds global badges from other client m
 equicordplugins,googleThat,GoogleThat,If the sent link should hyperlink with the query as the label,"Devs.Samwich,EquicordDevs.KrystalSkull",4,False,False,False,False,False,,portable-ui,
 equicordplugins,guildPickerDumper,GuildPickerDumper,Context menu to dump and download a server's emojis and stickers.,"EquicordDevs.Cortex,Devs.Samwich,Equicor",1,False,False,False,False,False,,portable-logic,
 equicordplugins,hideChatButtons,HideChatButtons,Color it red on open,EquicordDevs.iamme,3,False,False,False,False,False,,portable-logic,
-equicordplugins,hideMessages,HideMessages,Hide the hide button in the message popover.,EquicordDevs.yash,3,True,False,False,False,False,,rewrite,visibility
+equicordplugins,hideMessages,HideMessages,Hide the hide button in the message popover.,EquicordDevs.yash,3,True,False,False,False,False,,rewrite,HideMessages
 equicordplugins,hideServers,HideServers,Allows you to hide servers from the guild list and quick switcher by right clicking them,EquicordDevs.bep,1,True,False,False,False,False,,rewrite,
 equicordplugins,homeTyping,HomeTyping,Changes the home button to a typing indicator if someone in your dms is typing,Devs.Samwich,0,True,False,False,False,False,,rewrite,
-equicordplugins,hopOn,HopOn,Regex to trigger on,Devs.ImLvna,3,False,False,False,True,False,,portable-hook,react
+equicordplugins,hopOn,HopOn,Regex to trigger on,Devs.ImLvna,3,False,False,False,True,False,,portable-hook,HopOn
 equicordplugins,husk,Husk,Attempt to find emoji of same name in server before using ID in settings (useful if no nitro),Devs.nin0dev,4,False,False,False,False,False,,portable-logic,
-equicordplugins,iRememberYou,IRememberYou,"Locally saves everyone you've been communicating with (including servers), in case of lose","EquicordDevs.zoodogood,EquicordDevs.keir",0,False,False,False,False,False,,portable-logic,react
+equicordplugins,iRememberYou,IRememberYou,"Locally saves everyone you've been communicating with (including servers), in case of lose","EquicordDevs.zoodogood,EquicordDevs.keir",0,False,False,False,False,False,,portable-logic,IRememberYou
 equicordplugins,iconViewer,IconViewer,Adds a new tab to settings to preview all icons.,EquicordDevs.iamme,1,False,False,False,False,False,,portable-logic,
 equicordplugins,idleAutoRestart,IdleAutoRestart,Enable automatic restart after idle,EquicordDevs.SteelTech,2,False,False,False,False,False,,portable-logic,
 equicordplugins,ignoreCalls,IgnoreCalls,User IDs (comma + space) who should be permanetly ignored,"EquicordDevs.TheArmagan,Devs.thororen",3,True,False,False,True,False,,rewrite,
 equicordplugins,inRole,InRole,Know who is in a role with the role context menu or /inrole command (read plugin info!),Devs.nin0dev,1,False,False,False,False,False,,portable-ui,
-equicordplugins,ingtoninator,Ingtoninator,Show a button to toggle the Ingtoninator plugin,"EquicordDevs.zyqunix,EquicordDevs.BioTom",3,False,False,False,False,False,,portable-logic,speech
+equicordplugins,ingtoninator,Ingtoninator,Show a button to toggle the Ingtoninator plugin,"EquicordDevs.zyqunix,EquicordDevs.BioTom",3,False,False,False,False,False,,portable-logic,Ingtoninator
 equicordplugins,instantScreenshare,InstantScreenshare,"Instantly screenshare when joining a voice channel with support for desktop sources, windows, and video input ","Devs.HAHALOSAH,Devs.thororen,EquicordDev",2,True,False,False,True,False,,rewrite,
 equicordplugins,invisibleChat.desktop,InvisibleChat,"Saved Passwords (Seperated with a , )",Devs.SammCheese,3,True,False,False,False,False,,rewrite,
 equicordplugins,inviteDefaults,InviteDefaults,Invite Duration,EquicordDevs.VillainsRule,3,True,False,False,False,False,,rewrite,
@@ -266,12 +266,12 @@ equicordplugins,limitlessScreenshare,LimitlessScreenshare,Adds a slider for scre
 equicordplugins,loginWithQR,LoginWithQR,Scan a QR code,EquicordDevs.nexpid,1,False,False,False,False,False,,portable-logic,
 equicordplugins,markdownTables,MarkdownTables,Hide the Table/Raw toggle and always show rendered tables.,EquicordDevs.yafyx,1,True,False,False,False,False,,rewrite,
 equicordplugins,mediaPlaybackSpeed,MediaPlaybackSpeed,Voice messages,Devs.D3SOX,3,False,False,False,False,False,,portable-logic,
-equicordplugins,messageBurst,MessageBurst,The duration of bursts (in seconds).,EquicordDevs.port22exposed,3,False,False,False,False,False,,portable-logic,burst
+equicordplugins,messageBurst,MessageBurst,The duration of bursts (in seconds).,EquicordDevs.port22exposed,3,False,False,False,False,False,,portable-logic,MessageBurst
 equicordplugins,messageColors,MessageColors,Displays color codes like #FF0042 inside of messages,EquicordDevs.Hen,0,False,False,False,False,False,,portable-logic,
 equicordplugins,messageFetchTimer,MessageFetchTimer,Show fetch time icon in message bar,EquicordDevs.GroupXyz,4,False,False,False,False,False,,portable-logic,
 equicordplugins,messageLinkTooltip,MessageLinkTooltip,Show tooltip when hovering over message links,Devs.Kyuuhachi,4,True,False,False,False,False,,rewrite,
 equicordplugins,messageLoggerEnhanced,MessageLoggerEnhanced,"Improves Message Logger with edited message history, ghost ping detection and more","Devs.Aria,EquicordDevs.keircn,TestcordDe",3,True,False,False,True,False,,rewrite,
-equicordplugins,messageNotifier,MessageNotifier,Comma separated list of user ids to get message toasts for,"EquicordDevs.cassie,EquicordDevs.mochien",2,False,False,False,True,False,,portable-hook,notify
+equicordplugins,messageNotifier,MessageNotifier,Comma separated list of user ids to get message toasts for,"EquicordDevs.cassie,EquicordDevs.mochien",2,False,False,False,True,False,,portable-hook,MessageNotifier
 equicordplugins,messagePeek,MessagePeek,Hide message previews and timestamps for muted DMs and group chats.,"Devs.prism,EquicordDevs.justjxke",1,True,False,False,False,True,,rewrite,
 equicordplugins,messageTranslate,MessageTranslate,"Auto translate messages to your language with caching, per-channel toggles, and more options.",EquicordDevs.creations,0,True,False,False,False,False,,rewrite,
 equicordplugins,micLoopbackTester,MicLoopbackTester,Adds mic loopback test icon to the user panel,EquicordDevs.benjii,1,False,False,False,False,False,,portable-logic,
@@ -290,14 +290,14 @@ equicordplugins,noNitroUpsell,NoNitroUpsell,Removes all of Discord's nitro upsel
 equicordplugins,noPushToTalk,NoPushToTalk,Bypasses the push-to-talk requirement for voice activity in channels that enforce it.,EquicordDevs.omaw,0,True,False,False,False,False,,rewrite,
 equicordplugins,noRPC.discordDesktop,NoRPC,Disables Discord's RPC server.,Devs.Cyn,0,True,False,False,False,False,,rewrite,
 equicordplugins,noRoleHeaders,NoRoleHeaders,We are all equal!! Removes the role headers in the member list.,Devs.Samwich,0,True,False,False,False,False,,rewrite,
-equicordplugins,normalizeMessageLinks,NormalizeMessageLinks,Strip canary/ptb from message links,Devs.bb010g,0,True,False,False,False,False,,rewrite,casing
+equicordplugins,normalizeMessageLinks,NormalizeMessageLinks,Strip canary/ptb from message links,Devs.bb010g,0,True,False,False,False,False,,rewrite,NormalizeMessageLinks
 equicordplugins,notificationTitle.discordDesktop,NotificationTitle,Makes desktop notifications more informative,Devs.Kyuuhachi,0,True,False,False,False,False,,rewrite,
 equicordplugins,orbolayBridge,OrbolayBridge,Port to connect to,EquicordDevs.SpikeHD,2,False,False,False,True,False,,portable-hook,
 equicordplugins,partyMode,PartyMode,Party intensity,Devs.UwUDev,1,False,False,False,False,False,,portable-logic,
 equicordplugins,pendingFriendRequest,CancelFriendRequest,Adds a way to cancel outgoing friend requests from profiles.,EquicordDevs.omaw,1,True,False,False,False,False,,rewrite,
 equicordplugins,pinIcon,PinIcon,Adds a pin icon to pinned messages,EquicordDevs.iamme,0,True,False,False,False,False,,rewrite,
-equicordplugins,pingNotifications,PingNotifications,Notify when friends send messages in servers,EquicordDevs.smuki,6,False,False,False,True,False,,portable-hook,notify
-equicordplugins,polishWording,PolishWording,Quick disable. Turns off message modifying without requiring a client reload.,"Devs.Samwich,EquicordDevs.WKoA",7,False,True,False,False,False,,portable-hook,sendtext
+equicordplugins,pingNotifications,PingNotifications,Notify when friends send messages in servers,EquicordDevs.smuki,6,False,False,False,True,False,,portable-hook,PingNotifications
+equicordplugins,polishWording,PolishWording,Quick disable. Turns off message modifying without requiring a client reload.,"Devs.Samwich,EquicordDevs.WKoA",7,False,True,False,False,False,,portable-hook,PolishWording
 equicordplugins,profileSets,ProfileSets,Avatar size in preset list.,"EquicordDevs.omaw,EquicordDevs.justjxke",2,False,False,False,False,False,,portable-logic,
 equicordplugins,questify,Questify,"Enhance specific Quest features, disable annoyances, or completely remove Quests.",EquicordDevs.Etorix,2,True,False,False,True,False,native.ts,native-feature,
 equicordplugins,quickThemeSwitcher.discordDesktop,QuickThemeSwitcher,Include local themes,Devs.prism,5,False,False,False,False,False,,portable-logic,
@@ -326,21 +326,21 @@ equicordplugins,showResourceChannels,ShowResourceChannels,shows the channels hid
 equicordplugins,showRolesInChat,ShowRolesInChat,Whether to show the highest role on bots.,EquicordDevs.lucabeyer,3,False,False,False,False,True,,portable-ui,
 equicordplugins,showSongName,ShowSongName,Shows song name instead of artist for Spotify activity,Devs.prism,0,True,False,False,False,False,,rewrite,
 equicordplugins,sidebarChat,SidebarChat,Open a channel or DM as a sidebar or a popout.,"Devs.Joona,EquicordDevs.justjxke",3,True,False,False,False,False,,rewrite,
-equicordplugins,signature,Signature,The signature that will be added to the end of your messages,"Devs.Ven,Devs.Rini,Devs.ImBanana,Equicor",2,False,False,False,False,False,,portable-ui,sendtext
-equicordplugins,silenceUsers,SilenceUsers,Comma-separated Discord user IDs to silence pings and server badges.,EquicordDevs.dka,1,False,False,False,False,False,,portable-logic,silenceusers
+equicordplugins,signature,Signature,The signature that will be added to the end of your messages,"Devs.Ven,Devs.Rini,Devs.ImBanana,Equicor",2,False,False,False,False,False,,portable-ui,Signature
+equicordplugins,silenceUsers,SilenceUsers,Comma-separated Discord user IDs to silence pings and server badges.,EquicordDevs.dka,1,False,False,False,False,False,,portable-logic,SilenceUsers
 equicordplugins,snowfall,Snowfall,Change the type of snow displayed (Affects performance).,"EquicordDevs.ZcraftElite,EquicordDevs.sq",4,False,False,False,False,False,,portable-logic,
 equicordplugins,songLink.desktop,SongLink,settings for services,"Devs.nin0dev,EquicordDevs.NassCT",5,False,False,False,False,True,native.ts,native-feature,
 equicordplugins,songSpotlight.desktop,SongSpotlight,Show off songs on your profile,EquicordDevs.nexpid,2,False,False,False,True,True,native.ts,native-feature,
-equicordplugins,splitLargeMessages,SplitLargeMessages,Minimum delay between each chunk in seconds.,"EquicordDevs.Reycko,EquicordDevs.justjxk",4,True,True,False,False,False,,rewrite,splitlarge
+equicordplugins,splitLargeMessages,SplitLargeMessages,Minimum delay between each chunk in seconds.,"EquicordDevs.Reycko,EquicordDevs.justjxk",4,True,True,False,False,False,,rewrite,SplitLargeMessages
 equicordplugins,spotifyActivityToggle,SpotifyActivityToggle,Where to show the Spotify toggle button.,Devs.thororen,3,False,False,False,True,False,,portable-hook,
 equicordplugins,statusPresets,StatusPresets,Status Presets,EquicordDevs.iamme,1,True,False,False,False,False,,rewrite,
 equicordplugins,statusWhileActive.desktop,StatusWhileActive,Status to set while in a voice channel.,EquicordDevs.smuki,2,False,False,False,True,False,,portable-hook,
 equicordplugins,steamStatusSync,SteamStatusSync,Steam status when on Online,EquicordDevs.niko,7,False,False,False,True,False,,portable-hook,
 equicordplugins,stickerBlocker,StickerBlocker,Whether to show a snazzy cat gif,Devs.Samwich,5,True,False,False,False,False,,rewrite,
-equicordplugins,stopAutoUnread,StopAutoUnread,,EquicordDevs.SobakinTech,0,True,False,False,False,False,,rewrite,display
+equicordplugins,stopAutoUnread,StopAutoUnread,,EquicordDevs.SobakinTech,0,True,False,False,False,False,,rewrite,StopAutoUnread
 equicordplugins,streaks,Streaks,Shows a streak next to a user when you exchange DMs with them on consecutive days.,"EquicordDevs.Moowi,Devs.thororen",1,False,False,False,True,True,,portable-hook,
 equicordplugins,streamingCodecDisabler,StreamingCodecDisabler,Make Discord not consider using AV1 for streaming.,EquicordDevs.davidkra230,5,True,False,False,False,False,,rewrite,
-equicordplugins,talkInReverse,TalkInReverse,Reverses the message content before sending it.,EquicordDevs.Tolgchu,1,False,False,False,False,False,,portable-logic,clean
+equicordplugins,talkInReverse,TalkInReverse,Reverses the message content before sending it.,EquicordDevs.Tolgchu,1,False,False,False,False,False,,portable-logic,TalkInReverse
 equicordplugins,themeLibrary,ThemeLibrary,A library of themes for Vencord.,EquicordDevs.Fafa,1,False,False,False,False,False,native.ts,native-feature,
 equicordplugins,tidalEmbeds,TidalEmbeds,Embeds TIDAL songs to make them playable in Discord.,EquicordDevs.vmohammad,0,True,False,False,False,True,,rewrite,
 equicordplugins,timezones,Timezones,Show your own timezone in profiles and message headers,"Devs.Aria,EquicordDevs.creations",15,False,False,False,False,True,,portable-ui,
@@ -371,7 +371,7 @@ equicordplugins,webpackTarball,WebpackTarball,Include patched modules,Devs.Kyuuh
 equicordplugins,whitelistedEmojis,WhitelistedEmojis,Hide default Unicode emojis from the autocomplete unless whitelisted.,EquicordDevs.creations,7,True,False,False,False,False,,rewrite,
 equicordplugins,whosWatching,WhosWatching,Show spectators under screenshare panel,"EquicordDevs.Fres,Devs.thororen",1,True,False,False,False,False,,rewrite,
 equicordplugins,wigglyText,WigglyText,Animation intensity in px,EquicordDevs.nexpid,1,True,False,False,False,False,,rewrite,
-equicordplugins,writeUpperCase,WriteUpperCase,Strings not to capitilise (seperate with a comma),"Devs.Samwich,EquicordDevs.KrystalSkull",0,False,False,False,False,False,,portable-logic,casing
+equicordplugins,writeUpperCase,WriteUpperCase,Strings not to capitilise (seperate with a comma),"Devs.Samwich,EquicordDevs.KrystalSkull",0,False,False,False,False,False,,portable-logic,WriteUpperCase
 equicordplugins,zipPreview,ZipPreview,Previews ZIP contents inside file attachments.,EquicordDevs.justjxke,0,True,False,False,False,False,native.ts,native-feature,
 testcordplugins,2FA HIder,1FA,hide the 2fa moderation warning because annoying,"{id:1003477997728313405n,name:""Death""}",0,True,False,False,False,False,,rewrite,
 testcordplugins,AnonLi,AnonLi,Anon.li API key used for Drop uploads.,"{name:""irritably"",id:928787166916640838n",6,False,False,False,False,False,native.ts,native-feature,
@@ -383,7 +383,7 @@ testcordplugins,AutoLanguageBlock,AutoLanguageBlock,Enable or disable automatic 
 testcordplugins,AutoMessageRepeater,AutoMessageRepeater,Where to show the button,TestcordDevs.x2b,6,False,False,False,False,False,,excluded,
 testcordplugins,AutoMessageSender,AutoMessageSender,Channel ID 1 (use ➕ Add in right-click menu),TestcordDevs.SirPhantom89,42,False,False,False,True,False,,excluded,
 testcordplugins,AutoReact,AutoReact,User reaction rules (JSON format),TestcordDevs.x2b,9,False,False,False,False,False,,portable-ui,
-testcordplugins,AutoReplyContent,AutoReplyContent,Send a response if the message starts with this text,TestcordDevs.SirPhantom89,18,False,False,False,True,False,,portable-hook,autoreply
+testcordplugins,AutoReplyContent,AutoReplyContent,Send a response if the message starts with this text,TestcordDevs.SirPhantom89,18,False,False,False,True,False,,portable-hook,AutoReplyContent
 testcordplugins,AutoThemeSwitcher,AutoThemeSwitcher,"Automatically switches between themes based on the time of day, or based on system appearance (ie. light/dark ","{
 name:""maddie480"",
 id:35434165835294311",1,False,False,False,True,False,,portable-hook,
@@ -493,8 +493,8 @@ testcordplugins,Vimium,Vimium,Key to toggle link hints (Vimium style),TestcordDe
 testcordplugins,WebCordHardened,WebCordHardened,Block Discord telemetry endpoints.,"{name:""irritably"",id:928787166916640838n",10,False,False,False,False,False,,excluded,
 testcordplugins,WebhookSend,WebhookSend,Send Discord webhooks from a tabbed modal with visual embed builder and saved history.,TestcordDevs.x2b,1,False,False,False,False,False,native.ts,native-feature,
 testcordplugins,ZIPplus,ZIP+,Automatically zip specified file types and folders before upload,"EquicordDevs.justjxke,EquicordDevs.SSnow",3,True,False,False,False,False,,rewrite,
-testcordplugins,ZeroWidthSanitizer,ZeroWidthSanitizer,Sanitize outgoing messages (before sending),"{name:""Irritably"",id:928787166916640838n",4,False,False,False,False,False,,portable-logic,clean
-testcordplugins,abreviation,Abbreviation,Enable Abbreviation plugin,TestcordDevs.x2b,8,False,False,False,False,False,,portable-logic,reacts
+testcordplugins,ZeroWidthSanitizer,ZeroWidthSanitizer,Sanitize outgoing messages (before sending),"{name:""Irritably"",id:928787166916640838n",4,False,False,False,False,False,,portable-logic,ZeroWidthSanitizer
+testcordplugins,abreviation,Abbreviation,Enable Abbreviation plugin,TestcordDevs.x2b,8,False,False,False,False,False,,portable-logic,Abbreviation
 testcordplugins,accroche,Hook,Enable Hook plugin,"
 {
 name:""Bash"",
@@ -504,16 +504,16 @@ testcordplugins,allConnectionsEnabled,AllConnectionsEnabled,Enables all connecti
 testcordplugins,amrpcStatusDisplayType.desktop,AMRPCStatusDisplayType,Make MusicRPC show the track / artist name in the member list,Devs.nin0dev,0,False,False,False,False,False,,portable-logic,
 testcordplugins,animalese,Animalese,Volume of the animalese sound,TestcordDevs.x2b,2,False,False,False,False,False,,portable-logic,
 testcordplugins,animstatus,AnimatedStatus,,,6,False,False,False,False,False,,portable-logic,
-testcordplugins,annoiler,Annoiler,"Makes you send messages with spoilers around every single character. Originally made by Kyza for Powercord, Us",TestcordDevs.x2b,0,False,False,False,False,False,,portable-ui,commands
+testcordplugins,annoiler,Annoiler,"Makes you send messages with spoilers around every single character. Originally made by Kyza for Powercord, Us",TestcordDevs.x2b,0,False,False,False,False,False,,portable-ui,Annoiler
 testcordplugins,antiDeco,AntiDisconnect,Automatically reconnects to voice channel in case of forced disconnection,TestcordDevs.x2b,1,False,False,False,True,False,,portable-hook,
-testcordplugins,antiDeleteMessage,AntiDeleteMessage,Enable automatic message restoration (toggle with toolbar button),"{name:""Nightcord"",id:0n}",6,False,False,False,True,False,,portable-hook,visibility
+testcordplugins,antiDeleteMessage,AntiDeleteMessage,Enable automatic message restoration (toggle with toolbar button),"{name:""Nightcord"",id:0n}",6,False,False,False,True,False,,portable-hook,AntiDeleteMessage
 testcordplugins,antiGroup,AntiGroup,Enable AntiGroup plugin,"
 {
 name:""Bash"",
 id:1327483363518582784n,",8,False,False,False,True,False,,portable-hook,
 testcordplugins,antiMod,AntiMod,Tools to avoid mods,TestcordDevs.dot,0,False,False,False,False,False,,portable-logic,
 testcordplugins,antiMoveDeco,AntiMoveDeco,Adds a button to prevent being moved or disconnected from a voice channel.,"{name:""Nightcord"",id:0n}",1,False,False,False,False,False,,portable-logic,
-testcordplugins,antiNameChange,AntiNameChange,User IDs of the friend (comma separated),Devs.nin0dev,4,False,True,True,True,False,,portable-hook,speech
+testcordplugins,antiNameChange,AntiNameChange,User IDs of the friend (comma separated),Devs.nin0dev,4,False,True,True,True,False,,portable-hook,AntiNameChange
 testcordplugins,antiNickname,AntiNickname,Show a notification when a forced nickname is removed,"{name:""Nightcord"",id:0n}",2,False,False,False,True,False,,portable-hook,
 testcordplugins,antiSnitch,AntiSnitch,Alarm Volume,TestcordDevs.dot,2,False,False,False,False,False,,portable-logic,
 testcordplugins,antiStereo,AntiStereo,Force mono (disable stereo),"
@@ -521,7 +521,7 @@ testcordplugins,antiStereo,AntiStereo,Force mono (disable stereo),"
 name:""Bash"",
 id:1327483363518582784n,",2,True,False,False,False,False,,rewrite,
 testcordplugins,apisniper,ApiSniper,"Detects and logs API keys, tokens, and credentials from chat messages",TestcordDevs.x2b,1,False,False,False,True,False,,excluded,
-testcordplugins,askMeToMute,AskMeToMute,"Mute yourself when moderators server mute you, and automatically remove your server mute if you have permissio",TestcordDevs.x2b,1,False,False,False,True,False,,portable-hook,react
+testcordplugins,askMeToMute,AskMeToMute,"Mute yourself when moderators server mute you, and automatically remove your server mute if you have permissio",TestcordDevs.x2b,1,False,False,False,True,False,,portable-hook,AskMeToMute
 testcordplugins,audioCenter,AudioCenter - Virtual Output,Enable audio center,TestcordDevs.x2b,8,False,False,False,False,False,,portable-logic,
 testcordplugins,audioLimiter,AudioLimiter,Maximum allowed volume (%),TestcordDevs.x2b,0,False,False,False,False,False,,portable-logic,
 testcordplugins,auditLogChannel,AuditLogChannel,Adds an audit log channel,TestcordDevs.x2b,0,True,False,False,False,False,,rewrite,
@@ -529,15 +529,15 @@ testcordplugins,autoBan,AutoBan,User list separated by /,TestcordDevs.dot,6,Fals
 testcordplugins,autoBanMenu,AutoBanMenu,Enhanced ban list with import/export/sync functionality.,"
 {name:""dot"",id:1400610916285812776n},
 {",1,False,False,False,False,False,,portable-ui,
-testcordplugins,autoChannelReact,AutoChannelReact,Channel reaction rules (JSON format),TestcordDevs.x2b,3,False,False,False,False,False,,portable-logic,aftermath
+testcordplugins,autoChannelReact,AutoChannelReact,Channel reaction rules (JSON format),TestcordDevs.x2b,3,False,False,False,False,False,,portable-logic,AutoChannelReact
 testcordplugins,autoClaim,AutoClaim,allowed guilds separated by /,TestcordDevs.dot,6,True,False,False,True,False,,rewrite,
 testcordplugins,autoCorrect,AutoCorrectNC,Where to show the button,"{name:""Nightcord"",id:0n}",10,False,False,False,False,False,,portable-logic,
 testcordplugins,autoDeco,AutoDisconnect,Enable AutoDeco,TestcordDevs.x2b,3,False,False,False,True,False,,excluded,
-testcordplugins,autoDeleteDms,AutoDeleteDMs,Delete messages after (value),TestcordDevs.x2b,5,False,False,False,False,False,,portable-logic,quiet
+testcordplugins,autoDeleteDms,AutoDeleteDMs,Delete messages after (value),TestcordDevs.x2b,5,False,False,False,False,False,,portable-logic,AutoDeleteDMs
 testcordplugins,autoDeleter,AutoDeleter,Enable automatic message deletion,"
 {
 name:""Bash"",
-id:1327483363518582784n,",40,False,False,False,False,False,,portable-logic,forget
+id:1327483363518582784n,",40,False,False,False,False,False,,portable-logic,AutoDeleter
 testcordplugins,autoMute,AutoMute,Whether the plugin will automatically mute you after being silent for too long or not,TestcordDevs.x2b,5,False,False,False,True,False,,portable-hook,
 testcordplugins,autoRedeem,AutoRedeem,Blazing fast mode: parallel redemption with no delays. Forces prevalidation on. May increase captcha risk.,TestcordDevs.x2b,9,False,False,False,True,False,native.ts,native-feature,
 testcordplugins,autoReply,AutoReply,Where to show the button,"{name:""User"",id:0n}",14,False,False,False,True,False,,portable-hook,
@@ -547,7 +547,7 @@ testcordplugins,autoUnmute,AutoUnmute,Automatically unmutes and undeafens when s
 {
 name:""Bash"",
 id:1327483363518582784n,",1,False,False,False,True,False,,portable-hook,
-testcordplugins,autoVaporwave,AutoVaporwave,Turn every message you send into ｆｕｌｌｗｉｄｔｈ text automatically.,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-logic,speech
+testcordplugins,autoVaporwave,AutoVaporwave,Turn every message you send into ｆｕｌｌｗｉｄｔｈ text automatically.,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-logic,AutoVaporwave
 testcordplugins,autonickname,AutoNickname,Show a toast when AutoNickname restores a nickname.,TestcordDevs.x2b,3,False,False,False,True,False,,portable-hook,
 testcordplugins,avatarGrabber,AvatarGrabber,/avatar grabs the full-resolution avatar of any user (or yourself).,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-ui,
 testcordplugins,betterBios,BetterBios,Improves Discord's bio redesign,TestcordDevs.x2b,0,False,False,False,False,False,,portable-logic,
@@ -562,7 +562,7 @@ testcordplugins,betterScreenshare.desktop,BetterScreenshare,This plugin allows y
 testcordplugins,betterforwardmeta,BetterForwardMeta,Access server profile under forwarded messages (if available) and always show time,TestcordDevs.x2b,0,True,False,False,False,False,,rewrite,
 testcordplugins,betterplusreacts,BetterPlusReacts,The amount of plus before :emoji: is the message to add it to,TestcordDevs.x2b,0,True,False,False,False,False,,rewrite,
 testcordplugins,bigFileUpload,BigFileUpload,Select the file uploader service,Devs.ScattrdBlade,28,True,False,False,False,False,native.ts,native-feature,
-testcordplugins,boldText,BoldText,/bold turns your message into 𝐮𝐧𝐢𝐜𝐨𝐝𝐞 bold (works where markdown can't).,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-ui,commands
+testcordplugins,boldText,BoldText,/bold turns your message into 𝐮𝐧𝐢𝐜𝐨𝐝𝐞 bold (works where markdown can't).,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-ui,BoldText
 testcordplugins,bulkFriendRemove,BulkFriendRemove,Delete multiple friends at once.,"{name:""Nightcord"",id:0n}",1,False,False,False,False,False,,portable-logic,
 testcordplugins,bypassAccounts,PBKDF2,Enable Alt+G hotkey to quickly open account switcher,TestcordDevs.dot,1,False,False,False,False,False,,excluded,
 testcordplugins,bypassBlockedOrIgnored,BypassBlockedOrIgnored,Bypass the blocked or ignored user modal if is present in voice channels.,"{
@@ -580,7 +580,7 @@ testcordplugins,chatGPT,ChatGPT,Your OpenAI API key (obtained from https://platf
 testcordplugins,chatgptwriting,ChatGPTWriting,Where to show the button,TestcordDevs.x2b,6,False,False,False,False,False,,portable-logic,
 testcordplugins,chatsScrapper,ChatsScrapper,Where to show the button,TestcordDevs.x2b,3,False,False,False,False,False,,portable-logic,
 testcordplugins,chromeTabs,ChromeTabs,Browser-style channel tabs styled after Google Chrome,TestcordDevs.SirPhantom89,2,True,False,False,True,False,,rewrite,
-testcordplugins,clapText,ClapText,Adds /clap to 👏 put 👏 claps 👏 between 👏 your 👏 words.,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-ui,commands
+testcordplugins,clapText,ClapText,Adds /clap to 👏 put 👏 claps 👏 between 👏 your 👏 words.,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-ui,ClapText
 testcordplugins,clickSparkles,ClickSparkles,Sprinkles little neon sparkles wherever you click.,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-logic,
 testcordplugins,clientSideBadges,ClientSideBadges,Adds client-side badges to your profile. Other users can't see them!,"
 Devs.nin0dev,
@@ -603,12 +603,12 @@ testcordplugins,customStream,Default,Use custom preview instead of screen captur
 name:""TopQ"",
 id:523800559791374356n
 }",7,True,False,False,False,False,,rewrite,
-testcordplugins,customreactionbuttons,CustomReactionButtons,Custom reaction buttons (restart needed after adding/removing),TestcordDevs.x2b,1,False,False,False,False,False,,portable-logic,reacts
+testcordplugins,customreactionbuttons,CustomReactionButtons,Custom reaction buttons (restart needed after adding/removing),TestcordDevs.x2b,1,False,False,False,False,False,,portable-logic,CustomReactionButtons
 testcordplugins,deepsearch,DeepSearch,Maximum number of search results to return,TestcordDevs.x2b,4,False,False,False,False,False,,portable-logic,
 testcordplugins,defaultStatusForever,DefaultStatusForever,Make statuses default to last forever,TestcordDevs.x2b,0,False,False,False,False,False,,portable-logic,
 testcordplugins,define,Define,/define looks up a word's dictionary definition (sent only to you).,"{name:""Sharp"",id:0n}",1,False,False,False,False,False,,portable-ui,
 testcordplugins,detectBlock,DetectBlock,Detects users who have blocked you and warns when they appear in voice channels or group DMs.,"
-{name:""justjxke"",id:852558183087472640n",1,False,False,False,True,True,,portable-hook,aftermath
+{name:""justjxke"",id:852558183087472640n",1,False,False,False,True,True,,portable-hook,DetectBlock
 testcordplugins,disconnect,DisconnectUser,Target user ID to auto-disconnect,TestcordDevs.x2b,3,True,False,False,True,False,,rewrite,
 testcordplugins,dmAway,DMAway,Auto-reply message sent to DMs while you're away,"{name:""Sharp"",id:0n}",3,False,False,False,False,False,,portable-logic,
 testcordplugins,dmReadReceipt,DmReadReceipt,Shows a Seen indicator on your messages in DMs when the other person has read them.,"{name:""Sharp"",id:0n}",0,False,False,False,False,True,,portable-ui,
@@ -616,7 +616,7 @@ testcordplugins,dontLimitMe,DontLimitMe,removes the limit on message sending. sp
 testcordplugins,doubleEmoji,DoubleEmoji,Keeps the emoji picker open on click and highlights selected emojis with a blue border.,"{name:""Nightcord"",id:0n}",0,False,False,False,False,False,,portable-logic,
 testcordplugins,editUsers,EditUsers,Edit users,TestcordDevs.x2b,1,True,False,False,False,False,,rewrite,
 testcordplugins,embedBuilder,EmbedBuilder,"Default embed color (hex format, e.g. #5865F2).","{name:""Mifu"",id:1309909311618814005n},Te",2,False,False,False,False,False,,portable-ui,
-testcordplugins,embeddedURLs,EmbeddedURLs,,"{name:""Dadian1"",id:131825869302792192n}",0,False,False,False,False,False,,portable-logic,stamp
+testcordplugins,embeddedURLs,EmbeddedURLs,,"{name:""Dadian1"",id:131825869302792192n}",0,False,False,False,False,False,,portable-logic,EmbeddedURLs
 testcordplugins,emojiOnMouseUp,EmojiOnMouseUp,Sends the emoji you are hovering when you take your mouse button up.,TestcordDevs.x2b,0,True,False,False,False,False,,rewrite,
 testcordplugins,encryptedMessage,EncryptedMessage,Where to show the button,"{name:""Nightcord"",id:0n},TestcordDevs.x2",2,False,False,False,False,True,,portable-ui,
 testcordplugins,eval,Eval,Adds a / command to evaluate JavaScript on your client,Devs.nin0dev,0,False,False,False,False,False,native.ts,native-feature,
@@ -648,7 +648,7 @@ testcordplugins,gatewayLogger,GatewayLogger,logs gateway events to the console,"
 {id:253302259696271360n,name:""zastix""},",0,True,False,False,False,False,,rewrite,
 testcordplugins,getMyToken,getMyToken,Get your token with a slash command.,"{name:""Sami"",id:1403404140461297816n}",0,False,False,False,False,False,,excluded,
 testcordplugins,ghostClient,GhostClient,"Discord ghost accounts — left-click to enable/disable, right-click to configure.","{name:""Nightcord"",id:0n}",1,False,False,False,False,False,native.ts,excluded,
-testcordplugins,ghostPingAlert,GhostPingAlert,Also alert when @everyone / @here messages are deleted,"{name:""Sharp"",id:0n}",1,False,False,False,False,False,,portable-logic,aftermath
+testcordplugins,ghostPingAlert,GhostPingAlert,Also alert when @everyone / @here messages are deleted,"{name:""Sharp"",id:0n}",1,False,False,False,False,False,,portable-logic,GhostPingAlert
 testcordplugins,gifCaptioner,GifCaptioner,Add captions to GIFs in the GIF picker.,EquicordDevs.benjii,0,True,False,False,False,False,,rewrite,
 testcordplugins,gifSpammer,GifSpammer,Send all your favorite GIFs to the current channel with a 2 second delay between each.,TestcordDevs.nnenaza,0,False,False,False,False,False,,portable-ui,
 testcordplugins,gifTransfer,GifTransfer,Skip GIFs that are already in your favorites when importing,"TestcordDevs.nnenaza,TestcordDevs.x2b",5,True,False,False,False,False,,rewrite,
@@ -673,14 +673,14 @@ testcordplugins,idlePage,IdlePage,Hex code of the backgorund. needs #,TestcordDe
 testcordplugins,impersonate,Impersonate,Impersonate a user and have them send a message,TestcordDevs.x2b,0,False,False,False,False,False,,excluded,
 testcordplugins,importMultiTokens,ImportMultiTokens,Import tokens to Token Login Manager,TestcordDevs.x2b,1,False,False,False,False,False,,excluded,
 testcordplugins,inviteDefaults,InviteDefaults,Invite Duration,"{name:""Death"",id:1003477997728313405n}",3,True,False,False,False,False,,rewrite,
-testcordplugins,jstextreplace,JSTextReplace,"TextReplace, with JavaScript replacements",Devs.nin0dev,3,False,False,False,False,False,,portable-ui,sendtext
+testcordplugins,jstextreplace,JSTextReplace,"TextReplace, with JavaScript replacements",Devs.nin0dev,3,False,False,False,False,False,,portable-ui,JsTextReplace
 testcordplugins,laisse,Leash,Enable Leash plugin,TestcordDevs.x2b,5,False,False,False,True,False,,portable-hook,
 testcordplugins,lastOnline,LastOnline,Also show the last online indicator in server member lists,TestcordDevs.x2b,2,False,False,False,True,False,,portable-hook,
 testcordplugins,lastfmRichPresence,Last.fm,Your Last.fm API key. Get one free at last.fm/api/account/create.,"{name:""Sharp"",id:0n}",8,False,False,False,False,False,,portable-logic,
 testcordplugins,lazyMessageRender,LazyMessageRender,Prevents message action toolbar from clipping under the message above. content-visibility was removed — Discor,TestcordDevs.x2b,0,False,False,False,False,False,,portable-logic,
 testcordplugins,leaveAllGroups,LeaveAllGroups,Enable the LeaveAllGroups plugin,TestcordDevs.x2b,6,False,False,False,False,False,,excluded,
 testcordplugins,leaveAllServers,LeaveAllServers,Do not show or select servers you own,"{name:""Nightcord"",id:0n}",1,False,False,False,False,False,,excluded,
-testcordplugins,leetText,LeetText,/leet rewrites your message in 1337 5p34k.,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-ui,commands
+testcordplugins,leetText,LeetText,/leet rewrites your message in 1337 5p34k.,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-ui,LeetText
 testcordplugins,liveWallpaper,LiveWallpaper,"Wallpaper opacity (0 = invisible, 0.5 = max)","{name:""Nightcord"",id:0n}",6,False,False,False,False,False,,portable-logic,
 testcordplugins,localmessageedit,LocalMessageEditor,Edit and delete any message locally to demonstrate Discord security vulnerabilities,(Devsasany).nobody,1,True,False,False,False,False,,excluded,
 testcordplugins,lockGroup,LockGroup,Show notifications for actions,"
@@ -722,7 +722,7 @@ testcordplugins,newUserIndicator,NewUserIndicator,Enable on badges.,TestcordDevs
 testcordplugins,noButtons,NoButtons,Hide the popout chat button,TestcordDevs.x2b,8,False,False,False,False,False,,portable-logic,
 testcordplugins,noDMWhileStreaming,NoDMWhileStreaming,Hide Group DMs too while streaming,"{name:""Unknown"",id:0n}",3,False,False,False,True,False,,portable-hook,
 testcordplugins,noDraftLengthLimit,NoDraftLengthLimit,Removes the 4500 character saved draft message truncation,TestcordDevs.x2b,0,True,False,False,False,False,,rewrite,
-testcordplugins,noEditedTimestamp,NoEditedTimestamp,"Removes the '(edited)' label from all messages globally, not just your own.",TestcordDevs.Sharp,0,True,False,False,False,False,,rewrite,display
+testcordplugins,noEditedTimestamp,NoEditedTimestamp,"Removes the '(edited)' label from all messages globally, not just your own.",TestcordDevs.Sharp,0,True,False,False,False,False,,rewrite,NoEditedTimestamp
 testcordplugins,noOnboarding,NoOnboarding,"Select a random option for every prompt instead of always the last one, mimicking manual clicks so strict serv","EquicordDevs.omaw,Devs.Glitch",1,True,False,False,False,False,,rewrite,
 testcordplugins,noTelemetry,NoTelemetry,Block Discord from reporting which A/B experiments your account is enrolled in.,"{name:""Sharp"",id:0n}",5,False,False,False,False,False,,excluded,
 testcordplugins,nocompress,Disable Compression,Disables the compression of attachments.,"{id:566409342161780747n,name:""zv_yz""}",0,True,False,False,False,False,,rewrite,
@@ -748,15 +748,15 @@ testcordplugins,pluginManager,pluginManager,Manage custom plugins,TestcordDevs.d
 testcordplugins,pollMaker,PollMaker,/poll formats a quick poll. Use: question | option | option ...,"{name:""Dann"",id:0n}",0,False,False,False,False,False,,portable-ui,
 testcordplugins,profanityFilter,ProfanityFilter,Filter outgoing messages (Ctrl+Alt+P toggles this anywhere),"
 TestcordDevs.sirphantom89,
-{name:""Nepot",3,False,False,False,False,False,,portable-logic,sendtext
+{name:""Nepot",3,False,False,False,False,False,,portable-logic,ProfanityFilter
 testcordplugins,profileCommand,ProfileCommand,Adds a /profile command to open someone's profile,TestcordDevs.x2b,0,False,False,False,False,False,,portable-ui,
 testcordplugins,profileCopyButton,ProfileCopyButton,"Also copy the target user's profile game widgets (favourite game, currently playing, want to play, played, gam","TestcordDevs.x2b,TestcordDevs.nnenaza",2,True,False,False,False,False,,rewrite,
 testcordplugins,punishmentcommands,PunishmentCommands,"Allows you to send a command in chat to punish someone, right from the context menu",Devs.nin0dev,1,False,False,False,False,False,,portable-logic,
 testcordplugins,purgeMessages,PurgeMessages,Purges messages from a channel,TestcordDevs.x2b,0,False,False,False,False,False,,excluded,
-testcordplugins,quickDelete,QuickDelete,Keyboard shortcut to delete your last message in the current channel.,TestcordDevs.Sharp,2,False,False,False,False,False,,portable-logic,aftermath
+testcordplugins,quickDelete,QuickDelete,Keyboard shortcut to delete your last message in the current channel.,TestcordDevs.Sharp,2,False,False,False,False,False,,portable-logic,QuickDelete
 testcordplugins,quickSnippet,QuickSnippet,list of channel IDs to whitelist,TestcordDevs.x2b,2,True,False,False,False,False,,rewrite,
 testcordplugins,quickmsg,QuickMsg,"Delay in milliseconds between sending and deleting the message (lower = harder to catch, but may fail if the s",TestcordDevs.x2b,3,False,False,False,False,False,,portable-logic,
-testcordplugins,quietHours,QuietHours,"Quiet hours start (24h hour, 0-23)","{name:""Sharp"",id:0n}",2,False,False,False,False,False,,portable-logic,schedule
+testcordplugins,quietHours,QuietHours,"Quiet hours start (24h hour, 0-23)","{name:""Sharp"",id:0n}",2,False,False,False,False,False,,portable-logic,QuietHours
 testcordplugins,rPunisher,retardExterminator,Enable automatic banning of users who spam rejoin voice channels,TestcordDevs.dot,6,False,False,False,True,False,,excluded,
 testcordplugins,readableSpoilers,ReadableSpoilers,Gives unrevealed spoilers a subtle neon outline so you can spot them at a glance.,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-logic,
 testcordplugins,realtimeTimestamps,RealtimeTimestamps,Seconds format displayed on every message timestamp,"{name:""Nightcord"",id:253979869n}",3,False,False,False,False,False,,portable-logic,
@@ -767,7 +767,7 @@ testcordplugins,relationshipPruner,RelationshipPruner,"Adds a way to easily prun
 Devs.Samwich
 ,TestcordDevs.x2b",0,True,False,False,False,False,,rewrite,
 testcordplugins,repeatMessage,RepeatMessage,"Allows you to repeat messages quickly. If you hold shift while clicking the Repeat option, it will reply to th",TestcordDevs.x2b,1,False,False,False,False,False,,portable-logic,
-testcordplugins,robloxfilter,RobloxFilter,"Enable filtering (censor/replace/block). When off, messages pass through freely.",TestcordDevs.x2b,7,False,False,False,False,False,,portable-logic,filter
+testcordplugins,robloxfilter,RobloxFilter,"Enable filtering (censor/replace/block). When off, messages pass through freely.",TestcordDevs.x2b,7,False,False,False,False,False,,portable-logic,RobloxFilter
 testcordplugins,roleDuplication,RoleDuplication,Be able to duplicate/clone roles,"
 {
 name:""iamme"",
@@ -777,12 +777,12 @@ testcordplugins,runInConsole,RunInConsole,Allows you to run code blocks in the c
 testcordplugins,rzblack,Voice Channel Blacklist,Server Mute blacklisted users,"TestcordDevs.SirPhantom89,",6,False,False,False,True,False,,portable-hook,
 testcordplugins,rzengz,AutoJumpToMention,Automatically takes you to the message when someone mentions you,TestcordDevs.SirPhantom89,1,False,False,False,True,False,,portable-hook,
 testcordplugins,rznoone,Pin to Voice Channel,Reconnect if disconnected,TestcordDevs.SirPhantom89,6,False,False,False,False,False,,portable-logic,
-testcordplugins,safeNumbers,SafeNumbers,Toggle safe numbers replacement on or off.,TestcordDevs.x2b,2,False,False,False,False,False,,portable-logic,clean
+testcordplugins,safeNumbers,SafeNumbers,Toggle safe numbers replacement on or off.,TestcordDevs.x2b,2,False,False,False,False,False,,portable-logic,SafeNumbers
 testcordplugins,saveUserGifs,SaveUserGifs,Where to scan for GIFs,TestcordDevs.nnenaza,5,False,False,False,False,False,,portable-logic,
 testcordplugins,selfDestruct,SelfDestruct,Where to show the button,"{name:""Nightcord"",id:0n}",5,False,False,False,True,True,,portable-hook,
 testcordplugins,selfForward,SelfForward,Adds the current channel to the forward list popup,"{name:""VillainsRule"",id:0n}",0,True,False,False,False,False,,excluded,
 testcordplugins,sendtoalldms,SendToAllDMs,Adds a command to send a message to all friends' DMs with blacklist/whitelist settings. WE CANNOT GUARANTEE TH,TestcordDevs.x2b,0,False,False,False,False,False,,excluded,
-testcordplugins,sentfrommyuname,SentFromMyUname,Add your uname/useragent to every single message you send,TestcordDevs.x2b,0,False,True,False,False,False,native.ts,native-feature,stamp
+testcordplugins,sentfrommyuname,SentFromMyUname,Add your uname/useragent to every single message you send,TestcordDevs.x2b,0,False,True,False,False,False,native.ts,native-feature,SentFromMyUname
 testcordplugins,serverBackup,ServerBackup,"Backs up and restores complete Discord server configuration (roles, channels, permissions) - No permissions re","
 {
 name:""Bash"",
@@ -800,14 +800,14 @@ testcordplugins,showTypingUsers,ShowTypingUsers,Shows a badge in the channel hea
 testcordplugins,shytyping,ShyTyping,Always show you are typing in your current voice channel,TestcordDevs.x2b,3,True,False,False,False,False,,rewrite,
 testcordplugins,sillyMaxwell,Maxwell :3,Silly Silly Silly,"TestcordDevs.x2b,TestcordDevs.nnenaza",0,False,False,False,False,False,,portable-logic,
 testcordplugins,simplifiedProfileNotes,SimplifiedProfileNotes,Hide the note box when no note is set for a user,TestcordDevs.x2b,1,True,False,False,False,False,,rewrite,
-testcordplugins,smallCaps,SmallCaps,/smallcaps writes your message in ꜱᴍᴀʟʟ ᴄᴀᴘꜱ.,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-ui,commands
+testcordplugins,smallCaps,SmallCaps,/smallcaps writes your message in ꜱᴍᴀʟʟ ᴄᴀᴘꜱ.,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-ui,SmallCaps
 testcordplugins,smoothmessages,SmoothMessages,Fade messages in while they slide.,TestcordDevs.x2b,2,False,False,False,True,False,,portable-hook,
 testcordplugins,socket.desktop,Socket,self explanatory,Devs.nin0dev,4,False,False,False,False,False,native.ts,native-feature,
 testcordplugins,soloaudio,SoloAudio,Re-clicking the same Solo target unmutes / restores everyone,"{name:""you"",id:0n}",5,False,False,False,False,False,,portable-logic,
 testcordplugins,soundTriggers,SoundTriggers,Chaotic plugin for mapping text/emojis to sound,TestcordDevs.x2b,2,False,False,False,True,False,,portable-hook,
 testcordplugins,soundboardPro,Bruh,Enable Soundboard Pro,TestcordDevs.x2b,6,True,False,False,False,False,,rewrite,
 testcordplugins,soundcloudRichPresence,SoundCloud,Your SoundCloud OAuth token. Get it from soundcloud.com → F12 DevTools → Application → Cookies → oauth_token.,"{name:""Sharp"",id:0n}",7,False,False,False,False,False,,portable-logic,
-testcordplugins,spaceOut,SpaceOut,/spaceout p u t s   s p a c e s   between every letter.,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-ui,speech
+testcordplugins,spaceOut,SpaceOut,/spaceout p u t s   s p a c e s   between every letter.,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-ui,SpaceOut
 testcordplugins,spoofmsgv2,Server Level,Spoof official Discord system messages with realistic embeds,TestcordDevs.x2b,0,False,False,False,False,False,,excluded,
 testcordplugins,spotifyAddToQueue.desktop,SpotifyAddToQueue,Adds a button in Spotify embeds to add the song to the queue,Devs.nin0dev,0,False,False,False,False,False,native.ts,native-feature,
 testcordplugins,staffScanner,StaffScanner,Alert volume when Staff is detected.,TestcordDevs.x2b,4,False,False,False,True,False,,portable-hook,
@@ -848,7 +848,7 @@ testcordplugins,userflags,UserFlags,Add flags to users that will always show und
 testcordplugins,userpluginInstaller,UserpluginInstaller,Comma separated list of channels where the Install Plugin button should be displayed,"Devs.nin0dev,TestcordDevs.sirphantom89",4,False,False,False,False,True,native.ts,native-feature,
 testcordplugins,vAnalyzer-main,vAnalyzer,"Analyze message attachments, trace URLs, check certificates, avoid scams and more.","{name:""nay-cat"",id:1159977353661919363n}",2,False,False,False,True,True,analyzers/CertPL/native.ts;analyzers/CordCat/native.ts;analyzers/CrtSh/native.ts;analyzers/DiscordInvite/native.ts;analyzers/FishFish/native.ts;analyzers/HybridAnalysis/native.ts;analyzers/ModularScan/native.ts;analyzers/Sucuri/native.ts;analyzers/VirusTotal/native.ts;analyzers/WaybackMachine/native.ts;analyzers/WhereGoes/native.ts;native.ts,native-feature,
 testcordplugins,vaporScrollbar,VaporScrollbar,Replaces scrollbars with a neon pink-to-cyan vaporwave gradient.,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-logic,
-testcordplugins,vaporwaveText,VaporwaveText,Adds /vaporwave to turn your message into ａｅｓｔｈｅｔｉｃ fullwidth text.,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-ui,commands
+testcordplugins,vaporwaveText,VaporwaveText,Adds /vaporwave to turn your message into ａｅｓｔｈｅｔｉｃ fullwidth text.,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-ui,VaporwaveText
 testcordplugins,vc-NewlinesInCommands,NewlinesInCommands,Allows shift+enter to create new lines in command inputs.,TestcordDevs.x2b,0,True,False,False,False,False,,rewrite,
 testcordplugins,vc-autocorrect,AutoCorrect,Enable auto correct,TestcordDevs.x2b,3,True,False,False,False,False,,rewrite,
 testcordplugins,vc-betterActivities,BetterActivities,Show activity icons in the member list,"
@@ -858,7 +858,7 @@ Devs.AutumnVN
 ",8,True,False,False,False,False,,rewrite,
 testcordplugins,vc-blockKrisp,BlockKrisp,Prevent Krisp from loading,TestcordDevs.x2b,0,False,False,False,False,False,native.ts,native-feature,
 testcordplugins,vc-followUser,FollowUser,Make sure to be in the same VC when following a user,"Devs.D3SOX,TestcordDevs.x2b",15,True,False,False,True,False,,rewrite,
-testcordplugins,vc-goodperson,GoodPerson,Makes you (or others) a good person,"Devs.nin0dev,Devs.mantikafasi",1,False,True,False,True,False,,portable-hook,polite
+testcordplugins,vc-goodperson,GoodPerson,Makes you (or others) a good person,"Devs.nin0dev,Devs.mantikafasi",1,False,True,False,True,False,,portable-hook,GoodPerson
 testcordplugins,vc-ignoreTerms,IgnoreTerms,Ignore Discord's new terms of service,TestcordDevs.x2b,0,False,False,False,False,False,,portable-logic,
 testcordplugins,vc-junkCleanup-main,JunkCleanup,Enable all patches (intended for testing),Devs.Sqaaakoi,0,False,False,False,False,False,,portable-logic,
 testcordplugins,vc-notifyUserChanges,NotifyUserChanges,Notify on status changes,TestcordDevs.x2b,9,False,False,False,True,False,,portable-hook,
@@ -870,7 +870,7 @@ testcordplugins,vcOwnerDetector,vcOwnerDetector,Guild detection data,TestcordDev
 testcordplugins,vcR,vcGrape,The tag configuration component,TestcordDevs.dot,5,False,False,False,False,False,,portable-logic,
 testcordplugins,vcpanelsettings,VCPanelSettings,Control voice settings right from the voice panel,TestcordDevs.x2b,0,True,False,False,False,False,,rewrite,
 testcordplugins,vencord-ExitSounds,ExitSounds,Guild ID of sound source,TestcordDevs.x2b,3,True,False,False,False,False,,rewrite,
-testcordplugins,vencord-antirickroll,AntiRickroll,Custom links to check for (separated by commas),TestcordDevs.x2b,2,False,False,False,False,False,,portable-logic,marker
+testcordplugins,vencord-antirickroll,AntiRickroll,Custom links to check for (separated by commas),TestcordDevs.x2b,2,False,False,False,False,False,,portable-logic,AntiRickroll
 testcordplugins,vencord-gpubinder-main,GpuBinder,Choose which GPU Discord should prioritize. This fixes the issue where Windows 'forgets' your settings after a,"{name:""unclide"",id:395504896817758210n}",1,False,False,False,False,False,native.ts,native-feature,
 testcordplugins,vencord-perf-main,perf,[RISKY]Collection of small performance improvements[RISKY],"
 {
@@ -879,7 +879,7 @@ name:""void"",
 ",0,False,False,False,False,False,,portable-logic,
 testcordplugins,venfetch,venfetch,neofetch for vencord,Devs.nin0dev,0,False,False,False,False,False,native.ts,native-feature,
 testcordplugins,versions,Versions,Adds extra information to the version info,TestcordDevs.x2b,0,False,False,False,False,False,,portable-logic,
-testcordplugins,vibeCheck,VibeCheck,Adds /vibe to drop a random vaporwave mood into chat.,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-ui,commands
+testcordplugins,vibeCheck,VibeCheck,Adds /vibe to drop a random vaporwave mood into chat.,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-ui,VibeCheck
 testcordplugins,videoStartNotifier,VideoStartNotifier,Play notification sound in private voice calls (DMs),TestcordDevs.x2b,2,False,False,False,False,False,,portable-logic,
 testcordplugins,viewRawVariant,ViewRawVariant,"Copy/View raw content of any message, channel, or guild, but show in the right click menu.","Devs.KingFish,Devs.Ven,Devs.rad,Devs.ImL",1,False,False,False,False,False,,portable-logic,
 testcordplugins,voiceChannelSearch,VoiceChannelSearch,Search and join any voice channel across all your servers.,"{name:""Nightcord"",id:0n}",0,False,False,False,False,False,,portable-logic,
@@ -895,7 +895,7 @@ testcordplugins,webRtcLeakPrevent,WebRTCLeakPrevent,"ICE transport policy. Relay
 testcordplugins,webcamStartNotifier,WebcamStartNotifier,Play notification sound in private voice calls (DMs),TestcordDevs.x2b,2,False,False,False,False,False,,portable-logic,
 testcordplugins,wikiLookup,WikiLookup,/wiki pulls a short Wikipedia summary for anything (sent only to you).,"{name:""Sharp"",id:0n}",0,False,False,False,False,False,,portable-ui,
 testcordplugins,wordBomb,WordBomb,"BombParty/WordBomb assistant with persistent overlay, integrated AI, and alphabet tracking.","{name:""Nightcord"",id:0n}",1,False,False,False,False,False,,portable-logic,
-testcordplugins,wordCount,WordCount,Shows the word count of a message below it,TestcordDevs.x2b,0,False,False,False,False,False,,portable-logic,speech
+testcordplugins,wordCount,WordCount,Shows the word count of a message below it,TestcordDevs.x2b,0,False,False,False,False,False,,portable-logic,WordCount
 testcordplugins,yMusicSync.desktop,YMusicSync,Control Yandex Music through Ynison and Discord RPC,"{name:""diram1x"",id:710580442180485120n}",1,False,False,False,False,False,native.ts;nativeBridge.ts,native-feature,
 testcordplugins,ytdownloader,⚪,Send a Clyde message with the download progress.,TestcordDevs.x2b,5,True,False,False,False,False,native.ts,native-feature,
 testcordplugins,yuri,PurrBot,Sends a random yuri picture via /yuri. Uses 5 APIs with random order and automatic fallback. (NSFW),TestcordDevs.x2b,0,False,False,False,False,False,,portable-ui,

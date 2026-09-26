@@ -617,7 +617,7 @@ impl Registry {
 			Box::new(clean::TalkInReverse::default()),
 			Box::new(inspect::ClientSideBlock::default()),
 			Box::new(inspect::ReplaceGoogleSearch::default()),
-			Box::new(inspect::BaseDecoder::default()),
+			Box::new(inspect::DecodeBase64::default()),
 			Box::new(polite::GoodPerson::default()),
 			Box::new(files::FixFileExtensions::default()),
 			Box::new(files::DownloadAllAttachments::default()),
