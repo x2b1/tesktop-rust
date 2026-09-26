@@ -7477,6 +7477,14 @@ impl eframe::App for Desktop {
 	}
 }
 
+/// The hour in this machine's own zone, falling back to UTC when the zone is unavailable,
+/// which is a wrong hour for an hour rather than a wrong window for a day.
+fn local_hour() -> u8 {
+	use time::OffsetDateTime;
+	let now = OffsetDateTime::now_local().unwrap_or_else(|_| OffsetDateTime::now_utc());
+	now.hour()
+}
+
 #[cfg(test)]
 mod tests {
 	use super::plugins_page::tesktop_field;
@@ -7907,12 +7915,4 @@ mod tests {
 			}
 		));
 	}
-}
-
-/// The hour in this machine's own zone, falling back to UTC when the zone is unavailable,
-/// which is a wrong hour for an hour rather than a wrong window for a day.
-fn local_hour() -> u8 {
-	use time::OffsetDateTime;
-	let now = OffsetDateTime::now_local().unwrap_or_else(|_| OffsetDateTime::now_utc());
-	now.hour()
 }
