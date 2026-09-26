@@ -5679,6 +5679,168 @@ mod tests {
 		}
 		assert!(!egui::Popup::is_any_open(&ctx));
 	}
+	/// A port that adds a message-menu entry has to be reachable: the entry is painted in
+	/// the app's own menu, and a click on it asks the host for that port and that action.
+	#[test]
+	fn a_ports_message_menu_entry_is_painted_and_a_click_asks_the_host() {
+		fn collect(shape: &egui::Shape, labels: &mut Vec<(String, egui::Rect)>) {
+			match shape {
+				egui::Shape::Text(text) => labels.push((
+					text.galley.job.text.clone(),
+					text.galley.rect.translate(text.pos.to_vec2()),
+				)),
+				egui::Shape::Vec(shapes) => {
+					for shape in shapes {
+						collect(shape, labels);
+					}
+				}
+				_ => {}
+			}
+		}
+		let ctx = egui::Context::default();
+		let mut state = test_support::demo_state();
+		state.read_state.reset();
+		// One message with text in it, since the menu is opened by clicking the body, and
+		// the fixture's own last messages are attachments with no text to click.
+		let channel = state
+			.channels
+			.iter()
+			.find(|channel| Some(channel.id) == state.selected)
+			.unwrap()
+			.clone();
+		let mut message = text_message(51);
+		message.channel = channel.id;
+		message.content = "a message to open a menu on".into();
+		state.timeline.clear();
+		state
+			.timeline
+			.insert(message.clone(), false, false)
+			.unwrap();
+		state.revision += 1;
+		let mut view = TimelineView::default();
+		let actions = std::sync::Arc::new(vec![crate::extensions_ui::MenuAction {
+			plugin: "Abbreviation".to_string(),
+			action: "expand".to_string(),
+			label: "Expand abbreviations".to_string(),
+		}]);
+		let mut avatars = crate::avatars::Avatars::default();
+		let mut editing = None;
+		let mut render = |view: &mut TimelineView, state: &mut State, events: Vec<egui::Event>| {
+			let output = ctx.run_ui(
+				egui::RawInput {
+					screen_rect: Some(egui::Rect::from_min_size(
+						egui::Pos2::ZERO,
+						egui::vec2(900.0, 600.0),
+					)),
+					events,
+					..Default::default()
+				},
+				|ui| {
+					view.show(
+						ui,
+						state,
+						&mut editing,
+						&mut None,
+						(
+							&mut avatars,
+							&mut crate::profiles::ProfileSession::default(),
+						),
+						None,
+					)
+				},
+			);
+			let mut painted = vec![];
+			for shape in &output.shapes {
+				collect(&shape.shape, &mut painted);
+			}
+			output.drop_without_applying_deltas();
+			painted
+		};
+		for _ in 0..4 {
+			render(&mut view, &mut state, vec![]);
+		}
+		// The first frame built the view; the host hands the entries over from then on.
+		view.plugin_actions = actions;
+		let painted = render(&mut view, &mut state, vec![]);
+		let body = painted
+			.iter()
+			.find(|(label, _)| *label == message.content)
+			.unwrap_or_else(|| panic!("Missing message: {painted:?}"))
+			.1
+			.center();
+		for pressed in [true, false] {
+			render(
+				&mut view,
+				&mut state,
+				vec![
+					egui::Event::PointerMoved(body),
+					egui::Event::PointerButton {
+						pos: body,
+						button: egui::PointerButton::Secondary,
+						pressed,
+						modifiers: egui::Modifiers::NONE,
+					},
+				],
+			);
+		}
+		let painted = render(&mut view, &mut state, vec![]);
+		assert!(
+			painted.iter().any(|(label, _)| label == "Copy message"),
+			"the right click did not open the message menu: {painted:?}"
+		);
+		let entry = painted
+			.iter()
+			.find(|(label, _)| label == "TestCord")
+			.unwrap_or_else(|| panic!("The port's submenu is not in the menu: {painted:?}"))
+			.1
+			.center();
+		// The submenu opens on the entry itself, the way every other submenu here does.
+		for pressed in [true, false] {
+			render(
+				&mut view,
+				&mut state,
+				vec![
+					egui::Event::PointerMoved(entry),
+					egui::Event::PointerButton {
+						pos: entry,
+						button: egui::PointerButton::Primary,
+						pressed,
+						modifiers: egui::Modifiers::NONE,
+					},
+				],
+			);
+		}
+		let painted = render(&mut view, &mut state, vec![]);
+		let action = painted
+			.iter()
+			.find(|(label, _)| label == "Expand abbreviations")
+			.unwrap_or_else(|| panic!("The port's entry is not in its submenu: {painted:?}"))
+			.1
+			.center();
+		for pressed in [true, false] {
+			render(
+				&mut view,
+				&mut state,
+				vec![
+					egui::Event::PointerMoved(action),
+					egui::Event::PointerButton {
+						pos: action,
+						button: egui::PointerButton::Primary,
+						pressed,
+						modifiers: egui::Modifiers::NONE,
+					},
+				],
+			);
+		}
+		let picked = view
+			.plugin_request
+			.take()
+			.expect("clicking a port's entry must ask the host to run it");
+		assert_eq!(picked.plugin, "Abbreviation");
+		assert_eq!(picked.action, "expand");
+		assert_eq!(picked.message, message.id);
+	}
+
 	#[test]
 	fn reply_target_browsing_waits_for_success_and_explicit_latest_before_acknowledging() {
 		fn collect(shape: &egui::Shape, labels: &mut Vec<(String, egui::Rect)>) {
