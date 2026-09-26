@@ -28,6 +28,8 @@ pub mod messagelogger;
 pub mod noreplymention;
 pub mod notify;
 pub mod polite;
+#[cfg(test)]
+mod properties;
 pub mod quiet;
 pub mod react;
 pub mod reacts;
