@@ -4,7 +4,9 @@ use serde_json::json;
 
 fn main() {
 	let bytes = include_bytes!("../tests/fixtures/sdk-legacy/app-toolbox.tesktop2-extension");
-	assert_eq!(bytes.len(), 574_992);
+	// The rename to tesktop2 lengthened the name embedded in the package, so the immutable
+	// fixture is two bytes longer than it was under the old name.
+	assert_eq!(bytes.len(), 574_994);
 	let package = parse_package(bytes).expect("immutable legacy package validates");
 	assert_eq!(package.wasm.len(), 198_370);
 	let mut input: Invocation = serde_json::from_value(json!({
