@@ -717,6 +717,49 @@ impl MessagingUi {
 	pub fn preview_forum_layout(&mut self, layout: model::forum::Layout) {
 		self.forum.preview_layout(layout);
 	}
+	/// Fixture-only: open the bundled-ports page at startup, as the settings rail would.
+	#[cfg(feature = "demo")]
+	pub fn preview_testcord_settings(&mut self) {
+		self.open_testcord_settings();
+	}
+
+	/// Fixture-only: open one port's own section, as clicking its header would.
+	#[cfg(feature = "demo")]
+	pub fn preview_testcord_plugin(&mut self, id: &str) {
+		self.open_testcord_settings();
+		self.testcord.expanded = Some(id.to_string());
+		self.testcord.listing_dirty = true;
+		// Searching for it keeps the open port in view whatever its place in the list.
+		self.testcord.search = id.to_string();
+	}
+
+	/// Fixture-only: the line a port would draw under one message, as the app fills it in.
+	#[cfg(feature = "demo")]
+	pub fn preview_testcord_marker(&mut self, id: model::Id, line: &str) {
+		let mut markers = (*self.message_markers).clone();
+		markers.insert(id, line.to_string());
+		self.message_markers = std::sync::Arc::new(markers);
+	}
+
+	/// Fixture-only: the buttons a port would offer, in the row they are drawn in.
+	#[cfg(feature = "demo")]
+	pub fn preview_testcord_port_buttons(&mut self) {
+		self.testcord.composer_buttons = std::sync::Arc::new(vec![
+			crate::testcord::ComposerButton {
+				id: "ingtoninator".to_string(),
+				label: "Ington".to_string(),
+				tooltip: "Add the Ington suffix to one word of every message you send.".to_string(),
+				active: Some(true),
+			},
+			crate::testcord::ComposerButton {
+				id: "talk-in-reverse".to_string(),
+				label: "Reverse".to_string(),
+				tooltip: "Send your message with its characters in reverse order.".to_string(),
+				active: Some(false),
+			},
+		]);
+	}
+
 	/// Fixture-only: open the settings dialog of `channel` at startup.
 	#[cfg(feature = "demo")]
 	pub fn preview_channel_settings(&mut self, channel: Id, generation: u64) {

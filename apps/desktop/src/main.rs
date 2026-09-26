@@ -32,6 +32,7 @@ mod group_icon;
 mod interaction_uploads;
 mod notification_runtime;
 mod notification_sounds;
+mod plugins_page;
 mod pointer;
 #[cfg(feature = "demo")]
 mod post_menu_demo;
@@ -769,6 +770,9 @@ struct Desktop {
 	/// How many ports were enabled when the composer's buttons were last built, so the row
 	/// is rebuilt when the set changes and not on every frame.
 	tesktop_buttons_built: usize,
+	/// Fixture-only latch: the demo flags are applied once, not every frame.
+	#[cfg(feature = "demo")]
+	demo_fixtures_done: bool,
 	login: Option<platform::LoginView>,
 	captcha: captcha::Captcha,
 	connection: Option<connection::Connection>,
@@ -879,50 +883,7 @@ fn reply_target(command: &Command) -> Option<model::Id> {
 	}
 }
 
-/// One settings row for the TestCord page, falling back to the value the plugin declares.
-fn tesktop_field(
-	registry: &tesktop_plugins::Registry,
-	id: &str,
-	setting: &tesktop_plugins::Setting,
-) -> ui::testcord::Field {
-	use tesktop_plugins::{Fallback, SettingKind};
-	let stored = registry.value(id, setting.key);
-	let (kind, fallback) = match (setting.kind, setting.default) {
-		(SettingKind::Toggle, Fallback::Flag(value)) => {
-			(ui::testcord::Kind::Toggle, ui::testcord::Value::Flag(value))
-		}
-		(SettingKind::Text { multiline }, Fallback::Text(value)) => (
-			ui::testcord::Kind::Text { multiline },
-			ui::testcord::Value::Text(value.to_string()),
-		),
-		(SettingKind::Number { min, max }, Fallback::Number(value)) => (
-			ui::testcord::Kind::Number { min, max },
-			ui::testcord::Value::Number(value),
-		),
-		(SettingKind::Choice(options), Fallback::Text(value)) => (
-			ui::testcord::Kind::Choice { options },
-			ui::testcord::Value::Text(value.to_string()),
-		),
-		_ => (ui::testcord::Kind::Toggle, ui::testcord::Value::Flag(false)),
-	};
-	let value = match (&kind, stored) {
-		(ui::testcord::Kind::Toggle, Some(serde_json::Value::Bool(stored))) => {
-			ui::testcord::Value::Flag(*stored)
-		}
-		(ui::testcord::Kind::Number { .. }, Some(serde_json::Value::Number(stored))) => {
-			ui::testcord::Value::Number(stored.as_i64().unwrap_or_default())
-		}
-		(_, Some(serde_json::Value::String(stored))) => ui::testcord::Value::Text(stored.clone()),
-		_ => fallback,
-	};
-	ui::testcord::Field {
-		key: setting.key.to_string(),
-		label: setting.label.to_string(),
-		kind,
-		value,
-	}
-}
-
+/// The stored form of one settings row, as it goes to the registry and back.
 fn tesktop_value(value: ui::testcord::Value) -> serde_json::Value {
 	match value {
 		ui::testcord::Value::Flag(value) => serde_json::Value::Bool(value),
@@ -1991,6 +1952,8 @@ impl Desktop {
 			tesktop_chunks: Default::default(),
 			tesktop_markers_channel: None,
 			tesktop_buttons_built: usize::MAX,
+			#[cfg(feature = "demo")]
+			demo_fixtures_done: false,
 			login: None,
 			captcha: captcha::Captcha::default(),
 			connection: None,
@@ -2101,6 +2064,70 @@ impl Desktop {
 			token_input: Zeroizing::new(String::new()),
 		})
 	}
+	/// Fixture-only: the bundled ports switched on against the synthetic timeline, so the
+	/// composer row, the per-message line and the settings page can all be looked at in
+	/// the running app rather than only in a screenshot.
+	///
+	/// `--demo-plugins` turns a handful of ports on and gives the conversation two messages
+	/// they have something to say about; `--demo-plugins-page` opens their page;
+	/// `--demo-marker` is the one-message version, for the line drawn under a single message.
+	#[cfg(feature = "demo")]
+	fn demo_ports(&mut self) {
+		if self.demo_fixtures_done {
+			return;
+		}
+		let asked = |flag: &str| std::env::args().any(|arg| arg == flag);
+		if !asked("--demo-plugins") && !asked("--demo-marker") {
+			return;
+		}
+		self.demo_fixtures_done = true;
+		for id in [
+			"Ingtoninator",
+			"TalkInReverse",
+			"QuickDelete",
+			"AntiRickroll",
+			"WordCount",
+			"MessageLogger",
+			"Abbreviation",
+		] {
+			self.tesktop.set_enabled(id, true);
+		}
+		self.tesktop
+			.set_value("Abbreviation", "abbreviations", "btw=by the way".into());
+		self.tesktop_dirty = true;
+		// Delivered the way a real message arrives, so every port sees them as it would in
+		// use: one with an abbreviation in it, one long enough to be worth counting, and
+		// one carrying a link a port has an opinion about.
+		for (index, content) in [
+			"btw the water is fine, and it is fine enough",
+			"a long enough message to be worth counting the words and characters of",
+			"look at this one https://youtu.be/dQw4w9WgXcQ and tell me what it is about",
+		]
+		.into_iter()
+		.enumerate()
+		{
+			self.demo_message(20_000 + index as u64, content);
+		}
+		if asked("--demo-plugins-page") {
+			self.messaging.preview_testcord_settings();
+		}
+		self.state.status = "Offline fixture · bundled ports switched on";
+	}
+
+	/// Fixture-only: put one synthetic message into the live timeline, the way the service
+	/// would, so every port sees it exactly as it sees a real one.
+	#[cfg(feature = "demo")]
+	fn demo_message(&mut self, id: u64, content: &str) {
+		let channel = self.state.selected.unwrap_or(model::Id(7));
+		let mut message = test_support::message(id, channel);
+		message.author = self.state.user.clone().unwrap_or(message.author);
+		message.content = content.to_string();
+		self.state.apply(client_core::Envelope {
+			generation: self.state.generation,
+			event: client_core::Event::Message(message),
+		});
+	}
+
 	fn connect(&mut self, secret: SessionSecret, save: bool, ctx: &egui::Context) {
 		if self.presence_load_pending {
 			self.deferred_connect = Some((secret, save));
@@ -3982,35 +4009,7 @@ impl Desktop {
 			self.state.set_preserve_deleted_messages(preserve);
 		}
 		if self.messaging.testcord_settings_open() || self.tesktop_dirty {
-			self.messaging.testcord.entries = self
-				.tesktop
-				.metas()
-				.iter()
-				.map(|meta| {
-					let mut entry = ui::testcord::Entry::new(
-						meta.id,
-						meta.name,
-						meta.description,
-						meta.authors,
-						meta.tags,
-						self.tesktop.enabled(meta.id),
-					);
-					entry.summary = self.tesktop.summary(meta.id).unwrap_or_default();
-					entry.log = self.tesktop.export(meta.id).is_some();
-					entry.log_tail = if entry.log {
-						self.tesktop.tail(meta.id, 40)
-					} else {
-						String::new()
-					};
-					entry.fields = self
-						.tesktop
-						.settings_of(meta.id)
-						.iter()
-						.map(|setting| tesktop_field(&self.tesktop, meta.id, setting))
-						.collect();
-					entry
-				})
-				.collect();
+			self.messaging.testcord.entries = plugins_page::page(&self.tesktop);
 		}
 		if let Some(picker) = &self.tesktop_picker {
 			match picker.try_recv() {
@@ -6330,6 +6329,10 @@ impl eframe::App for Desktop {
 	}
 	/// One UI frame: pumps workers, expires challenges, renders and drains commands.
 	fn logic(&mut self, ctx: &egui::Context, _: &mut eframe::Frame) {
+		#[cfg(feature = "demo")]
+		if self.state.demo {
+			self.demo_ports();
+		}
 		let search_focused = {
 			#[cfg(feature = "demo")]
 			{
@@ -7456,38 +7459,13 @@ impl eframe::App for Desktop {
 
 #[cfg(test)]
 mod tests {
+	use super::plugins_page::tesktop_field;
+
 	use super::*;
 
-	/// The page the owner actually sees, built from the live registry the way the app
-	/// builds it: every port, its own defaults, and the settings each one declares.
+	/// The page the owner actually sees, built by the same code the app uses.
 	fn live_page(registry: &tesktop_plugins::Registry) -> Vec<ui::testcord::Entry> {
-		registry
-			.metas()
-			.iter()
-			.map(|meta| {
-				let mut entry = ui::testcord::Entry::new(
-					meta.id,
-					meta.name,
-					meta.description,
-					meta.authors,
-					meta.tags,
-					registry.enabled(meta.id),
-				);
-				entry.summary = registry.summary(meta.id).unwrap_or_default();
-				entry.log = registry.export(meta.id).is_some();
-				entry.log_tail = if entry.log {
-					registry.tail(meta.id, 40)
-				} else {
-					String::new()
-				};
-				entry.fields = registry
-					.settings_of(meta.id)
-					.iter()
-					.map(|setting| tesktop_field(registry, meta.id, setting))
-					.collect();
-				entry
-			})
-			.collect()
+		plugins_page::page(registry)
 	}
 
 	#[test]

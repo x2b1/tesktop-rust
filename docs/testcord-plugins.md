@@ -211,10 +211,50 @@ path, inbound, the message menu, the composer row and its text, a staged file, a
 action, a line under a message, a toast, a tick, and the settings page with its own search and
 order.
 
+## What the ports draw, and how it was checked
+
+A port that only rewrites text cannot be seen; a port that draws something can be checked.
+What the ports draw in a conversation is three things, and all three use the app's own
+palette and widgets rather than a colour or a control of their own:
+
+- a line under a message, in `colors.danger`, drawn the way the app draws `(edited)`;
+- a word and character count beside it, in `colors.muted`;
+- a row of buttons under the composer, drawn with the app's own button.
+
+That is asserted, not assumed: `what_a_port_draws_uses_the_palette_the_rest_of_the_page_uses`
+renders a conversation and reads the colour back out of the painted glyphs, so a port that
+grew a colour of its own would fail. Writing it turned up one behaviour worth recording — the
+timeline rebuilds itself on the first frame of a new channel, so per-message state has to be
+handed over every frame rather than once, which is what the host does.
+
+Two fixtures look at the page rather than assert about it:
+
+- `cargo run -p tesktop2 --example profile_preview --features demo -- --demo
+  --output=shot.png --page=plugins` renders the ports page with every port on it, built by
+  the same `apps/desktop/src/plugins_page.rs` the app uses, so a screenshot of the page is a
+  screenshot of the page. `--page=plugins-open` narrows to one port and opens its settings;
+  `--page=chat-ports` renders a conversation with a port's line under a message and the
+  composer row.
+- `tesktop2-native --demo --demo-plugins` switches the same ports on inside the running app
+  for anyone who would rather click through it than read a PNG.
+
 ## Tests
 
 `cargo test -p tesktop-plugins` covers the registry, the bounds, settings persistence and
-TestCord import, and each port's matching rules. `cargo test -p ui --lib` renders the settings
-page. The host wiring in `apps/desktop/src/main.rs` is covered by `cargo check -p tesktop2`; the
-desktop unit tests do not currently build because of an unrelated upstream fixture error in
-`apps/desktop/src/extension_member_details.rs`.
+TestCord import, and each port's matching rules.
+
+`properties.rs` is the suite that says the ports *work* rather than that they do what they
+are for. Every bundled port is switched on at once and put in front of the bodies that break
+implementations: empty, one character, a space, a mention, a link, a fence, markdown, emoji, a
+combining mark, a carriage return, and a body at the service's own ceiling. Nothing may panic,
+grow a body out of all proportion, or come back with a null or a replacement character in it.
+Each port is then checked alone while it is off, and again after it has been on and turned
+off, because a port that keeps working after you turn it off is the worst kind of bug. A
+setting you type takes effect on the next send rather than the next restart; a refusal
+carries a reason short enough for a status line; a press for a button nobody offers does
+nothing and a press for one that is offered reaches the port that owns it.
+
+`cargo test -p ui --lib` renders the settings page, the composer row and the timeline,
+including the palette assertion above. The host wiring in `apps/desktop/src/main.rs` is
+covered by `cargo test -p tesktop2 --bin tesktop2-native`, with and without the `demo`
+feature.

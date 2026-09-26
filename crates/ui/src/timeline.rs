@@ -5055,6 +5055,117 @@ mod tests {
 		}
 	}
 
+	/// The ports' own additions to a message must be drawn in the app's colours, or they
+	/// would be the only thing on the page that does not follow the theme.
+	#[test]
+	fn what_a_port_draws_uses_the_palette_the_rest_of_the_page_uses() {
+		fn collect(shape: &egui::Shape, texts: &mut Vec<(String, egui::Color32)>) {
+			match shape {
+				// The glyphs are pre-coloured into the mesh, so the first vertex of a run
+				// carries the colour it was painted in.
+				egui::Shape::Text(t) => texts.push((
+					t.galley.job.text.clone(),
+					t.galley
+						.rows
+						.iter()
+						.flat_map(|row| row.visuals.mesh.vertices.iter())
+						.map(|vertex| vertex.color)
+						.next()
+						.unwrap_or(egui::Color32::TRANSPARENT),
+				)),
+				egui::Shape::Vec(shapes) => {
+					for shape in shapes {
+						collect(shape, texts);
+					}
+				}
+				_ => {}
+			}
+		}
+		let mut state = test_support::demo_state();
+		state.read_state.reset();
+		let channel = state
+			.channels
+			.iter()
+			.find(|c| Some(c.id) == state.selected)
+			.unwrap()
+			.clone();
+		let mut message = text_message(43);
+		message.channel = channel.id;
+		// A count is only drawn when there are more than five words, which is the
+		// port's own rule and not something this test should quietly change.
+		message.content = "a line long enough for a count to be worth drawing".into();
+		state.timeline.clear();
+		state
+			.timeline
+			.insert(message.clone(), false, false)
+			.unwrap();
+		state.revision += 1;
+		let ctx = egui::Context::default();
+		let mut view = TimelineView::default();
+		view.display.word_count = true;
+		let mut avatars = crate::avatars::Avatars::default();
+		let count = word_and_characters(&message.content).expect("more than five words");
+		let markers = std::sync::Arc::new(std::collections::BTreeMap::from([(
+			message.id,
+			"This link is a known rickroll.".to_string(),
+		)]));
+		let mut texts = vec![];
+		let mut palette = None;
+		for frame in 0..4 {
+			let output = ctx.run_ui(
+				egui::RawInput {
+					screen_rect: Some(egui::Rect::from_min_size(
+						egui::Pos2::ZERO,
+						egui::vec2(380.0, 650.0),
+					)),
+					..Default::default()
+				},
+				|ui| {
+					palette = Some(crate::design::palette(ui));
+					// The first frame builds the view from scratch, the way the app's does,
+					// so the ports' own state is handed over the way the app hands it over.
+					if frame > 0 {
+						view.message_markers = markers.clone();
+					}
+					view.show(
+						ui,
+						&mut state,
+						&mut None,
+						&mut None,
+						(
+							&mut avatars,
+							&mut crate::profiles::ProfileSession::default(),
+						),
+						None,
+					)
+				},
+			);
+			texts.clear();
+			for shape in &output.shapes {
+				collect(&shape.shape, &mut texts);
+			}
+			output.drop_without_applying_deltas();
+		}
+		let palette = palette.expect("the page draws with the active palette");
+		let colour_of = |text: &str| {
+			texts
+				.iter()
+				.find(|(painted, _)| painted == text)
+				.map(|(_, colour)| *colour)
+				.unwrap_or_else(|| panic!("{text:?} is not drawn on the page"))
+		};
+		assert_eq!(
+			colour_of("This link is a known rickroll."),
+			palette.danger,
+			"a port's line must be drawn in the palette's own danger colour"
+		);
+		assert_eq!(
+			colour_of(&count),
+			palette.muted,
+			"a port's count must be drawn in the same muted colour as (edited)"
+		);
+	}
+
 	#[test]
 	fn extra_content_markers_update_layout_and_keep_supported_text() {
 		fn collect(shape: &egui::Shape, texts: &mut Vec<(String, egui::Rect)>) {

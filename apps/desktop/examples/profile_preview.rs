@@ -1,8 +1,10 @@
 //! Offline native framebuffer capture; no account, filesystem cache, or network adapters.
 use eframe::egui;
+#[allow(dead_code)] // The shared fixture's CLI check is called by the desktop binary.
+#[path = "../src/plugins_page.rs"]
+mod plugins_page;
 #[path = "../src/server_settings_demo.rs"]
 mod server_settings_demo;
-#[allow(dead_code)] // The shared fixture's CLI check is called by the desktop binary.
 #[path = "../src/slash_demo.rs"]
 mod slash_demo;
 use std::{
@@ -449,8 +451,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 			| "forum-gallery"
 			| "forum-settings"
 			| "friends"
+			| "plugins"
+			| "plugins-open"
+			| "chat-ports"
 	) {
-		return Err("Page must be profile, profile-card, member-tags, dm-tags, account, appearance, general, extensions, slash-commands, slash-command-search, slash-command-options, server, server-engagement or server-stickers".into());
+		return Err("Page must be profile, profile-card, member-tags, dm-tags, account, appearance, general, extensions, plugins, plugins-open, chat-ports, slash-commands, slash-command-search, slash-command-options, server, server-engagement or server-stickers".into());
 	}
 	let slash_command = value("--command=").unwrap_or("help").to_owned();
 	if !matches!(slash_command.as_str(), "help" | "weather") {
@@ -568,6 +573,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 				);
 			} else if matches!(page.as_str(), "member-tags" | "dm-tags") {
 				// State is primed above; the normal offline messaging surface renders the list.
+			} else if page == "plugins" {
+				messaging.testcord.entries = plugins_page::page(&tesktop_plugins::Registry::new());
+				messaging.preview_testcord_settings();
+			} else if page == "plugins-open" {
+				messaging.testcord.entries = plugins_page::page(&tesktop_plugins::Registry::new());
+				messaging.preview_testcord_settings();
+				messaging.preview_testcord_plugin("MessageLogger");
+			} else if page == "chat-ports" {
+				// A conversation with a port's line under a message, a count beside it and
+				// buttons in the composer: the whole of what the ports draw in a chat.
+				messaging.preview_testcord_port_buttons();
+				messaging.testcord_display.word_count = true;
+				if let Some(message) = state.timeline.iter().last() {
+					messaging
+						.preview_testcord_marker(message.id, "⚠️ This link is a known rickroll.");
+				}
 			} else if page == "slash-commands" {
 				messaging.preview_slash_commands();
 			} else if page == "slash-command-search" {

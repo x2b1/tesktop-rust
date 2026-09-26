@@ -239,6 +239,14 @@ impl MessagingUi {
 		self.settings.query.clear();
 	}
 
+	/// Open the bundled-ports page, which is what the fixtures and a screenshot want.
+	#[cfg(feature = "demo")]
+	pub fn open_testcord_settings(&mut self) {
+		self.settings.open = true;
+		self.settings.page = Page::TestCord;
+		self.settings.query.clear();
+	}
+
 	pub(super) fn keybinds_shortcut(&mut self, ctx: &egui::Context) {
 		if !self.server_settings.is_open()
 			&& !self.switcher.is_open()

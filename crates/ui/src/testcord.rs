@@ -147,7 +147,7 @@ pub struct TestCord {
 
 	/// The entry the owner picked on a message.
 	pub picked: Option<Picked>,
-	expanded: Option<String>,
+	pub(super) expanded: Option<String>,
 	/// The order the list is shown in, and the order the owner picked.
 	listing: Vec<usize>,
 	buffers: BTreeMap<(String, String), String>,
