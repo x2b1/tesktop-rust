@@ -62,14 +62,14 @@ For the owner-controlled live gate, leave the peer connected in a private DM cal
 DM in Serein, wait for the banner, then explicitly Join. Verify no new ring, actual two-way
 audio, leaving/rejoining while the peer stays, and disappearance after the peer ends the call.
 
-Mute/deafen, saved input/output selection and focused V push-to-talk are implemented. Remappable mute and deafen bindings use global native registration when supported and when a modifier is present; they fall back to focused input on Wayland or when registration is unavailable. Push-to-talk releases when focus is lost and is disabled while text entry has focus. It remains focused-only by default. Devices are initialized only following an explicit call with authenticated empty-room waiting or encrypted readiness, or an explicit local microphone test; no microphone test runs at startup. Acoustic echo cancellation follows the selected input profile; see below for its limits. A microphone that fails to open or start, reports a fatal callback error, or delivers no audio callbacks for five seconds is disabled with a visible warning. The call and speaker playback remain connected, and the client periodically retries microphone setup in the background while selecting another input immediately retries. Transient buffer discontinuities and non-fatal stream glitches do not disable the microphone. Ordinary silence does not trigger the warning. Selected speaker failures can fall back to the default output; an unusable output can still fail the call.
+Mute/deafen, saved input/output selection and focused V push-to-talk are implemented. Remappable mute and deafen bindings use global native registration when supported and when a modifier is present; they fall back to focused input on Wayland or when registration is unavailable. Push-to-talk releases when focus is lost and is disabled while text entry has focus. It remains focused-only by default. Devices are initialized only following an explicit call with authenticated empty-room waiting or encrypted readiness, or an explicit local microphone test; no microphone test runs at startup. The transmitted microphone path has no software echo cancellation, noise suppression, automatic gain or sensitivity gate; only the explicit user gain control applies. A microphone that fails to open or start, reports a fatal callback error, or delivers no audio callbacks for five seconds is disabled with a visible warning. The call and speaker playback remain connected, and the client periodically retries microphone setup in the background while selecting another input immediately retries. Transient buffer discontinuities and non-fatal stream glitches do not disable the microphone. Ordinary silence does not trigger the warning. Selected speaker failures can fall back to the default output; an unusable output can still fail the call.
 
 One-to-one DM calls accept only their expected peer. Group DM and server calls support up to 64 total participants, with independent bounded decoder/jitter state and mixed mono playback. Only DAVE version 1 is accepted; encryption downgrades and group identities outside the authenticated participant roster fail closed. Stage channels and recording are unsupported. Outgoing screen sharing and macOS camera support is described below. Voice WebSocket resumption has a finite retry budget; failed resumption or main Gateway disconnect requires an explicit new call. Voice credentials, ephemeral DAVE identities and audio stay in bounded session memory. The displayed privacy code applies to the current group epoch; identities are not remembered across calls. Comparing codes does not establish long-term identity verification or text-message encryption.
 
 ## Group DM calls
 
 Existing group conversations expose the same Start/Answer/Decline/Join controls, call stage,
-mute/deafen, audio device and gain controls, focused push-to-talk, noise suppression,
+mute/deafen, audio device controls, focused push-to-talk,
 privacy code, camera, screen sharing and stream viewing as one-to-one calls. Opening the
 conversation only requests call presence. Starting a new call rings the group once; joining
 or answering an existing call does not ring again. Group avatars identify incoming calls.
@@ -95,7 +95,7 @@ implementation pass does not establish production readiness or physical media be
 | DM entry, incoming call events and ringing | [discord.py-self Gateway](https://github.com/dolfies/discord.py-self/blob/master/discord/gateway.py), [dispatch](https://github.com/dolfies/discord.py-self/blob/master/discord/state.py), [HTTP](https://github.com/dolfies/discord.py-self/blob/master/discord/http.py): unofficial normal-user behavior | Real local WebSocket op13/op4 join/leave and local HTTP ring/decline tests; no Discord call |
 | Voice WebSocket, UDP discovery, RTP and codec negotiation | [Discord voice documentation](https://docs.discord.com/developers/topics/voice-connections): documented transport, not an approval of normal-user clients | Synthetic loopback voice event loop, authenticated RTP and Opus tests |
 | Required end-to-end encryption | [Discord DAVE protocol](https://daveprotocol.com/): documented; [Davey](https://github.com/Snazzah/davey): unofficial implementation, not an independent security-audit claim | Synthetic two-party MLS/DAVE exchange, tamper/replay rejection and encrypted audio across local sockets |
-| Microphone, playback, resampling and devices | CPAL/native platform APIs | Device-free capture/resampling tests only; physical audio and permission dialogs unverified |
+| Microphone, playback, resampling and devices | CPAL/native platform APIs | Requires direct 96 kHz stereo input; unsupported mic formats fail instead of falling back; QEXT compatibility with Discord unverified; Discord's published encoder guidance specifies 48 kHz stereo |
 
 The [compatibility matrix](discord-compatibility.md) distinguishes this from restricted OAuth/RPC capabilities. No OAuth voice grant or bot connection substitutes for the user's session.
 
@@ -160,7 +160,7 @@ when no call is active; late updates cannot repopulate an inaccessible channel.
 ## Diagnosing a call that never opens audio
 
 Windows call playback uses the selected speaker's default shared-mode mix format,
-with the existing resampler converting 48 kHz call audio when needed. This avoids
+with the existing resampler converting incoming 48 kHz call audio when needed. This avoids
 choosing a converted format solely by enumeration order. Speaker-open errors
 distinguish busy, disconnected, unsupported-format and permission failures when
 the audio backend identifies them. This fast local change still needs a retry on
@@ -213,22 +213,7 @@ Quit an already-running instance first. Join/leave the call yourself; diagnostic
 enable capture, join a call or send media. Quit normally to obtain the existing UI frame
 summary. Remove the environment variables to disable diagnostics on the next launch.
 
-Each voice stage reports `[calls, total_us, max_us]` over `window_ms`:
-`echo_render` processes speaker reference; `echo_capture` includes the selected microphone
-processing; `noise` isolates RNNoise inference within `echo_capture`
-(WebRTC suppression remains inside the combined processor timing);
-`encode` includes Opus and outgoing encryption; `mix` includes remote Opus decoding; `receive` measures accepted packet decryption/queueing.
-`noise_frames` identifies capture frames processed with suppression enabled.
-Audio `wakes` counts worker iterations; Transport `wakes` counts 20 ms timer ticks.
-`resets` counts AEC resets from mute transitions or callback overruns; `drops` counts
-full capture/playback worker queues; `stalls` counts transport gaps of at least 80 ms.
-Stage timings exclude device callbacks, socket waits, device opening and UI rendering.
-These are elapsed times, including scheduler preemption, **not process CPU percentages**.
-`debug=true` identifies a build with debug assertions. Development builds optimize the
-Sonora echo-processing crates, RNNoise (`nnnoiseless` and its FFT chain) and libopus
-while keeping application code unoptimized and debuggable; release builds remain the reference for overall performance. Rebuild and
-restart to apply this change. Compare speaking, muted and noise-suppression-on/off windows to narrow
-the cause; UI frame diagnostics help identify excessive rendering separately.
+Each voice stage reports `[calls, total_us, max_us]` over `window_ms`: `capture_read` covers microphone frame handling; `encode` includes Opus and outgoing encryption; `mix` includes remote Opus decoding; `receive` measures accepted packet decryption/queueing. Audio `wakes` counts worker iterations; Transport `wakes` counts 20 ms timer ticks. `resets` counts capture/playback buffer resets; `drops` counts full worker queues; `stalls` counts transport gaps of at least 80 ms. Stage timings exclude device callbacks, socket waits, device opening and UI rendering. These are elapsed times, including scheduler preemption, not process CPU percentages. Development builds optimize libopus while keeping application code debuggable; release builds remain the reference for overall performance. Rebuild and restart to apply changes. UI frame diagnostics help identify excessive rendering separately.
 
 Logging is off by default. Fixed numeric reports go through an eight-slot queue to a
 separate writer; media workers never wait for stderr. Output stops after 128 reports
@@ -239,25 +224,9 @@ Serein. Shell redirection is owner-managed and may include unrelated framework l
 The device-free check is `cargo run --locked -p discord-voice --example voice_diagnostics`.
 Instrumentation alone does not establish the cause of a reported CPU spike or a speedup.
 
-## Acoustic echo cancellation
+## Direct microphone capture
 
-When enabled by the input profile, Sonora 0.2.0 (a Rust port of WebRTC AEC3) runs on
-the audio worker, before denoising, microphone gain and Opus encoding. It uses mixed
-speaker output after software volume and resampling, including silence on
-underrun/deafen, as the echo reference. Devices and encryption changes recreate
-the processor; mute transitions and dropped callback frames reset its history.
-Echo cancellation can be changed independently in Custom and is bypassed in Studio.
-No SDK account, model downloads or additional device access are needed.
-Optional digital automatic gain control follows denoising, with a maximum 20 dB gain;
-it never changes system microphone gain. Krisp SDK embedding requires a
-[commercial license](https://sdk-docs.krisp.ai/docs/licensing-information).
-
-The device-free debug command is `cargo run --locked -p discord-voice --example echo`.
-It checks synthetic delayed/reflected echo reduction and preservation of a local
-signal. It does not establish real-room quality or Discord interoperability.
-AEC needs time to adapt after resets. Bluetooth latency, separate device clocks,
-very loud/clipped speakers, simultaneous speech and non-48 kHz hardware need
-owner-operated listening checks. The existing linear resampling fallback remains.
+Microphone capture requires a device format that natively exposes exactly 96 kHz and two channels. CPAL callback samples are converted to `f32`, packed as left/right 20 ms frames and passed directly to the Opus 1.6 QEXT encoder. Unsupported microphone formats fail clearly; the transmitted path never silently switches to 48 kHz. The app performs no channel folding, suppression, echo cancellation, automatic gain or sensitivity gating; explicit user microphone gain remains available. The encoder bitrate target is derived from a 1,400-byte UDP media budget after reserving RTP, DAVE and transport-encryption overhead (540.8 kb/s at 20 ms); libopus also caps each encoded payload at 1,352 bytes. QEXT frames are bounded to the Opus 1.6 maximum and flow through a bounded per-speaker jitter queue. Input precision and device/driver/OS processing remain outside the app. Opus remains lossy; QEXT's additional high-frequency layer requires a QEXT-capable receiver. Opus 1.6 accepts 96 kHz only with QEXT enabled, not 192 kHz. Discord's published encoder guidance specifies 48 kHz stereo, so end-to-end 96 kHz QEXT support remains unverified.
 
 ## macOS microphone permission
 
@@ -282,45 +251,12 @@ the newest frame each network tick. One 20 ms lookahead frame smooths normal
 callback/worker scheduling variation. Mute, deafen, encryption pauses and a
 transport stall of at least 80 ms discard queued capture rather than replaying
 stale speech. The existing eight-frame capture channel plus lookahead retains
-at most nine frames (34,560 PCM bytes). This adds 20 ms of intentional buffering.
-The offline echo example also checks alternating two-frame/no-frame arrivals
-and mute/stall flushing; physical cutout resolution still needs a listening check.
-
-Speaking indicators use post-processing outgoing microphone audio and each remote
-participant's decoded playout audio. Local activity follows the configured sensitivity,
-or −70 dBFS for an open microphone; remote activity retains its display-only −45 dBFS
-threshold. Both hold for 200 ms. These detect sound, not speech. Activity snapshots
+at most nine frames (up to 138,240 PCM bytes at 96 kHz). This adds 20 ms of intentional buffering.
+Speaking indicators use microphone frame energy and decoded playout energy. They detect
+sound, not speech. Activity snapshots
 contain at most 64 IDs (512 bytes), update at most ten times per second, and replace
 the previous value rather than queueing UI events. Mute, deafen, permission and call
 lifecycle gates hide ineligible activity, including while alone.
-
-## Input profiles and noise suppression
-
-Voice & Video settings offers three saved profiles:
-
-- **Voice Isolation:** RNNoise suppression, AEC3 echo cancellation, digital automatic gain
-  control (maximum 20 dB), and −55 dBFS input sensitivity.
-- **Studio:** bypasses processing and sensitivity gating. Manual gain, mute, deafen,
-  push-to-talk and permission/security gates still apply.
-- **Custom:** Off, RNNoise, or WebRTC (four suppression strengths);
-  independent echo cancellation and automatic gain controls; and optional manual
-  sensitivity from −80 to 0 dBFS. The gate uses 3 dB hysteresis, a 200 ms release
-  hold and a 5 ms ramp. This controls transmitted audio, not just the speaking glow.
-
-Switching profiles retains Custom settings; editing a preset starts from its visible
-values. Saved preferences without a profile migrate to Custom with their prior
-RNNoise/Off choice, echo cancellation enabled, and gain control/sensitivity gating off.
-
-The worker processes AEC/WebRTC suppression, then optional RNNoise,
-then digital automatic gain, manual gain, the local meter, and sensitivity gating.
-Calls and microphone preview share this path; playback audio is not denoised.
-No DSP runs in rendering or native audio callbacks. Settings replace one fixed-size
-worker snapshot and do not add a queue. Native PCM queues remain eight frames each.
-
-RNNoise uses bundled nnnoiseless 0.5.2. These processors keep bounded session state,
-with no audio recordings or remote processing. Quality, CPU cost, physical latency and
-cross-platform behavior require owner-operated checks; this local implementation does
-not establish production readiness or superiority over Discord's processing.
 
 ## Screen sharing
 
@@ -379,7 +315,7 @@ whole-output fallback. Neither adapter records to disk.
 Native contracts: [PulseAudio per-stream monitoring](https://www.freedesktop.org/wiki/Software/PulseAudio/Documentation/Developer/Clients/WritingVolumeControlUIs/)
 and [Microsoft process-loopback capture](https://learn.microsoft.com/en-us/samples/microsoft/windows-classic-samples/applicationloopbackaudio-sample/).
 
-Both feed the existing stream RTC connection with 48 kHz stereo Opus at 128 kbps and
+Both feed the existing stream RTC connection with 48 kHz stereo Opus at a media-budget target and
 DAVE/transport encryption, independently of microphone mute. Capture output is gated
 by secure readiness. The transport keeps at most 100 ms pending, sends one 20 ms frame
 per tick, and clears queued/pending PCM on encryption transitions or a 100 ms stall.
@@ -683,11 +619,11 @@ Keep these local logs out of commits.
 Voice & Video settings has an explicit Start testing / Stop testing control, a live RMS
 input meter and local playback through the selected speaker. Use headphones to avoid feedback.
 The preview shares native device selection, microphone gain, speaker volume and the
-selected processing profile with calls. It opens no Discord transport and records nothing. Opening settings
+raw capture path with calls. It opens no Discord transport and records nothing. Opening settings
 alone never opens streams. Leaving the voice settings page, joining a call, logout and exit
 stop the preview. Testing is disabled during calls and in offline demo mode.
 The existing eight-frame rings bound loopback PCM; meter state is one atomic value and is not
-persisted. The meter is measured before the sensitivity gate; playback follows the gate.
+persisted. The meter shows the captured signal after the explicit manual microphone gain control.
 `cargo run --locked -p serein --features demo -- --demo --demo-check-mic-preview`
 checks settings rendering and capture guards without opening devices. Physical loopback and
 microphone permission prompts remain owner-verified behavior.

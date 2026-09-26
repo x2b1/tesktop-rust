@@ -1,0 +1,28 @@
+[package]
+name = "opus2"
+version = "0.4.0"
+authors = ["nemurubaka <cijiugechu@gmail.com>", "Tad Hardesty <tad@platymuus.com>"]
+
+description = "Safe Rust bindings for libopus"
+readme = "README.md"
+license = "MIT/Apache-2.0"
+keywords = ["opus", "codec", "voice", "sound", "audio"]
+categories = ["api-bindings", "encoding", "compression",
+	"multimedia::audio", "multimedia::encoding"]
+
+repository = "https://github.com/cijiugechu/opus2"
+documentation = "https://docs.rs/opus2"
+
+edition = "2024"
+
+[dependencies]
+libopus_sys = { version = "0.3.2", optional = true }
+mousiki = { version = "0.2.1", optional = true }
+
+[features]
+default = ["backend-libopus", "static"]
+backend-libopus = ["dep:libopus_sys"]
+backend-mousiki = ["dep:mousiki"]
+static = ["libopus_sys/static"]
+dynamic = ["libopus_sys/dynamic"]
+bundled = ["libopus_sys/bundled"]

@@ -533,17 +533,12 @@ impl Voice {
 				) || call.server_muted
 				|| deafened || (ui.voice_push_to_talk && !ui.voice_ptt_active);
 			live.audio.set_controls(muted, deafened);
-			live.audio.set_processing(ui.voice_processing.effective());
 			live.audio.set_input_enabled(state.can_speak(call.channel));
 			live.audio
 				.set_gain(ui.voice_gain.input_percent, ui.voice_gain.output_percent);
 			let user_volumes = ui.voice_user_volumes();
 			let stream_volume = ui.voice_stream_volume();
-			let activity_threshold_db = ui
-				.voice_processing
-				.effective()
-				.sensitivity_db
-				.unwrap_or(-70);
+			let activity_threshold_db = -70;
 			live.controls.send_if_modified(|control| {
 				if control.muted == muted
 					&& control.deafened == deafened
@@ -846,9 +841,6 @@ impl Voice {
 		preview
 			.audio
 			.set_gain(ui.voice_gain.input_percent, ui.voice_gain.output_percent);
-		preview
-			.audio
-			.set_processing(ui.voice_processing.effective());
 		preview.audio.set_ready(true);
 		let error = preview.failure.get().copied().or_else(|| {
 			if preview.audio.is_stopped() {
@@ -1148,11 +1140,7 @@ impl Voice {
 			},
 		)?;
 		let (controls, control_receive) = watch::channel(Controls {
-			activity_threshold_db: ui
-				.voice_processing
-				.effective()
-				.sensitivity_db
-				.unwrap_or(-70),
+			activity_threshold_db: -70,
 			muted: listen_only || ui.voice_push_to_talk,
 			camera: 0,
 			deafened: false,
@@ -1173,7 +1161,6 @@ impl Voice {
 		});
 		audio.set_controls(listen_only || ui.voice_push_to_talk, false);
 		audio.set_input_enabled(input_enabled);
-		audio.set_processing(ui.voice_processing.effective());
 		audio.set_gain(ui.voice_gain.input_percent, ui.voice_gain.output_percent);
 		let session = pending.session.ok_or("Missing voice session")?;
 		let session_copy = Zeroizing::new(session.expose().to_owned());

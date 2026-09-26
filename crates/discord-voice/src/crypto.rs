@@ -13,6 +13,9 @@ use zeroize::Zeroize;
 
 pub(crate) const MODE: &str = "aead_xchacha20_poly1305_rtpsize";
 pub(crate) const MAX_PACKET: usize = 4096;
+/// Opus 1.6 QEXT's maximum encoded frame size. DAVE and transport overhead
+/// remain inside the 4 KiB authenticated RTP receive bound.
+pub(crate) const MAX_OPUS_FRAME: usize = 3825;
 pub(crate) const MAX_SIGNAL: usize = 64 * 1024;
 pub(crate) use client_core::voice::MAX_PARTICIPANTS;
 

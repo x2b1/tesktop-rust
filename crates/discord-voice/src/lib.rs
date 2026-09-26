@@ -24,6 +24,39 @@ pub use video_receive::{RemoteFrame, VideoSink};
 pub mod camera_video;
 
 pub type Frame = [f32; 960];
+pub type StereoFrame = [f32; 1920];
+
+/// Direct microphone samples, retained as left/right through Opus.
+#[derive(Clone, Copy)]
+pub enum CaptureFrame {
+	Stereo(StereoFrame),
+	/// 20 ms of native 96 kHz stereo input for Opus 1.6 QEXT.
+	Stereo96([f32; 3840]),
+}
+
+impl CaptureFrame {
+	pub fn energy(&self) -> f32 {
+		match self {
+			Self::Stereo(frame) => frame.iter(),
+			Self::Stereo96(frame) => frame.iter(),
+		}
+		.filter(|s| s.is_finite())
+		.map(|s| s * s)
+		.sum()
+	}
+
+	pub fn mono_preview(&self) -> Frame {
+		match self {
+			Self::Stereo(frame) => {
+				std::array::from_fn(|index| (frame[index * 2] + frame[index * 2 + 1]) * 0.5)
+			}
+			Self::Stereo96(frame) => std::array::from_fn(|index| {
+				let sample = index * 4;
+				(frame[sample] + frame[sample + 1] + frame[sample + 2] + frame[sample + 3]) * 0.25
+			}),
+		}
+	}
+}
 #[derive(Clone, Copy)]
 pub struct Controls {
 	pub muted: bool,
