@@ -138,16 +138,24 @@ impl MessageLogger {
 			|| self.ignore_users.contains(&author.id)
 	}
 
+	/// One record: a header line naming what happened and to which message, then the text
+	/// as it was. The trailing newline is what keeps two records from running into one
+	/// another, and a message that ends in a newline of its own does not get two.
 	fn text(&self, entry: &Entry) -> String {
 		let label = match entry.kind {
 			Kind::Created => "message",
 			Kind::Edited => "edit",
 			Kind::Deleted => "deleted",
 		};
-		format!(
+		let text = format!(
 			"[{}] {} in {}: {}\n{}",
 			label, entry.author, entry.channel, entry.id, entry.content
-		)
+		);
+		if text.ends_with('\n') {
+			text
+		} else {
+			format!("{text}\n")
+		}
 	}
 }
 
@@ -542,5 +550,46 @@ mod delivery_tests {
 		assert_eq!(tail.lines().count(), 2);
 		assert!(tail.contains("line 4"), "{tail}");
 		assert!(!tail.contains("line 1"), "{tail}");
+	}
+
+	/// Two records must not run into one another: every header starts a line of its own,
+	/// or the text of one message ends up with the next one's header glued to it.
+	#[test]
+	fn one_record_never_runs_into_the_next() {
+		let mut registry = Registry::new();
+		registry.set_enabled("MessageLogger", true);
+		for id in 1..5 {
+			let message = mine(id, &format!("line {id}"));
+			registry.delivered(&Delivery::Sent {
+				channel: model::Id(7),
+				message: &message,
+				me: model::Id(1),
+			});
+		}
+		let export = registry.export("MessageLogger").unwrap();
+		for line in export.lines() {
+			for header in ["[message]", "[edit]", "[deleted]"] {
+				assert!(
+					line.starts_with(header) || !line.contains(header),
+					"a header glued to the end of a record: {line:?}"
+				);
+			}
+		}
+		// A message that ends in a newline of its own must not leave a blank line behind.
+		let mut registry = Registry::new();
+		registry.set_enabled("MessageLogger", true);
+		for id in 5..7 {
+			let message = mine(id, "two lines\nand a blank one\n");
+			registry.delivered(&Delivery::Sent {
+				channel: model::Id(7),
+				message: &message,
+				me: model::Id(1),
+			});
+		}
+		let export = registry.export("MessageLogger").unwrap();
+		assert!(
+			!export.contains("\n\n"),
+			"a record's own trailing newline must not be doubled: {export:?}"
+		);
 	}
 }

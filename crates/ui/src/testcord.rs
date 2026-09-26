@@ -389,7 +389,7 @@ impl TestCord {
 				.size(11.5)
 				.color(colors.muted),
 			);
-			if !entry.fields.is_empty() || entry.log {
+			if !entry.fields.is_empty() {
 				design::card_divider(ui);
 				let response = design::disclosure(ui, "Settings", open);
 				if response.clicked() {
@@ -399,7 +399,41 @@ impl TestCord {
 					self.settings(ui, &entry);
 				}
 			}
+			self.record(ui, &entry);
 		});
+	}
+
+	/// What the port kept, on the card rather than behind the settings: a port whose whole
+	/// job is to keep something should not need two clicks to show that it did.
+	fn record(&mut self, ui: &mut egui::Ui, entry: &Entry) {
+		if entry.log_tail.is_empty() {
+			return;
+		}
+		design::card_divider(ui);
+		ui.label(
+			egui::RichText::new("Record")
+				.size(11.5)
+				.color(design::palette(ui).muted),
+		);
+		egui::Frame::new()
+			.fill(design::palette(ui).base)
+			.corner_radius(6)
+			.inner_margin(egui::Margin::symmetric(8, 6))
+			.show(ui, |ui| {
+				egui::ScrollArea::vertical()
+					.id_salt(("testcord-log", entry.id.as_str()))
+					.max_height(160.0)
+					.show(ui, |ui| {
+						for line in entry.log_tail.lines() {
+							ui.label(egui::RichText::new(line).small().monospace());
+						}
+					});
+			});
+		if design::button(ui, "Copy log", design::ButtonKind::Outline).clicked() {
+			self.request(Request::CopyLog {
+				id: entry.id.clone(),
+			});
+		}
 	}
 
 	fn settings(&mut self, ui: &mut egui::Ui, entry: &Entry) {
@@ -486,28 +520,6 @@ impl TestCord {
 				_ => {}
 			}
 			ui.add_space(6.0);
-		}
-		if !entry.log_tail.is_empty() {
-			ui.add_space(4.0);
-			egui::Frame::new()
-				.fill(crate::design::palette(ui).base)
-				.corner_radius(6)
-				.inner_margin(egui::Margin::symmetric(8, 6))
-				.show(ui, |ui| {
-					egui::ScrollArea::vertical()
-						.id_salt(("testcord-log", entry.id.as_str()))
-						.max_height(160.0)
-						.show(ui, |ui| {
-							for line in entry.log_tail.lines() {
-								ui.label(egui::RichText::new(line).small().monospace());
-							}
-						});
-				});
-		}
-		if entry.log && design::button(ui, "Copy log", design::ButtonKind::Outline).clicked() {
-			self.request(Request::CopyLog {
-				id: entry.id.clone(),
-			});
 		}
 	}
 }

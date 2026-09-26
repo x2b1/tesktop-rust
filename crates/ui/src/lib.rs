@@ -733,6 +733,15 @@ impl MessagingUi {
 		self.testcord.search = id.to_string();
 	}
 
+	/// Fixture-only: one port's page with its settings closed, so what the port itself
+	/// shows is the thing in view rather than a list of switches above it.
+	#[cfg(feature = "demo")]
+	pub fn preview_testcord_record(&mut self, id: &str) {
+		self.open_testcord_settings();
+		self.testcord.search = id.to_string();
+		self.testcord.listing_dirty = true;
+	}
+
 	/// Fixture-only: the line a port would draw under one message, as the app fills it in.
 	#[cfg(feature = "demo")]
 	pub fn preview_testcord_marker(&mut self, id: model::Id, line: &str) {

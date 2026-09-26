@@ -423,7 +423,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let args: Vec<_> = std::env::args().skip(1).collect();
 	let value = |prefix: &str| args.iter().find_map(|arg| arg.strip_prefix(prefix));
 	if !args.iter().any(|arg| arg == "--demo") {
-		return Err("Usage: profile_preview --demo --output=PATH.png [--page=stickers|slash-commands|slash-command-search|slash-command-options|profile|profile-card|member-tags|dm-tags|account|appearance|general|extensions|server|server-engagement|server-stickers] [--command=help|weather] [--themes] [--extension=ID] [--thumbnail] [--width=1120] [--height=760] [--light]".into());
+		return Err("Usage: profile_preview --demo --output=PATH.png [--page=stickers|plugins-record|slash-commands|slash-command-search|slash-command-options|profile|profile-card|member-tags|dm-tags|account|appearance|general|extensions|server|server-engagement|server-stickers] [--command=help|weather] [--themes] [--extension=ID] [--thumbnail] [--width=1120] [--height=760] [--light]".into());
 	}
 	let output = PathBuf::from(value("--output=").ok_or("Missing --output=PATH.png")?);
 	let page = value("--page=").unwrap_or("profile").to_owned();
@@ -453,9 +453,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 			| "friends"
 			| "plugins"
 			| "plugins-open"
+			| "plugins-record"
 			| "chat-ports"
 	) {
-		return Err("Page must be profile, profile-card, member-tags, dm-tags, account, appearance, general, extensions, plugins, plugins-open, chat-ports, slash-commands, slash-command-search, slash-command-options, server, server-engagement or server-stickers".into());
+		return Err("Page must be profile, profile-card, member-tags, dm-tags, account, appearance, general, extensions, plugins, plugins-open, plugins-record, chat-ports, slash-commands, slash-command-search, slash-command-options, server, server-engagement or server-stickers".into());
 	}
 	let slash_command = value("--command=").unwrap_or("help").to_owned();
 	if !matches!(slash_command.as_str(), "help" | "weather") {
@@ -580,6 +581,46 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 				messaging.testcord.entries = plugins_page::page(&tesktop_plugins::Registry::new());
 				messaging.preview_testcord_settings();
 				messaging.preview_testcord_plugin("MessageLogger");
+			} else if page == "plugins-record" {
+				// The record itself: a port that keeps something, switched on, fed messages,
+				// and the page showing what it kept.
+				let mut registry = tesktop_plugins::Registry::new();
+				registry.set_enabled("MessageLogger", true);
+				for (index, content) in [
+					"first thing said in here",
+					"a second one, edited afterwards",
+					"and a third",
+				]
+				.into_iter()
+				.enumerate()
+				{
+					let mut message = test_support::message(30_000 + index as u64, model::Id(7));
+					message.content = content.to_string();
+					message.attachments = vec![model::Attachment {
+						id: model::Id(40_000 + index as u64),
+						filename: format!("note-{index}.txt"),
+						description: None,
+						content_type: Some("text/plain".to_string()),
+						size: 128,
+						media: model::EmbedMedia::default(),
+						spoiler: false,
+						duration_ms: None,
+						waveform: Vec::new(),
+					}];
+					let inbound = tesktop_plugins::Inbound::new(
+						model::Id(7),
+						Some(model::Id(10)),
+						model::Id(1),
+						1_700_000_000 + index as u64,
+					);
+					let _ = registry
+						.observe(&inbound, tesktop_plugins::InboundEvent::Created(&message));
+				}
+				messaging.testcord.entries = plugins_page::page(&registry);
+				messaging.preview_testcord_settings();
+				// Collapsed, so the record itself is what the page is showing rather than
+				// three switches above it.
+				messaging.preview_testcord_record("MessageLogger");
 			} else if page == "chat-ports" {
 				// A conversation with a port's line under a message, a count beside it and
 				// buttons in the composer: the whole of what the ports draw in a chat.

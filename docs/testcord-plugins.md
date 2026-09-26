@@ -219,7 +219,10 @@ palette and widgets rather than a colour or a control of their own:
 
 - a line under a message, in `colors.danger`, drawn the way the app draws `(edited)`;
 - a word and character count beside it, in `colors.muted`;
-- a row of buttons under the composer, drawn with the app's own button.
+- a row of buttons under the composer, drawn with the app's own button;
+- an entry in the message menu, under a `TestCord` submenu, drawn with the app's own menu;
+- a record on the port's own card, where a port that keeps something shows it without a
+  click rather than behind its settings.
 
 That is asserted, not assumed: `what_a_port_draws_uses_the_palette_the_rest_of_the_page_uses`
 renders a conversation and reads the colour back out of the painted glyphs, so a port that
