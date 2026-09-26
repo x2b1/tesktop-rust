@@ -188,25 +188,28 @@ not faked until the app can honour it:
 
 ## What is left, and why
 
-The 265 plugins still marked portable in the inventory are not one thing, and it is worth
-being exact about which is which:
+The 259 plugins still marked portable fall into four buckets, counted from the sources rather
+than estimated:
 
-- **Roughly 60 restyle a web client.** They inject a stylesheet, patch a class name or set a
-  `style` rule. An egui window has no stylesheet to restyle and no class names to patch, so a
-  faithful port would be a different product rather than a different implementation. They need
-  a design against the native theme tokens, which is the owner's call.
-- **Roughly 85 are a surface rather than a behaviour**: a modal, a context-menu entry, a
-  member-list badge, a status indicator. The state and the action are usually portable; where
+- **60 restyle a web client.** They inject a stylesheet, patch a class name or set a `style`
+  rule. An egui window has no stylesheet and no class names, so these need a design against the
+  native theme tokens rather than a translation. That is the owner's call, not a port.
+- **28 patch Discord's own JavaScript** over a client this one never loads.
+- **86 are a surface rather than a behaviour**: a modal, a context-menu entry, a member-list
+  badge, a status indicator, a device thing. The state and the action are often portable; where
   they are drawn is a design decision. The composer row, the message menu, the per-message line
-  and the settings page now exist, which is what a good part of this tier needs.
-- **The rest split into three honest groups.** About thirty are DOM patches over a client this
-  one never loads. About twenty are integrations with other applications (AdGuard, OBS, a music
-  player, a downloader, an installer) that are not plugins in this client at all. And a handful
-  ask for something the product boundaries rule out: posting to a webhook, scanning people,
-  auto-redeeming, rewriting your own identity.
+  and the settings page exist now, which is what a good part of this bucket needs.
+- **85 are behaviour with no surface here yet**, and they are the honest remainder. They split
+  roughly into integrations with other applications (AdGuard, OBS, a music player, a
+  downloader, a microphone loopback), sound, navigation and scrolling this client has no
+  command for, and a handful asking for something the product boundaries rule out (posting to a
+  webhook, scanning people, auto-redeeming, rewriting your own identity, reporting you to
+  moderators).
 
-None of those are waiting on a seam. They are waiting on a decision about what this client is,
-which is not mine to make quietly.
+None of the four buckets is waiting on a seam. Every seam the queue needed is built: the send
+path, inbound, the message menu, the composer row and its text, a staged file, a service
+action, a line under a message, a toast, a tick, and the settings page with its own search and
+order.
 
 ## Tests
 
