@@ -1,4 +1,5 @@
-//! Fixed 40ms startup with a bounded reorder window for 2.5?120ms Opus packets.
+//! Fixed 40ms startup with a bounded reorder window for standard Opus and QEXT packets.
+use crate::crypto::MAX_OPUS_FRAME;
 const SLOTS: usize = 8;
 #[derive(Default)]
 pub(crate) struct Jitter {
@@ -12,7 +13,7 @@ impl Jitter {
 		*self = Self::default();
 	}
 	pub fn push(&mut self, sequence: u16, opus: Vec<u8>) {
-		if opus.len() > 1275 {
+		if opus.len() > MAX_OPUS_FRAME {
 			return;
 		}
 		if self.next.is_none() {
@@ -81,7 +82,7 @@ mod tests {
 			jitter.push(sequence, vec![1; 1275]);
 			assert!(jitter.packets.len() <= SLOTS);
 		}
-		jitter.push(1000, vec![0; 1276]);
+		jitter.push(1000, vec![0; MAX_OPUS_FRAME + 1]);
 		assert!(jitter.packets.len() <= SLOTS);
 	}
 }

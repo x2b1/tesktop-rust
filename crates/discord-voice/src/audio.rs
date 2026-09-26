@@ -1,9 +1,7 @@
 //! Device I/O starts only for an explicit call or a user-started local microphone preview.
 //! CPAL callbacks use preallocated lock-free rings; codecs and channels stay off them.
-use crate::Frame;
 use crate::diagnostics::{Metrics, Scope, Stage};
-mod echo;
-use model::voice_settings::{NoiseSuppression, Processing, VoiceProcessing};
+use crate::{CaptureFrame, Frame};
 #[cfg(target_os = "macos")]
 mod permission_macos;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
@@ -65,9 +63,8 @@ pub struct Gate {
 	input_enabled: AtomicBool,
 	input_gain: AtomicU16,
 	output_gain: AtomicU16,
-	echo_reset: AtomicBool,
+	capture_reset: AtomicBool,
 	preview_level: AtomicU16,
-	processing_ready: AtomicBool,
 }
 impl Default for Gate {
 	fn default() -> Self {
@@ -85,9 +82,8 @@ impl Default for Gate {
 			input_enabled: AtomicBool::new(true),
 			input_gain: AtomicU16::new(100),
 			output_gain: AtomicU16::new(100),
-			echo_reset: AtomicBool::new(false),
+			capture_reset: AtomicBool::new(false),
 			preview_level: AtomicU16::new(0),
-			processing_ready: AtomicBool::new(true),
 		}
 	}
 }
@@ -124,7 +120,6 @@ impl Gate {
 	}
 	fn capture(&self) -> bool {
 		self.is_ready()
-			&& self.processing_ready.load(Ordering::Acquire)
 			&& self.input_enabled.load(Ordering::Acquire)
 			&& self.input_failed_revision.load(Ordering::Acquire)
 				!= self.revision.load(Ordering::Acquire)
@@ -140,14 +135,13 @@ impl Gate {
 pub struct Audio {
 	pub gate: Arc<Gate>,
 	settings: tokio::sync::watch::Sender<Devices>,
-	processing: tokio::sync::watch::Sender<Processing>,
 	thread: std::thread::Thread,
 	done: Option<mpsc::Receiver<()>>,
 }
 impl Audio {
 	pub fn start(
 		settings: Devices,
-		capture: mpsc::SyncSender<Frame>,
+		capture: mpsc::SyncSender<CaptureFrame>,
 		playback: mpsc::Receiver<Frame>,
 		emit: impl Fn(Result<(), &'static str>) + Send + 'static,
 	) -> Result<Self, &'static str> {
@@ -170,7 +164,7 @@ impl Audio {
 	}
 	fn start_inner(
 		settings: Devices,
-		capture: mpsc::SyncSender<Frame>,
+		capture: mpsc::SyncSender<CaptureFrame>,
 		playback: mpsc::Receiver<Frame>,
 		emit: impl Fn(Result<(), &'static str>) + Send + 'static,
 		preview: bool,
@@ -178,15 +172,12 @@ impl Audio {
 		let gate = Arc::new(Gate::default());
 		let worker_gate = gate.clone();
 		let (settings, mut selected) = tokio::sync::watch::channel(settings);
-		let (processing, mut selected_processing) =
-			tokio::sync::watch::channel(VoiceProcessing::from_legacy(false).effective());
 		let (finished, done) = mpsc::sync_channel(1);
 		let thread = std::thread::Builder::new()
 			.name("voice-audio".into())
 			.spawn(move || {
 				let mut metrics = Metrics::new(Scope::Audio);
 				let mut streams: Option<(u64, Streams)> = None;
-				let mut echo = echo::Echo::new();
 				let mut opened_at: Option<Instant> = None;
 				let mut last_selection: Option<Devices> = None;
 				let mut opened_once = false;
@@ -195,7 +186,7 @@ impl Audio {
 				let mut recovery_attempts = 0u8;
 				let mut next_default_check = Instant::now();
 				let mut next_input_retry = Instant::now() + Duration::from_secs(2);
-				'audio: while !worker_gate.stopped.load(Ordering::Acquire) {
+				while !worker_gate.stopped.load(Ordering::Acquire) {
 					let revision = worker_gate.revision.load(Ordering::Acquire);
 					let current = selected.borrow_and_update().clone();
 					if last_selection.as_ref() != Some(&current) {
@@ -262,7 +253,7 @@ impl Audio {
 									continue;
 								}
 								streams = Some((revision, value));
-								worker_gate.echo_reset.store(true, Ordering::Release);
+								worker_gate.capture_reset.store(true, Ordering::Release);
 								opened_at = Some(Instant::now());
 								opened_once = true;
 								emit(Ok(()));
@@ -304,7 +295,7 @@ impl Audio {
 						active._input = None;
 						active.input_id = None;
 						next_input_retry = Instant::now() + Duration::from_secs(2);
-						worker_gate.echo_reset.store(true, Ordering::Release);
+						worker_gate.capture_reset.store(true, Ordering::Release);
 						emit(Ok(())); // Wake the UI for the recoverable microphone warning.
 					}
 					if active._input.is_none()
@@ -318,50 +309,11 @@ impl Audio {
 							emit(Ok(()));
 						}
 					}
-					let reset = worker_gate.echo_reset.swap(false, Ordering::AcqRel);
+					let reset = worker_gate.capture_reset.swap(false, Ordering::AcqRel);
 					let mut drops = 0;
-					let mut noise_frames = 0;
 					if reset {
-						echo.reset();
-						active.input_gate = crate::activity::InputGate::default();
 						for _ in 0..8 {
 							let _ = active.input.pop();
-							let _ = active.reference.pop();
-						}
-					}
-					let processing = *selected_processing.borrow_and_update();
-					if active.processing != processing {
-						active.input_gate = crate::activity::InputGate::default();
-						active.processing = processing;
-					}
-					if let Err(error) = echo.configure(processing) {
-						emit(Err(error));
-						break 'audio;
-					}
-					// Publish readiness under the same watch lock as configuration changes.
-					let latest_processing = selected_processing.borrow();
-					let prepared = *latest_processing == processing;
-					if !worker_gate
-						.processing_ready
-						.swap(prepared, Ordering::AcqRel)
-						&& prepared
-					{
-						emit(Ok(()));
-					}
-					drop(latest_processing);
-					let noise = processing.suppression != NoiseSuppression::Off;
-					for _ in 0..8 {
-						let Ok(frame) = active.reference.pop() else {
-							break;
-						};
-						if worker_gate.capture() {
-							let start = metrics.start();
-							let result = echo.render(&frame);
-							metrics.finish(Stage::EchoRender, start);
-							if let Err(error) = result {
-								emit(Err(error));
-								break 'audio;
-							}
 						}
 					}
 					for _ in 0..8 {
@@ -370,34 +322,32 @@ impl Audio {
 						};
 						if worker_gate.capture() {
 							let start = metrics.start();
-							let result = echo.capture(&mut frame, start.is_some());
-							metrics.finish(Stage::EchoCapture, start);
-							noise_frames += u64::from(noise);
-							match result {
-								Ok(noise_time) => metrics.add(Stage::Noise, noise_time),
-								Err(error) => {
-									emit(Err(error));
-									break 'audio;
-								}
-							}
 							let gain =
 								f32::from(worker_gate.input_gain.load(Ordering::Relaxed)) / 100.0;
-							for sample in &mut frame {
-								*sample = amplify(*sample, gain);
+							match &mut frame {
+								CaptureFrame::Stereo(samples) => {
+									for sample in samples.iter_mut() {
+										*sample = amplify(*sample, gain);
+									}
+								}
+								CaptureFrame::Stereo96(samples) => {
+									for sample in samples.iter_mut() {
+										*sample = amplify(*sample, gain);
+									}
+								}
 							}
+							let preview_frame = frame.mono_preview();
+							metrics.finish(Stage::CaptureRead, start);
 							if worker_gate.capture()
-								&& !worker_gate.echo_reset.load(Ordering::Acquire)
+								&& !worker_gate.capture_reset.load(Ordering::Acquire)
 							{
 								worker_gate.preview_level.store(
-									(crate::activity::level_db(&frame) + 100.0) as u16,
+									(crate::activity::level_db(&preview_frame) + 100.0) as u16,
 									Ordering::Relaxed,
 								);
-								let audible = active
-									.input_gate
-									.apply(&mut frame, processing.sensitivity_db);
 								if preview {
-									drops += u64::from(active.output.push(frame).is_err());
-								} else if audible {
+									drops += u64::from(active.output.push(preview_frame).is_err());
+								} else {
 									drops += u64::from(capture.try_send(frame).is_err());
 								}
 							}
@@ -411,7 +361,7 @@ impl Audio {
 							drops += u64::from(active.output.push(frame).is_err());
 						}
 					}
-					metrics.poll(reset, drops, false, noise_frames);
+					metrics.poll(reset, drops, false, 0);
 					std::thread::park_timeout(Duration::from_millis(5));
 				}
 				worker_gate.stopped.store(true, Ordering::Release);
@@ -422,7 +372,6 @@ impl Audio {
 		Ok(Self {
 			gate,
 			settings,
-			processing,
 			thread: thread.thread().clone(),
 			done: Some(done),
 		})
@@ -449,7 +398,7 @@ impl Audio {
 		let established = self.gate.is_ready();
 		if self.gate.ready.swap(ready, Ordering::AcqRel) && !ready {
 			self.gate.media_generation.fetch_add(1, Ordering::AcqRel);
-			self.gate.echo_reset.store(true, Ordering::Release);
+			self.gate.capture_reset.store(true, Ordering::Release);
 			if !established {
 				// An in-flight open must not acknowledge a later security epoch.
 				self.gate.revision.fetch_add(1, Ordering::AcqRel);
@@ -466,7 +415,7 @@ impl Audio {
 	}
 	/// True only after streams for the current device/security revision have opened.
 	pub fn is_ready(&self) -> bool {
-		self.gate.is_ready() && self.gate.processing_ready.load(Ordering::Acquire)
+		self.gate.is_ready()
 	}
 	pub fn microphone_unavailable(&self) -> bool {
 		self.gate.input_enabled.load(Ordering::Acquire)
@@ -480,23 +429,10 @@ impl Audio {
 		if mute_changed || deafen_changed {
 			// A quick mute/unmute may happen between callbacks: invalidate partial PCM too.
 			self.gate.media_generation.fetch_add(1, Ordering::AcqRel);
-			self.gate.echo_reset.store(true, Ordering::Release);
+			self.gate.capture_reset.store(true, Ordering::Release);
 		}
 	}
 	/// Changes are coalesced and applied on the worker, never in device callbacks.
-	pub fn set_processing(&self, mut settings: Processing) {
-		settings.suppression_level = settings.suppression_level.min(3);
-		settings.sensitivity_db = settings.sensitivity_db.map(|db| db.clamp(-80, 0));
-		self.processing.send_if_modified(|current| {
-			if *current == settings {
-				return false;
-			}
-			self.gate.processing_ready.store(false, Ordering::Release);
-			*current = settings;
-			true
-		});
-		self.thread.unpark();
-	}
 	/// Adjusts software gain without reopening devices. Defaults to 100%; clamps to 0..=200%.
 	pub fn set_gain(&self, input_percent: u16, output_percent: u16) {
 		self.gate
@@ -520,15 +456,12 @@ const MAX_RECOVERY_ATTEMPTS: u8 = 24;
 const RECOVERY_DELAY: Duration = Duration::from_millis(250);
 
 struct Streams {
-	processing: Processing,
-	input_gate: crate::activity::InputGate,
 	input_callbacks: u64,
 	input_activity: Instant,
 	_input: Option<cpal::Stream>,
 	_output: cpal::Stream,
-	input: rtrb::Consumer<Frame>,
+	input: rtrb::Consumer<CaptureFrame>,
 	output: rtrb::Producer<Frame>,
-	reference: rtrb::Consumer<Frame>,
 	/// Devices actually opened, so a changed system default can be followed.
 	output_id: Option<String>,
 	input_id: Option<String>,
@@ -595,8 +528,7 @@ impl Streams {
 		let output_id = output.id().ok().map(|id| id.to_string());
 		let output_config = config(&output, false)?;
 		let (output_write, output_read) = rtrb::RingBuffer::new(8);
-		let (reference_write, reference_read) = rtrb::RingBuffer::new(8);
-		let render = Playback::new(output_config.sample_rate(), output_read, reference_write);
+		let render = Playback::new(output_config.sample_rate(), output_read);
 		let (input_stream, input_read, input_id) = if gate.input_enabled.load(Ordering::Acquire) {
 			match open_input_stream(&host, settings, &gate, revision) {
 				Ok((stream, read, id)) => (Some(stream), read, id),
@@ -656,9 +588,6 @@ impl Streams {
 			_output: output_stream,
 			input: input_read,
 			output: output_write,
-			reference: reference_read,
-			processing: VoiceProcessing::from_legacy(false).effective(),
-			input_gate: crate::activity::InputGate::default(),
 			output_id,
 			input_id,
 		})
@@ -679,7 +608,7 @@ impl Streams {
 				self.input_id = id;
 				self.input_callbacks = gate.input_callbacks.load(Ordering::Acquire);
 				self.input_activity = Instant::now();
-				gate.echo_reset.store(true, Ordering::Release);
+				gate.capture_reset.store(true, Ordering::Release);
 				gate.input_failed_revision.load(Ordering::Acquire) != revision
 			}
 			Err(_) => false,
@@ -691,7 +620,7 @@ fn open_input_stream(
 	settings: &Devices,
 	gate: &Arc<Gate>,
 	revision: u64,
-) -> Result<(cpal::Stream, rtrb::Consumer<Frame>, Option<String>), &'static str> {
+) -> Result<(cpal::Stream, rtrb::Consumer<CaptureFrame>, Option<String>), &'static str> {
 	#[cfg(target_os = "macos")]
 	permission_macos::authorize(gate, revision)?;
 	let input = choose(host, settings.input.as_deref(), true)?;
@@ -709,7 +638,7 @@ fn open_input_stream(
 		config
 	};
 	let (input_write, input_read) = rtrb::RingBuffer::new(8);
-	let capture = Capture::new(input_config.sample_rate(), input_write);
+	let capture = MicrophoneCapture::new(input_write, stream_config.sample_rate);
 	let stream = match input_config.sample_format() {
 		cpal::SampleFormat::F32 => {
 			input_stream::<f32>(&input, &stream_config, capture, gate.clone(), revision)
@@ -770,11 +699,44 @@ fn config(device: &cpal::Device, input: bool) -> Result<cpal::SupportedStreamCon
 	if let Some(config) = supported
 		.into_iter()
 		.filter(|c| c.channels() > 0 && c.channels() <= 8)
+		.filter(|c| !input || c.channels() == 2)
 		.filter(|c| supported_format(c.sample_format()))
-		.filter_map(|c| c.try_with_sample_rate(48_000))
-		.min_by_key(|c| c.channels())
-	{
+		.filter_map(|c| {
+			if input {
+				c.try_with_sample_rate(96_000)
+			} else {
+				c.try_with_sample_rate(48_000)
+			}
+		})
+		.min_by_key(|c| {
+			(
+				if input && c.sample_rate() == 96_000 {
+					0
+				} else {
+					1
+				},
+				if input && c.channels() == 2 {
+					0
+				} else if input && c.channels() > 2 {
+					1 + c.channels().abs_diff(2)
+				} else if c.channels() == 1 {
+					1
+				} else {
+					2 + c.channels().abs_diff(2)
+				},
+			)
+		}) {
+		if input && (config.sample_rate() != 96_000 || config.channels() != 2) {
+			return Err(
+				"Microphone must support native 96 kHz stereo capture; select a compatible device",
+			);
+		}
 		return Ok(config);
+	}
+	if input {
+		return Err(
+			"Microphone must support native 96 kHz stereo capture; select a compatible device",
+		);
 	}
 	let config = if input {
 		device.default_input_config()
@@ -788,6 +750,11 @@ fn config(device: &cpal::Device, input: bool) -> Result<cpal::SupportedStreamCon
 		|| !supported_format(config.sample_format())
 	{
 		return Err("Audio device format is unsupported; choose another device");
+	}
+	if input && (config.sample_rate() != 96_000 || config.channels() != 2) {
+		return Err(
+			"Microphone must support native 96 kHz stereo capture; select a compatible device",
+		);
 	}
 	Ok(config)
 }
@@ -809,7 +776,7 @@ fn is_fatal_error(error: &cpal::Error) -> bool {
 fn input_stream<T>(
 	device: &cpal::Device,
 	config: &cpal::StreamConfig,
-	mut capture: Capture,
+	mut capture: MicrophoneCapture,
 	gate: Arc<Gate>,
 	revision: u64,
 ) -> Result<cpal::Stream, &'static str>
@@ -889,18 +856,26 @@ fn amplify(sample: f32, gain: f32) -> f32 {
 		0.0
 	}
 }
-// ponytail: linear conversion is a fallback for devices lacking 48 kHz; use a band-limited resampler if aliasing is measured to matter.
-struct Capture {
+/// Direct native 96 kHz stereo microphone capture; transmitted samples are not resampled.
+struct MicrophoneCapture {
 	media_generation: u64,
-	previous: Option<f32>,
-	phase: f64,
-	step: f64,
-	frame: Frame,
+	sample_rate: u32,
+	frame: [f32; 3840],
 	index: usize,
-	output: rtrb::Producer<Frame>,
+	output: rtrb::Producer<CaptureFrame>,
 	overrun: bool,
 }
-impl Capture {
+impl MicrophoneCapture {
+	fn new(output: rtrb::Producer<CaptureFrame>, sample_rate: u32) -> Self {
+		Self {
+			media_generation: 0,
+			sample_rate,
+			frame: [0.0; 3840],
+			index: 0,
+			output,
+			overrun: false,
+		}
+	}
 	fn process<T: cpal::SizedSample>(&mut self, data: &[T], channels: usize, gate: &Gate)
 	where
 		f32: cpal::FromSample<T>,
@@ -914,53 +889,32 @@ impl Capture {
 			self.reset();
 			return;
 		}
-		for frame in data.chunks_exact(channels) {
-			let sample = frame.iter().map(|v| v.to_sample::<f32>()).sum::<f32>() / channels as f32;
-			// Keep microphone gain after AEC to avoid clipping the echo before cancellation.
-			self.sample(amplify(sample, 1.0));
+		for source in data.chunks_exact(channels) {
+			self.frame[self.index * 2] = source[0].to_sample::<f32>();
+			self.frame[self.index * 2 + 1] = source[1].to_sample::<f32>();
+			self.index += 1;
+			if self.index == (self.sample_rate as usize / 50) {
+				let frame = if self.sample_rate == 96_000 {
+					CaptureFrame::Stereo96(self.frame)
+				} else {
+					CaptureFrame::Stereo(std::array::from_fn(|index| self.frame[index]))
+				};
+				self.overrun |= self.output.push(frame).is_err();
+				self.index = 0;
+			}
 		}
 		if std::mem::take(&mut self.overrun) {
-			gate.echo_reset.store(true, Ordering::Release);
-		}
-	}
-	fn new(rate: u32, output: rtrb::Producer<Frame>) -> Self {
-		Self {
-			media_generation: 0,
-			previous: None,
-			phase: 0.0,
-			step: f64::from(rate) / 48_000.0,
-			frame: [0.0; 960],
-			index: 0,
-			output,
-			overrun: false,
+			gate.capture_reset.store(true, Ordering::Release);
 		}
 	}
 	fn reset(&mut self) {
-		self.previous = None;
-		self.phase = 0.0;
-		self.index = 0;
 		self.frame.fill(0.0);
-	}
-	fn sample(&mut self, sample: f32) {
-		if let Some(previous) = self.previous {
-			while self.phase < 1.0 {
-				self.frame[self.index] = previous + (sample - previous) * self.phase as f32;
-				self.index += 1;
-				if self.index == 960 {
-					self.overrun |= self.output.push(self.frame).is_err();
-					self.index = 0;
-				}
-				self.phase += self.step;
-			}
-			self.phase -= 1.0;
-		}
-		self.previous = Some(sample);
+		self.index = 0;
 	}
 }
 struct Playback {
 	media_generation: u64,
 	input: rtrb::Consumer<Frame>,
-	reference: Capture,
 	frame: Frame,
 	index: usize,
 	previous: f32,
@@ -983,27 +937,18 @@ impl Playback {
 		if !gate.playback() {
 			self.reset();
 			data.fill(T::from_sample(0.0));
-			for _ in data.chunks_exact(channels) {
-				self.reference.sample(0.0);
-			}
 		} else {
 			let gain = f32::from(gate.output_gain.load(Ordering::Relaxed)) / 100.0;
 			for frame in data.chunks_mut(channels) {
 				let sample = amplify(self.sample(), gain);
 				frame.fill(T::from_sample(sample));
-				// Reference actual output, including gain, underrun silence and resampling.
-				self.reference.sample(sample);
 			}
 		}
-		if std::mem::take(&mut self.reference.overrun) {
-			gate.echo_reset.store(true, Ordering::Release);
-		}
 	}
-	fn new(rate: u32, input: rtrb::Consumer<Frame>, reference: rtrb::Producer<Frame>) -> Self {
+	fn new(rate: u32, input: rtrb::Consumer<Frame>) -> Self {
 		Self {
 			media_generation: 0,
 			input,
-			reference: Capture::new(rate, reference),
 			frame: [0.0; 960],
 			index: 960,
 			previous: 0.0,
@@ -1018,7 +963,6 @@ impl Playback {
 				break;
 			}
 		}
-		self.reference.reset();
 		self.frame.fill(0.0);
 		self.index = 960;
 		self.previous = 0.0;
@@ -1049,93 +993,14 @@ impl Playback {
 		value
 	}
 }
-/// Offline processing exercise: no audio host, native streams or Discord transport.
-#[cfg(debug_assertions)]
-pub fn debug_processing_check() {
-	use model::voice_settings::InputProfile;
-	let mut settings = VoiceProcessing::default();
-	settings.custom.sensitivity_db = Some(-63);
-	settings.profile = InputProfile::Studio;
-	assert_eq!(settings.effective(), Processing::studio());
-	settings.profile = InputProfile::Custom;
-	assert_eq!(settings.effective().sensitivity_db, Some(-63));
-	assert!(
-		!Processing {
-			sensitivity_db: Some(-1000),
-			..Processing::default()
-		}
-		.is_valid()
-	);
-	for legacy in [false, true] {
-		let migrated = VoiceProcessing::from_legacy(legacy).effective();
-		assert_eq!(migrated.suppression == NoiseSuppression::RnNoise, legacy);
-		assert!(
-			migrated.echo_cancellation
-				&& !migrated.automatic_gain
-				&& migrated.sensitivity_db.is_none()
-		);
-	}
-	let mut gate = crate::activity::InputGate::default();
-	let mut quiet = [0.0001; 960];
-	assert!(!gate.apply(&mut quiet, Some(-55)) && quiet == [0.0; 960]);
-	let mut speech = [0.1; 960];
-	assert!(gate.apply(&mut speech, Some(-55)));
-	assert!(speech[0] < speech[959]);
-	for _ in 0..11 {
-		gate.apply(&mut [0.0; 960], Some(-55));
-	}
-	assert!(!gate.apply(&mut [0.0; 960], Some(-55)));
-	let mut quiet = [0.0001; 960];
-	assert!(gate.apply(&mut quiet, None) && quiet == [0.0001; 960]);
-	let mut dsp = echo::Echo::new();
-	dsp.configure(Processing::studio()).unwrap();
-	let original = std::array::from_fn(|i| (i as f32 * 0.04).sin() * 0.2);
-	let mut frame = original;
-	dsp.capture(&mut frame, false).unwrap();
-	assert_eq!(frame, original, "Studio must bypass DSP");
-	for suppression in [NoiseSuppression::RnNoise, NoiseSuppression::WebRtc] {
-		dsp.configure(Processing {
-			suppression,
-			..Processing::default()
-		})
-		.unwrap();
-		for _ in 0..40 {
-			let mut frame = original;
-			dsp.render(&[0.0; 960]).unwrap();
-			dsp.capture(&mut frame, false).unwrap();
-			assert!(frame.iter().all(|s| s.is_finite() && s.abs() <= 1.0));
-		}
-		dsp.reset();
-		let mut first = original;
-		dsp.capture(&mut first, false).unwrap();
-		dsp.reset();
-		let mut second = original;
-		dsp.capture(&mut second, false).unwrap();
-		assert_eq!(first, second, "Reset must discard processor history");
-	}
-	dsp.configure(Processing::studio()).unwrap();
-	let mut frame = original;
-	dsp.capture(&mut frame, false).unwrap();
-	assert_eq!(
-		frame, original,
-		"Live switch back to Studio must bypass DSP"
-	);
-	println!(
-		"Offline voice processing passed: profiles, legacy mapping, sensitivity/release, Studio bypass, RNNoise/WebRTC inference and history reset. No devices opened."
-	);
-}
-
 #[cfg(test)]
 mod tests {
 	use super::*;
 	fn audio_without_devices() -> Audio {
 		let (settings, _) = tokio::sync::watch::channel(Devices::default());
-		let (processing, _) =
-			tokio::sync::watch::channel(VoiceProcessing::from_legacy(false).effective());
 		Audio {
 			gate: Arc::new(Gate::default()),
 			settings,
-			processing,
 			thread: std::thread::current(),
 			done: None,
 		}

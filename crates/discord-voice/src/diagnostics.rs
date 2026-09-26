@@ -26,9 +26,6 @@ pub(crate) enum Scope {
 
 #[derive(Clone, Copy)]
 pub(crate) enum Stage {
-	EchoRender,
-	EchoCapture,
-	Noise,
 	Encode,
 	Mix,
 	Receive,

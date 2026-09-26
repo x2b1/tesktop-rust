@@ -7,10 +7,7 @@ use client_core::{
 	voice::{Participant, Phase, RosterEntry},
 };
 use egui::RichText;
-use model::{
-	Id,
-	voice_settings::{InputProfile, NoiseSuppression},
-};
+use model::Id;
 
 /// Local mutes share the 64 per-user volume slots sent to the mixer.
 const MAX_USER_MUTES: usize = 64;
@@ -1502,22 +1499,10 @@ impl MessagingUi {
 			});
 			ui.separator();
 			if input {
-				let mut suppression =
-					self.voice_processing.effective().suppression != NoiseSuppression::Off;
-				if design::switch(
+				design::hint(
 					ui,
-					"Noise suppression",
-					Some("Choose an algorithm in all voice settings."),
-					&mut suppression,
-				)
-				.changed()
-				{
-					self.voice_processing.edit().suppression = if suppression {
-						NoiseSuppression::default()
-					} else {
-						NoiseSuppression::Off
-					};
-				}
+					"Raw mic path: requires native 96 kHz stereo input and uses Opus 1.6 QEXT. Unsupported microphone formats fail instead of switching rates. No app-side resampling or voice DSP.",
+				);
 				design::switch(
 					ui,
 					"Push to talk",
@@ -1923,140 +1908,24 @@ impl MessagingUi {
 	}
 
 	fn voice_processing_controls(&mut self, ui: &mut egui::Ui) {
-		let colors = design::palette(ui);
 		design::section(
 			ui,
-			"Input profile",
-			Some("Applies to calls and your local microphone test."),
+			"Microphone signal",
+			Some("The call and local preview use the same raw capture path."),
 		);
-		for (profile, label, detail) in [
-			(
-				InputProfile::VoiceIsolation,
-				"Voice Isolation",
-				"RNNoise suppression, echo cancellation and automatic gain for speech.",
-			),
-			(
-				InputProfile::Studio,
-				"Studio",
-				"Open microphone without suppression, echo cancellation or automatic gain.",
-			),
-			(
-				InputProfile::Custom,
-				"Custom",
-				"Choose your noise suppression, sensitivity and processing.",
-			),
-		] {
-			if design::radio_row(
-				ui,
-				self.voice_processing.profile == profile,
-				label,
-				Some(detail),
-			)
-			.clicked()
-			{
-				self.voice_processing.profile = profile;
-			}
-		}
-		if self.voice_processing.profile == InputProfile::Custom {
-			design::card_divider(ui);
-			let processing = &mut self.voice_processing.custom;
-			let mut sensitivity = processing.sensitivity_db.is_some();
-			if design::switch(
-				ui,
-				"Input threshold",
-				Some(if sensitivity {
-					"Only transmit sound above this level. Lower values pick up quieter speech."
-				} else {
-					"Open microphone. Mute and push to talk still apply."
-				}),
-				&mut sensitivity,
-			)
-			.changed()
-			{
-				processing.sensitivity_db = sensitivity.then_some(-55);
-			}
-			if let Some(db) = &mut processing.sensitivity_db {
-				ui.add_space(4.0);
-				design::slider(ui, db, -80..=0, " dBFS");
-			}
-			if let Some(level) = self.voice_preview_level {
-				ui.add(
-					egui::ProgressBar::new(((level + 80.0) / 80.0).clamp(0.0, 1.0))
-						.text(format!("Input level: {level:.0} dBFS"))
-						.fill(
-							if processing
-								.sensitivity_db
-								.is_none_or(|threshold| level >= f32::from(threshold))
-							{
-								colors.positive
-							} else {
-								colors.warning
-							},
-						),
-				);
-			} else {
-				design::hint(
-					ui,
-					"Start the microphone test or join a call to see your input level.",
-				);
-			}
-			design::card_divider(ui);
-			let choices = [
-				(NoiseSuppression::Off, "Off"),
-				(NoiseSuppression::RnNoise, "RNNoise"),
-				(NoiseSuppression::WebRtc, "WebRTC"),
-			];
-			design::row(
-				ui,
-				"Noise suppression",
-				Some("Removes keyboard, fan and room noise from your microphone."),
-				|ui| {
-					egui::ComboBox::from_id_salt("voice-noise-suppression")
-						.selected_text(
-							choices
-								.iter()
-								.find(|(value, _)| *value == processing.suppression)
-								.map_or("Off", |(_, label)| *label),
-						)
-						.width(ui.available_width().min(160.0))
-						.show_ui(ui, |ui| {
-							for (value, label) in choices {
-								ui.selectable_value(&mut processing.suppression, value, label);
-							}
-						});
-				},
+		design::hint(
+			ui,
+			"Software suppression, echo cancellation, automatic gain and voice gating are off. Microphone input requires native 96 kHz stereo and uses Opus 1.6 QEXT at a roughly 540 kbps target derived from the media packet budget, with a 1,352-byte encoded-frame cap. Unsupported mic formats fail rather than switching rates. No app-side resampling. Opus is lossy; Discord specifies 48 kHz stereo, so 96 kHz QEXT interoperability is unverified.",
+		);
+		if let Some(level) = self.voice_preview_level {
+			ui.add(
+				egui::ProgressBar::new(((level + 80.0) / 80.0).clamp(0.0, 1.0))
+					.text(format!("Input level: {level:.0} dBFS")),
 			);
-			if processing.suppression == NoiseSuppression::WebRtc {
-				ui.add_space(6.0);
-				let strength = ["Low", "Moderate", "High", "Very high"];
-				design::row(ui, "Suppression strength", None, |ui| {
-					egui::ComboBox::from_id_salt("voice-suppression-strength")
-						.selected_text(strength[usize::from(processing.suppression_level.min(3))])
-						.width(ui.available_width().min(160.0))
-						.show_ui(ui, |ui| {
-							for (index, label) in strength.iter().enumerate() {
-								ui.selectable_value(
-									&mut processing.suppression_level,
-									index as u8,
-									*label,
-								);
-							}
-						});
-				});
-			}
-			design::card_divider(ui);
-			design::switch(
+		} else {
+			design::hint(
 				ui,
-				"Echo cancellation",
-				Some("Reduce speaker audio picked up by your microphone."),
-				&mut processing.echo_cancellation,
-			);
-			design::card_divider(ui);
-			design::switch(
-				ui,
-				"Automatic gain control",
-				Some("Adjust microphone loudness automatically."),
-				&mut processing.automatic_gain,
+				"Start the mic test or join a call to see the input level.",
 			);
 		}
 		design::card_divider(ui);
@@ -2068,7 +1937,6 @@ impl MessagingUi {
 		)
 		.on_hover_text("Mute and deafen always take priority.");
 	}
-
 	/// Whether the local mute/deafen controls may emit commands for the active call.
 	fn controls_enabled(&self, state: &State) -> bool {
 		self.voice_available
@@ -2771,7 +2639,6 @@ impl MessagingUi {
 					|| state.demo || (self.screen.supported
 					&& matches!(phase, Phase::Connected | Phase::Waiting)
 					&& state.can_stream(channel_id));
-				let processing = !state.demo && self.voice_available;
 				let mut camera_clicked = false;
 				let mut share_clicked = false;
 				ui.horizontal(|ui| {
@@ -2836,33 +2703,6 @@ impl MessagingUi {
 						},
 					)
 					.clicked();
-					if card_action(
-						ui,
-						width,
-						crate::icons::Icon::Soundboard,
-						processing,
-						self.voice_processing.effective().suppression != NoiseSuppression::Off,
-						if self.voice_processing.effective().suppression != NoiseSuppression::Off {
-							"Turn off noise suppression"
-						} else {
-							"Turn on noise suppression"
-						},
-						if processing {
-							"Noise suppression reduces keyboard noise, breathing and fans locally."
-						} else {
-							"Noise suppression is unavailable in this build or preview."
-						},
-					)
-					.clicked()
-					{
-						let enabled =
-							self.voice_processing.effective().suppression != NoiseSuppression::Off;
-						self.voice_processing.edit().suppression = if enabled {
-							NoiseSuppression::Off
-						} else {
-							NoiseSuppression::default()
-						};
-					}
 				});
 				if camera_clicked && let Some(command) = state.set_call_camera(!camera) {
 					self.voice_camera_status = "";

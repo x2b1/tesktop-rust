@@ -9,7 +9,7 @@ use crate::{
 };
 use client_core::voice::VoiceConnection;
 use futures_util::{SinkExt, StreamExt};
-use opus2::{Application, Bitrate, Channels, Encoder};
+use opus2::{Application, Bandwidth, Bitrate, Channels, Encoder};
 use serde_json::{Value, json};
 use std::{
 	net::{IpAddr, SocketAddr},
@@ -31,6 +31,17 @@ use tokio_tungstenite::{
 };
 use zeroize::Zeroizing;
 type Socket = WebSocketStream<MaybeTlsStream<TcpStream>>;
+// Reserve a 1,400-byte UDP payload for IPv4/IPv6 paths. This leaves room for
+// the RTP header, DAVE's OPUS frame trailer, and XChaCha20-Poly1305 tag/nonce.
+// At 20 ms this yields a 540 kb/s encoder target without a hard-coded bitrate.
+const VOICE_UDP_BUDGET: usize = 1_400;
+const RTP_HEADER_BYTES: usize = 12;
+const DAVE_OPUS_OVERHEAD_BUDGET: usize = 16;
+const XCHACHA_RTP_OVERHEAD: usize = 20;
+const OPUS_FRAME_MS: usize = 20;
+const MIC_OPUS_MAX_BYTES: usize =
+	VOICE_UDP_BUDGET - RTP_HEADER_BYTES - DAVE_OPUS_OVERHEAD_BUDGET - XCHACHA_RTP_OVERHEAD;
+const MIC_TARGET_BITRATE: i32 = ((MIC_OPUS_MAX_BYTES * 8 * 1_000) / OPUS_FRAME_MS) as i32;
 /// Time a sole member gives the roster announcement before waiting for a peer.
 const PEER_GRACE: Duration = Duration::from_millis(500);
 
@@ -241,7 +252,7 @@ fn discovery(packet: &[u8], ssrc: u32) -> Result<(IpAddr, u16), &'static str> {
 #[allow(clippy::too_many_arguments)] // Every media input of one call.
 pub async fn run(
 	credentials: VoiceConnection,
-	capture: Receiver<Frame>,
+	capture: Receiver<crate::CaptureFrame>,
 	playback: SyncSender<Frame>,
 	controls: watch::Receiver<Controls>,
 	camera: Option<Receiver<crate::camera_video::Frame>>,
@@ -266,7 +277,7 @@ pub async fn run(
 #[allow(clippy::too_many_arguments)] // Every media input of one call plus its identity.
 pub async fn run_with_identity(
 	credentials: VoiceConnection,
-	capture: Receiver<Frame>,
+	capture: Receiver<crate::CaptureFrame>,
 	playback: SyncSender<Frame>,
 	controls: watch::Receiver<Controls>,
 	camera: Option<Receiver<crate::camera_video::Frame>>,
@@ -296,7 +307,7 @@ pub async fn run_with_identity(
 #[allow(clippy::too_many_arguments)] // Public media inputs plus the loopback-only test endpoint.
 async fn run_inner(
 	credentials: VoiceConnection,
-	capture: Receiver<Frame>,
+	capture: Receiver<crate::CaptureFrame>,
 	playback: SyncSender<Frame>,
 	mut controls: watch::Receiver<Controls>,
 	camera: Option<Receiver<crate::camera_video::Frame>>,
@@ -366,19 +377,53 @@ async fn run_inner(
 	let mut heard = false;
 	let mut speaking = false;
 	let mut silence = 0u8;
-	// Capture is mono; a mono stream halves Opus work and decodes identically on stereo receivers.
-	let mut encoder = Encoder::new(48_000, Channels::Mono, Application::Voip)
+	// Keep native 96 kHz captures intact with Opus 1.6 QEXT. Standard Opus's 48 kHz
+	// RTP clock still advances by 960 ticks for each 20 ms packet.
+	let mut encoder_48 = Encoder::new(48_000, Channels::Stereo, Application::Audio)
 		.map_err(|_| "Opus encoder initialization failed")?;
-	encoder
-		.set_bitrate(Bitrate::Bits(64_000))
+	encoder_48
+		.set_bitrate(Bitrate::Bits(MIC_TARGET_BITRATE))
 		.map_err(|_| "Opus bitrate configuration failed")?;
+	encoder_48
+		.set_complexity(10)
+		.map_err(|_| "Opus complexity configuration failed")?;
+	encoder_48
+		.set_force_channels(Some(Channels::Stereo))
+		.map_err(|_| "Opus stereo configuration failed")?;
+	encoder_48
+		.set_max_bandwidth(Bandwidth::Fullband)
+		.map_err(|_| "Opus fullband configuration failed")?;
+	encoder_48
+		.set_vbr_constraint(true)
+		.map_err(|_| "Opus packet-budget configuration failed")?;
+	let mut encoder_96 = Encoder::new(96_000, Channels::Stereo, Application::Audio)
+		.map_err(|_| "96 kHz Opus QEXT encoder initialization failed")?;
+	encoder_96
+		.set_qext(true)
+		.map_err(|_| "96 kHz Opus QEXT unavailable")?;
+	encoder_96
+		.set_bitrate(Bitrate::Bits(MIC_TARGET_BITRATE))
+		.map_err(|_| "96 kHz Opus bitrate configuration failed")?;
+	encoder_96
+		.set_complexity(10)
+		.map_err(|_| "96 kHz Opus complexity configuration failed")?;
+	encoder_96
+		.set_force_channels(Some(Channels::Stereo))
+		.map_err(|_| "96 kHz Opus stereo configuration failed")?;
+	encoder_96
+		.set_max_bandwidth(Bandwidth::Fullband)
+		.map_err(|_| "96 kHz Opus fullband configuration failed")?;
+	encoder_96
+		.set_vbr_constraint(true)
+		.map_err(|_| "96 kHz Opus packet-budget configuration failed")?;
 	let mut random = [0; 6];
 	getrandom::fill(&mut random).map_err(|_| "Voice random initialization failed")?;
 	let mut sequence = u16::from_be_bytes([random[0], random[1]]);
 	let mut timestamp = u32::from_be_bytes(random[2..].try_into().unwrap());
 	let mut packet = [0u8; MAX_PACKET + 1];
-	let mut encoded = [0u8; 1275];
-	let mut mono = [0.0f32; 960];
+	let mut encoded = [0u8; MIC_OPUS_MAX_BYTES];
+	let mut stereo = [0.0f32; 1920];
+	let mut stereo_96 = [0.0f32; 3840];
 	let mut tick = tokio::time::interval(Duration::from_millis(20));
 	tick.set_missed_tick_behavior(MissedTickBehavior::Skip);
 	let mut signal_window = Instant::now();
@@ -466,7 +511,7 @@ async fn run_inner(
 					capture_pacer.next(&capture,enabled && !control.muted && !control.deafened,stalled)
 				};
 				local_activity=if (enabled || waiting) && !control.muted && !control.deafened && !stalled {
-					crate::activity::hold_at(latest.as_ref().map_or(0.0, |frame| frame.iter().filter(|s| s.is_finite()).map(|s| s*s).sum()),local_activity,control.activity_threshold_db)
+					crate::activity::hold_at(latest.as_ref().map_or(0.0, crate::CaptureFrame::energy),local_activity,control.activity_threshold_db)
 				} else {0};
 				let active=enabled && !control.muted && !control.deafened && latest.is_some();
 				if active && !speaking {json_send(&mut ws,json!({"op":5,"d":{"speaking":1,"delay":0,"ssrc":ssrc}})).await?;speaking=true;}
@@ -474,9 +519,16 @@ async fn run_inner(
 				if enabled && (active || silence>0) {
 					let start = metrics.start();
 					let data=if active {
-						let frame=latest.unwrap();
-						for (sample,out) in frame.iter().zip(mono.iter_mut()) {*out=if sample.is_finite(){sample.clamp(-1.0,1.0)}else{0.0};}
-						let length=encoder.encode_float(&mono,&mut encoded).map_err(|_|"Opus encoding failed")?;
+						let length = match latest.unwrap() {
+							crate::CaptureFrame::Stereo(frame) => {
+								for (sample,out) in frame.iter().zip(stereo.iter_mut()) {*out=if sample.is_finite(){sample.clamp(-1.0,1.0)}else{0.0};}
+								encoder_48.encode_float(&stereo,&mut encoded).map_err(|_|"Opus encoding failed")?
+							}
+							crate::CaptureFrame::Stereo96(frame) => {
+								for (sample,out) in frame.iter().zip(stereo_96.iter_mut()) {*out=if sample.is_finite(){sample.clamp(-1.0,1.0)}else{0.0};}
+								encoder_96.encode_float(&stereo_96,&mut encoded).map_err(|_|"96 kHz Opus QEXT encoding failed")?
+							}
+						};
 						dave.session.encrypt_opus(&encoded[..length]).map_err(|_|"DAVE audio encryption failed")?.into_owned()
 					} else {silence-=1;davey::OPUS_SILENCE_PACKET.to_vec()};
 					let mut header=[0;12];header[0]=0x80;header[1]=120;header[2..4].copy_from_slice(&sequence.to_be_bytes());header[4..8].copy_from_slice(&timestamp.to_be_bytes());header[8..12].copy_from_slice(&ssrc.to_be_bytes());
@@ -1022,8 +1074,20 @@ async fn run_stream_inner(
 			let mut encoder = Encoder::new(48_000, Channels::Stereo, Application::Audio)
 				.map_err(|_| "Stream audio encoder initialization failed")?;
 			encoder
-				.set_bitrate(Bitrate::Bits(128_000))
+				.set_bitrate(Bitrate::Bits(MIC_TARGET_BITRATE))
 				.map_err(|_| "Stream audio bitrate configuration failed")?;
+			encoder
+				.set_complexity(10)
+				.map_err(|_| "Stream audio complexity configuration failed")?;
+			encoder
+				.set_force_channels(Some(Channels::Stereo))
+				.map_err(|_| "Stream audio stereo configuration failed")?;
+			encoder
+				.set_max_bandwidth(Bandwidth::Fullband)
+				.map_err(|_| "Stream audio fullband configuration failed")?;
+			encoder
+				.set_vbr_constraint(true)
+				.map_err(|_| "Stream audio packet-budget configuration failed")?;
 			Some(StreamAudio {
 				encoder,
 				pending: Vec::with_capacity(STREAM_AUDIO_PENDING),
@@ -1034,7 +1098,7 @@ async fn run_stream_inner(
 		None => None,
 	};
 	// Audio has its own RTP sequence space; the video SSRC keeps `sequence`.
-	let mut audio_encoded = [0u8; 1275];
+	let mut audio_encoded = [0u8; MIC_OPUS_MAX_BYTES];
 	getrandom::fill(&mut audio_encoded[..2]).map_err(|_| "Stream random initialization failed")?;
 	let mut audio_sequence = u16::from_be_bytes([audio_encoded[0], audio_encoded[1]]);
 	let mut audio_timestamp = 0u32;
